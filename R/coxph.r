@@ -1,482 +1,688 @@
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
-coxph_mpl=function(formula,data,subset,na.action,control,...){
-  #
-  mc = match.call(expand.dots = FALSE)
-  m  = match(c("formula","data","subset","na.action") ,names(mc),0)
-  mc = mc[c(1,m)]    
-  if (m[1]==0){stop("A formula argument is required")}
-  data.name = if(m[2]!=0){deparse(match.call()[[3]])}else{"-"}
-  mc[[1]] = as.name("model.frame")
-  mc$formula = if(missing(data)) terms(formula)
-  else              terms(formula, data=data)
-  mf = eval(mc,parent.frame())
+#' Fit Cox Proportional Hazards Regression Model Via MPL
+#'
+#' Simultaneously estimate the regression coefficients and the baseline hazard
+#' function of proportional hazard Cox models using maximum penalised
+#' likelihood (MPL).
+#'
+#' \code{coxph_mpl} fits a Cox proportional hazards model allowing right, left,
+#' and interval censoring by maximising a penalised likelihood in which a
+#' penalty term smooths the baseline hazard estimate. Optimisation combines a
+#' Newton step for regression coefficients with a multiplicative step for the
+#' baseline hazard parameters while enforcing non-negativity constraints (see
+#' Ma, Couturier, Heritier and Marschner (2021)). The covariate matrix is
+#' centred during optimisation; baseline estimates and covariance matrices are
+#' corrected afterwards using a delta-method adjustment.
+#'
+#' @param formula A survival formula with the response on the left-hand side and
+#'   covariates on the right. The response must be built with
+#'   [survival::Surv()] using \code{type = "interval2"} for interval-censored
+#'   data (right-censored responses are converted internally).
+#' @param data Optional data frame in which to evaluate \code{formula}.
+#' @param subset Optional expression specifying a subset of observations to use.
+#' @param na.action Optional missing-data filter function applied to the model
+#'   frame; defaults to \code{options()\$na.action}.
+#' @param control Optional list returned by [coxph_mpl.control()] specifying
+#'   basis choice, smoothing value, iteration limits, and related options. When
+#'   missing, defaults are built from \code{...}.
+#' @param ... Additional arguments passed to [coxph_mpl.control()].
+#'
+#' @return An object of class \code{"coxph_mpl"}; see [coxph_mpl.object] for
+#'   components.
+#' @seealso [coxph_mpl.object()], [coxph_mpl.control()], [summary.coxph_mpl()],
+#'   [plot.coxph_mpl()], [predict.coxph_mpl()]
+#' @examples
+#' \dontrun{
+#' ## Right-censored example: survival::lung
+#' data(lung)
+#' fit_mpl <- coxph_mpl(Surv(time, status == 2) ~ age + sex + ph.karno +
+#'  wt.loss,
+#'                      data = lung)
+#' summary(fit_mpl)
+#'
+#' ## Interval-censored example: bcos2
+#' data(bcos2)
+#' fit_mpl <- coxph_mpl(Surv(left, right, type = "interval2") ~ treatment,
+#'                      data = bcos2, basis = "m")
+#' summary(fit_mpl)
+#' }
+#' @import survival
+#' @importFrom MASS ginv
+#' @importFrom stats contrasts dnorm model.extract model.matrix pnorm quantile runif terms
+#' @export
+coxph_mpl <- function(formula, data, subset, na.action, control, ...) {
+  # --- build model frame and response (Surv) ---
+  mc <- match.call(expand.dots = FALSE)
+  m <- match(c("formula", "data", "subset", "na.action"), names(mc), 0)
+  mc <- mc[c(1, m)]
+  if (m[1] == 0) stop("A formula argument is required")
+  data.name <- if (m[2] != 0) {
+    deparse(match.call()[[3]])
+  } else {
+    "-"
+  }
+  mc[[1]] <- as.name("model.frame")
+  mc$formula <- if (missing(data)) {
+    terms(formula)
+  } else {
+    terms(formula, data = data)
+  }
+  mf <- eval(mc, parent.frame())
   if (any(is.na(mf))) stop("Missing observations in the model variables")
-  if (nrow(mf) ==0) stop("No (non-missing) observations")
-  mt = attr(mf,"terms")
+  if (nrow(mf) == 0) stop("No (non-missing) observations")
+  mt <- attr(mf, "terms")
   # Y
-  y    = model.extract(mf, "response")
-  type = attr(y, "type")
-  if(!inherits(y, "Surv")){stop("Response must be a survival object")}
+  y <- model.extract(mf, "response")
+  type <- attr(y, "type")
+  if (!inherits(y, "Surv")) {
+    stop("Response must be a survival object")
+  }
   ##
-  if (attr(y,which = "type")=="right"){
-    left=y[,1]
-    right=rep(NA, nrow(y))
-    icase = which(y[,2]==1)
-    right[icase] = y[icase,1]
-    y = Surv(left, right, type="interval2")
-  } else if (type!="interval"){
+  if (attr(y, which = "type") == "right") {
+    left <- y[, 1]
+    right <- rep(NA, nrow(y))
+    icase <- which(y[, 2] == 1)
+    right[icase] <- y[icase, 1]
+    y <- Surv(left, right, type = "interval2")
+  } else if (type != "interval") {
     stop("\nPlease create the survival object using the option type='interval2' in the Surv function.\n")
   }
   ##
-  t_i1        = y[,1L]
-  t_i2        = y[,2L]
-  n       = length(t_i1)
-  ctype   = matrix(NA, nrow=n, ncol=4)
-  colnames(ctype) = c("r","e","l","i")
-  for(tw in 1:4){ctype[,tw] = y[,3L]==(tw-1)}
-  n.ctype     = apply(ctype,2,sum)
-  ctypeTF     = n.ctype>0    
-  observed    = y[,3L]==1L
-  n.obs       = sum(y[,3L]!=0)    
-  # control arguments
+  # --- classify observations by censoring type (right/event/left/interval) ---
+  t_i1 <- y[, 1L]
+  t_i2 <- y[, 2L]
+  n <- length(t_i1)
+  ctype <- matrix(NA, nrow = n, ncol = 4)
+  colnames(ctype) <- c("r", "e", "l", "i")
+  for (tw in 1:4) {
+    ctype[, tw] <- y[, 3L] == (tw - 1)
+  }
+  n.ctype <- apply(ctype, 2, sum)
+  ctypeTF <- n.ctype > 0
+  observed <- y[, 3L] == 1L
+  n.obs <- sum(y[, 3L] != 0)
+  # --- control arguments and tie handling ---
   extraArgs <- list(...)
   if (length(extraArgs)) {
-    controlargs <- names(formals(coxph_mpl.control)) 
-    m <- pmatch(names(extraArgs), controlargs, nomatch=0L)
-    if (any(m==0L))
-      stop(gettextf("Argument(s) %s not matched", names(extraArgs)[m==0L]),
-           domain = NA, call. = F)
-  }    
-  if (missing(control)) control <- coxph_mpl.control(n.obs, ...)
-  
-  # ties 
-  t_i1.obs  = t_i1[observed]    
-  ties     = duplicated(t_i1.obs)
-  if(any(ties)){
-    if(control$ties=="epsilon"){
-      if(length(control$seed)>0){
-        old <- .Random.seed
-        on.exit({.Random.seed <<- old})
-        set.seed(control$seed)
-      }
-      t_i1.obs[ties] = t_i1.obs[ties]+runif(sum(ties),-1e-11,1e-11)
-      t_i1[observed] = t_i1.obs
-    }else{    
-      t_i1.obs = t_i1.obs[!ties]
-      n.obs   = length(t_i1.obs)
+    controlargs <- names(formals(coxph_mpl.control))
+    m <- pmatch(names(extraArgs), controlargs, nomatch = 0L)
+    if (any(m == 0L)) {
+      stop(gettextf("Argument(s) %s not matched", names(extraArgs)[m == 0L]),
+        domain = NA, call. = FALSE
+      )
     }
   }
+  if (missing(control)) control <- coxph_mpl.control(n.obs, ...)
+
+  # ties
+  t_i1.obs <- t_i1[observed]
+  ties <- duplicated(t_i1.obs)
+  if (any(ties)) {
+    if (control$ties == "epsilon") {
+      if (length(control$seed) > 0) {
+        old <- .Random.seed
+        on.exit(.Random.seed <<- old)
+        set.seed(control$seed)
+      }
+      t_i1.obs[ties] <- t_i1.obs[ties] + runif(sum(ties), -1e-11, 1e-11)
+      t_i1[observed] <- t_i1.obs
+    } else {
+      t_i1.obs <- t_i1.obs[!ties]
+      n.obs <- length(t_i1.obs)
+    }
+  }
+  # --- design matrix, centering, knots and basis matrices ---
   # X
-  X           = model.matrix(mt, mf)#, contrasts)
-  X           = X[,!apply(X, 2, function(x) all(x==x[1])), drop=FALSE]
-  if(ncol(X)==0){
-    X   = matrix(0,n,1)
-    noX = TRUE
-  }else{  noX = FALSE}
-  p           = ncol(X)    
-  mean_j      = apply(X, 2, mean)    
-  XC          = X - rep(mean_j, each=n)    
+  X <- model.matrix(mt, mf) # , contrasts)
+  X <- X[, !apply(X, 2, function(x) all(x == x[1])), drop = FALSE]
+  if (ncol(X) == 0) {
+    X <- matrix(0, n, 1)
+    noX <- TRUE
+  } else {
+    noX <- FALSE
+  }
+  p <- ncol(X)
+  mean_j <- apply(X, 2, mean)
+  XC <- X - rep(mean_j, each = n)
   # knot sequence and psi matrices
-  knots  = knots_mpl(control,
-                     c(t_i1[ctype[,"i"]],t_i2[ctype[,"i"]],t_i1[ctype[,"e"]]-1e-3,t_i1[ctype[,"e"]]+1e-3,
-                       t_i1[ctype[,"r"]],t_i1[ctype[,"l"]]))
-  
-  ###                                    
-  ### Estimation                         
-  ###                                    
-  
-  m            = knots$m
-  K            = control$max.iter
-  s_lambda     = control$smooth
-  s_kappa      = control$kappa
-  s_t1         = knots$Alpha[1]
-  s_tn         = max(knots$Alpha)
-  M_R_mm       = penalty_mpl(control,knots)
-  M_Rstar_ll   = rbind(matrix(0,p,p+m),cbind(matrix(0,m,p),M_R_mm))    
-  s_convlimit  = control$tol    
-  M_X_nop     = XC[ctype[,2],,drop=F]
-  M_tX_nop    = t(M_X_nop)
-  M_psi_nom   = basis_mpl(t_i1,knots,control$basis,control$order,which=1)[ctype[,2],,drop=F] 
-  M_tpsi_nom  = t(M_psi_nom)
-  M_Psi_nom   = basis_mpl(t_i1,knots,control$basis,control$order,which=2)[ctype[,2],,drop=F] 
-  M_tPsi_nom  = t(M_Psi_nom)                                                                 
-  M_X_nrp     = XC[ctype[,1],,drop=F]
-  M_tX_nrp    = t(M_X_nrp)
-  M_Psi_nrm   = basis_mpl(t_i1,knots,control$basis,control$order,which=2)[ctype[,1],,drop=F]     
-  M_tPsi_nrm  = t(M_Psi_nrm)                                                     
-  M_X_nlp     = XC[ctype[,3],,drop=F]
-  M_tX_nlp    = t(M_X_nlp)
-  M_Psi_nlm   = basis_mpl(t_i1,knots,control$basis,control$order,which=2)[ctype[,3],,drop=F]                                     
-  M_tPsi_nlm  = t(M_Psi_nlm)                                         
-  M_X_nip     = XC[ctype[,4],,drop=F]
-  M_tX_nip    = t(M_X_nip)
-  M_Psi1_nim  = basis_mpl(t_i1,knots,control$basis,control$order,which=2)[ctype[,4],,drop=F]                                     
-  M_Psi2_nim  = basis_mpl(t_i2,knots,control$basis,control$order,which=2)[ctype[,4],,drop=F]                                     
-  M_tPsi1_nim = t(M_Psi1_nim)                                     
-  M_tPsi2_nim = t(M_Psi2_nim)                                     
-  
+  knots <- knots_mpl(
+    control,
+    c(
+      t_i1[ctype[, "i"]],
+      t_i2[ctype[, "i"]],
+      t_i1[ctype[, "e"]] - 1e-3,
+      t_i1[ctype[, "e"]] + 1e-3,
+      t_i1[ctype[, "r"]],
+      t_i1[ctype[, "l"]]
+    )
+  )
+
   ###
-  ### initialise
+  ### Estimation
   ###
-  M_beta_p1  = matrix(0,nrow=p,ncol=1)
-  M_theta_m1 = matrix(1,nrow=m,ncol=1)
-  s_df       = -1    
-  
+  m <- knots$m
+  K <- control$max.iter
+  s_lambda <- control$smooth
+  s_kappa <- control$kappa
+  s_t1 <- knots$Alpha[1]
+  s_tn <- max(knots$Alpha)
+  M_R_mm <- penalty_mpl(control, knots)
+  M_Rstar_ll <- rbind(matrix(0, p, p + m), cbind(matrix(0, m, p), M_R_mm))
+  s_convlimit <- control$tol
+  M_X_nop <- XC[ctype[, 2], , drop = FALSE]
+  # M_tX_nop    = t(M_X_nop)  # OLD:  replaced with crossprod()
+  M_psi_nom <- basis_mpl(t_i1, knots, control$basis,
+    control$order,
+    which = 1
+  )[ctype[, 2], , drop = FALSE]
+  M_tpsi_nom <- t(M_psi_nom)
+  M_Psi_nom <- basis_mpl(t_i1, knots, control$basis,
+    control$order,
+    which = 2
+  )[ctype[, 2], , drop = FALSE]
+  M_tPsi_nom <- t(M_Psi_nom)
+  M_X_nrp <- XC[ctype[, 1], , drop = FALSE]
+  # M_tX_nrp    = t(M_X_nrp)  # OLD:  replaced with crossprod()
+  M_Psi_nrm <- basis_mpl(t_i1, knots, control$basis,
+    control$order,
+    which = 2
+  )[ctype[, 1], , drop = FALSE]
+  M_tPsi_nrm <- t(M_Psi_nrm)
+  M_X_nlp <- XC[ctype[, 3], , drop = FALSE]
+  # M_tX_nlp    = t(M_X_nlp)  # OLD:  replaced with crossprod()
+  M_Psi_nlm <- basis_mpl(t_i1, knots, control$basis,
+    control$order,
+    which = 2
+  )[ctype[, 3], , drop = FALSE]
+  M_tPsi_nlm <- t(M_Psi_nlm)
+  M_X_nip <- XC[ctype[, 4], , drop = FALSE]
+  # M_tX_nip    = t(M_X_nip)  # OLD:  replaced with crossprod()
+  M_Psi1_nim <- basis_mpl(t_i1, knots, control$basis,
+    control$order,
+    which = 2
+  )[ctype[, 4], , drop = FALSE]
+  M_Psi2_nim <- basis_mpl(t_i2, knots, control$basis,
+    control$order,
+    which = 2
+  )[ctype[, 4], , drop = FALSE]
+  M_tPsi1_nim <- t(M_Psi1_nim)
+  M_tPsi2_nim <- t(M_Psi2_nim)
+
+  # --- initialize parameters and derived hazard/survival quantities ---
+  M_beta_p1 <- matrix(0, nrow = p, ncol = 1)
+  M_theta_m1 <- matrix(1, nrow = m, ncol = 1)
+  s_df <- -1
+
   ## shortcuts
-  M_mu_no1   = exp(M_X_nop%*%M_beta_p1)
-  M_mu_nr1   = exp(M_X_nrp%*%M_beta_p1)
-  M_mu_nl1   = exp(M_X_nlp%*%M_beta_p1)
-  M_mu_ni1   = exp(M_X_nip%*%M_beta_p1)
-  M_h0_no1    = M_psi_nom%*%M_theta_m1
-  M_H0_no1    = M_Psi_nom%*%M_theta_m1
-  M_H0_nr1    = M_Psi_nrm%*%M_theta_m1
-  M_H0_nl1    = M_Psi_nlm%*%M_theta_m1
-  M_H01_ni1   = M_Psi1_nim%*%M_theta_m1
-  M_H02_ni1   = M_Psi2_nim%*%M_theta_m1
-  Rtheta      = M_R_mm%*%M_theta_m1
-  thetaRtheta = t(M_theta_m1)%*%Rtheta
-  TwoLRtheta  = s_lambda*2*Rtheta            
-  M_H_no1  = M_H0_no1 * M_mu_no1
-  M_H_nr1  = M_H0_nr1 * M_mu_nr1
-  M_H_nl1  = M_H0_nl1 * M_mu_nl1
-  M_H1_ni1 = M_H01_ni1* M_mu_ni1
-  M_H2_ni1 = M_H02_ni1* M_mu_ni1
-  M_S_no1  = exp(-M_H_no1)
-  M_S_nl1  = exp(-M_H_nl1)
-  M_S1_ni1 = exp(-M_H1_ni1)
-  M_S2_ni1 = exp(-M_H2_ni1)
+  M_mu_no1 <- exp(M_X_nop %*% M_beta_p1)
+  M_mu_nr1 <- exp(M_X_nrp %*% M_beta_p1)
+  M_mu_nl1 <- exp(M_X_nlp %*% M_beta_p1)
+  M_mu_ni1 <- exp(M_X_nip %*% M_beta_p1)
+  M_h0_no1 <- M_psi_nom %*% M_theta_m1
+  M_H0_no1 <- M_Psi_nom %*% M_theta_m1
+  M_H0_nr1 <- M_Psi_nrm %*% M_theta_m1
+  M_H0_nl1 <- M_Psi_nlm %*% M_theta_m1
+  M_H01_ni1 <- M_Psi1_nim %*% M_theta_m1
+  M_H02_ni1 <- M_Psi2_nim %*% M_theta_m1
+  Rtheta <- M_R_mm %*% M_theta_m1
+  thetaRtheta <- t(M_theta_m1) %*% Rtheta
+  TwoLRtheta <- s_lambda * 2 * Rtheta
+  M_H_no1 <- M_H0_no1 * M_mu_no1
+  M_H_nr1 <- M_H0_nr1 * M_mu_nr1
+  M_H_nl1 <- M_H0_nl1 * M_mu_nl1
+  M_H1_ni1 <- M_H01_ni1 * M_mu_ni1
+  M_H2_ni1 <- M_H02_ni1 * M_mu_ni1
+  M_S_no1 <- exp(-M_H_no1)
+  M_S_nl1 <- exp(-M_H_nl1)
+  M_S1_ni1 <- exp(-M_H1_ni1)
+  M_S2_ni1 <- exp(-M_H2_ni1)
   # avoid division by 0
-  M_S_nl1[M_S_nl1==1]   = 1-control$epsilon[1]
-  M_S1_ni1[M_S1_ni1==1] = 1-control$epsilon[1]
-  M_S2_ni1[M_S2_ni1==1] = 1-control$epsilon[1]
-  M_S1mS2_ni1           = M_S1_ni1-M_S2_ni1  
-  M_S1mS2_ni1[M_S1mS2_ni1<control$epsilon[2]] = control$epsilon[2]
-  
-  
-  ### outer loop
-  
-  full.iter = 0
-  K         = ifelse(control$max.iter[1]>1,control$max.iter[2],control$max.iter[3])
-  for(iter in 1:control$max.iter[1]){
+  M_S_nl1[M_S_nl1 == 1] <- 1 - control$epsilon[1]
+  M_S1_ni1[M_S1_ni1 == 1] <- 1 - control$epsilon[1]
+  M_S2_ni1[M_S2_ni1 == 1] <- 1 - control$epsilon[1]
+  M_S1mS2_ni1 <- M_S1_ni1 - M_S2_ni1
+  M_S1mS2_ni1[M_S1mS2_ni1 < control$epsilon[2]] <- control$epsilon[2]
+
+
+  # --- outer loop over smoothing/df iterations ---
+
+  full.iter <- 0
+  K <- ifelse(control$max.iter[1] > 1, control$max.iter[2], control$max.iter[3])
+  for (iter in 1:control$max.iter[1]) {
     # loglik
-    s_lik = 
-      sum(log(M_mu_no1)+log(M_h0_no1)-M_H_no1)-
-      sum(M_H_nr1)+
-      sum(log(1-M_S_nl1))+
-      sum(log(M_S1mS2_ni1))-
-      s_lambda*thetaRtheta
-    
-    ### inner loop
-    
-    for(k in 1:K){
+    s_lik <-
+      sum(log(M_mu_no1) + log(M_h0_no1) - M_H_no1) -
+      sum(M_H_nr1) +
+      sum(log(1 - M_S_nl1)) +
+      sum(log(M_S1mS2_ni1)) -
+      s_lambda * thetaRtheta
+
+    # --- inner loop: alternating beta/theta updates ---
+
+    for (k in 1:K) {
       ## update betas
-      s_omega       = 1
-      M_beta_p1_OLD = M_beta_p1 
-      s_lik_OLD     = s_lik 
-      M_gradbeta_p1     = 
-        (M_tX_nop%*%(1-M_H_no1))-
-        M_tX_nrp%*%M_H_nr1+
-        M_tX_nlp%*%(M_S_nl1*M_H_nl1/(1-M_S_nl1))+
-        M_tX_nip%*%((M_H2_ni1*M_S2_ni1-M_H1_ni1*M_S1_ni1)/M_S1mS2_ni1)
-      M_hessbeta_p1 = 
-        M_tX_nop%*%diag(c(M_H_no1),n.ctype[2],n.ctype[2])%*%M_X_nop+
-        M_tX_nrp%*%diag(c(M_H_nr1),n.ctype[1],n.ctype[1])%*%M_X_nrp+
-        M_tX_nlp%*%diag(c((M_S_nl1/(1-M_S_nl1)^2*M_H_nl1^2-M_S_nl1/(1-M_S_nl1)*M_H_nl1)),n.ctype[3],n.ctype[3])%*%M_X_nlp+            
-        M_tX_nip%*%diag(c((M_S1_ni1*M_S2_ni1/M_S1mS2_ni1^2*(M_H2_ni1-M_H1_ni1)^2+
-                             (M_S1_ni1*M_H1_ni1-M_S2_ni1*M_H2_ni1)/M_S1mS2_ni1
-        )),n.ctype[4],n.ctype[4])%*%M_X_nip   
-        # avoid division by 0 (leading to the issue spotted by Kenneth Beath [email of 20220112])
-        if(p==1){
-            if(M_hessbeta_p1[1,1]==0){M_hessbeta_p1[1,1]=control$epsilon[1]}
-        }        
-      M_stepbeta_p1 = chol2inv(chol(M_hessbeta_p1))%*%M_gradbeta_p1
-      M_beta_p1     = M_beta_p1_OLD+s_omega*M_stepbeta_p1
-      M_mu_no1   = exp(M_X_nop%*%M_beta_p1)
-      M_mu_nr1   = exp(M_X_nrp%*%M_beta_p1)
-      M_mu_nl1   = exp(M_X_nlp%*%M_beta_p1)
-      M_mu_ni1   = exp(M_X_nip%*%M_beta_p1)
-      M_H_no1  = M_H0_no1 * M_mu_no1
-      M_H_nr1  = M_H0_nr1 * M_mu_nr1
-      M_H_nl1  = M_H0_nl1 * M_mu_nl1
-      M_H1_ni1 = M_H01_ni1* M_mu_ni1
-      M_H2_ni1 = M_H02_ni1* M_mu_ni1
-      M_S_no1  = exp(-M_H_no1)
-      M_S_nl1  = exp(-M_H_nl1)
-      M_S1_ni1 = exp(-M_H1_ni1)
-      M_S2_ni1 = exp(-M_H2_ni1)
+      s_omega <- 1
+      M_beta_p1_OLD <- M_beta_p1
+      s_lik_OLD <- s_lik
+      ## OLD: using pre-computed transpose M_tX
+      # M_gradbeta_p1     =
+      #   (M_tX_nop%*%(1-M_H_no1))-
+      #   M_tX_nrp%*%M_H_nr1+
+      #   M_tX_nlp%*%(M_S_nl1*M_H_nl1/(1-M_S_nl1))+
+      #   M_tX_nip%*%((M_H2_ni1*M_S2_ni1-M_H1_ni1*M_S1_ni1)/M_S1mS2_ni1)
+      ## NEW: using crossprod()
+      M_gradbeta_p1 <-
+        crossprod(M_X_nop, (1 - M_H_no1)) -
+        crossprod(M_X_nrp, M_H_nr1) +
+        crossprod(M_X_nlp, (M_S_nl1 * M_H_nl1 / (1 - M_S_nl1))) +
+        crossprod(M_X_nip, ((M_H2_ni1 * M_S2_ni1 - M_H1_ni1 * M_S1_ni1) / M_S1mS2_ni1))
+      ## OLD: diag() creates full n x n matrices
+      # M_hessbeta_p1 =
+      #   M_tX_nop%*%diag(c(M_H_no1),n.ctype[2],n.ctype[2])%*%M_X_nop+
+      #   M_tX_nrp%*%diag(c(M_H_nr1),n.ctype[1],n.ctype[1])%*%M_X_nrp+
+      #   M_tX_nlp%*%diag(c((M_S_nl1/(1-M_S_nl1)^2*M_H_nl1^2-M_S_nl1/(1-M_S_nl1)*M_H_nl1)),n.ctype[3],n.ctype[3])%*%M_X_nlp+
+      #   M_tX_nip%*%diag(c((M_S1_ni1*M_S2_ni1/M_S1mS2_ni1^2*(M_H2_ni1-M_H1_ni1)^2+
+      #                        (M_S1_ni1*M_H1_ni1-M_S2_ni1*M_H2_ni1)/M_S1mS2_ni1
+      #   )),n.ctype[4],n.ctype[4])%*%M_X_nip
+      ## PREV: use element-wise multiplication with pre-computed M_tX
+      # M_hessbeta_p1 =
+      #   M_tX_nop %*% (c(M_H_no1) * M_X_nop)+
+      #   M_tX_nrp %*% (c(M_H_nr1) * M_X_nrp)+
+      #   M_tX_nlp %*% (c(M_S_nl1/(1-M_S_nl1)^2*M_H_nl1^2-M_S_nl1/(1-M_S_nl1)*M_H_nl1) * M_X_nlp)+
+      #   M_tX_nip %*% (c(M_S1_ni1*M_S2_ni1/M_S1mS2_ni1^2*(M_H2_ni1-M_H1_ni1)^2+
+      #                     (M_S1_ni1*M_H1_ni1-M_S2_ni1*M_H2_ni1)/M_S1mS2_ni1) * M_X_nip)
+      ## NEW: use crossprod()
+      M_hessbeta_p1 <-
+        crossprod(M_X_nop, c(M_H_no1) * M_X_nop) +
+        crossprod(M_X_nrp, c(M_H_nr1) * M_X_nrp) +
+        crossprod(M_X_nlp, c(M_S_nl1 / (1 - M_S_nl1)^2 * M_H_nl1^2 - M_S_nl1 / (1 - M_S_nl1) * M_H_nl1) * M_X_nlp) +
+        crossprod(M_X_nip, c(M_S1_ni1 * M_S2_ni1 / M_S1mS2_ni1^2 * (M_H2_ni1 - M_H1_ni1)^2 +
+          (M_S1_ni1 * M_H1_ni1 - M_S2_ni1 * M_H2_ni1) / M_S1mS2_ni1) * M_X_nip)
+      # avoid division by 0 (leading to the issue spotted by Kenneth Beath [email of 20220112])
+      if (p == 1) {
+        if (M_hessbeta_p1[1, 1] == 0) {
+          M_hessbeta_p1[1, 1] <- control$epsilon[1]
+        }
+      }
+      M_stepbeta_p1 <- chol2inv(chol(M_hessbeta_p1)) %*% M_gradbeta_p1
+      M_beta_p1 <- M_beta_p1_OLD + s_omega * M_stepbeta_p1
+      M_mu_no1 <- exp(M_X_nop %*% M_beta_p1)
+      M_mu_nr1 <- exp(M_X_nrp %*% M_beta_p1)
+      M_mu_nl1 <- exp(M_X_nlp %*% M_beta_p1)
+      M_mu_ni1 <- exp(M_X_nip %*% M_beta_p1)
+      M_H_no1 <- M_H0_no1 * M_mu_no1
+      M_H_nr1 <- M_H0_nr1 * M_mu_nr1
+      M_H_nl1 <- M_H0_nl1 * M_mu_nl1
+      M_H1_ni1 <- M_H01_ni1 * M_mu_ni1
+      M_H2_ni1 <- M_H02_ni1 * M_mu_ni1
+      M_S_no1 <- exp(-M_H_no1)
+      M_S_nl1 <- exp(-M_H_nl1)
+      M_S1_ni1 <- exp(-M_H1_ni1)
+      M_S2_ni1 <- exp(-M_H2_ni1)
       # avoid division by 0
-      M_S_nl1[M_S_nl1==1]   = 1-control$epsilon[1]
-      M_S1_ni1[M_S1_ni1==1] = 1-control$epsilon[1]
-      M_S2_ni1[M_S2_ni1==1] = 1-control$epsilon[1]
-      M_S1mS2_ni1           = M_S1_ni1-M_S2_ni1  
-      M_S1mS2_ni1[M_S1mS2_ni1<control$epsilon[2]] = control$epsilon[2]
+      M_S_nl1[M_S_nl1 == 1] <- 1 - control$epsilon[1]
+      M_S1_ni1[M_S1_ni1 == 1] <- 1 - control$epsilon[1]
+      M_S2_ni1[M_S2_ni1 == 1] <- 1 - control$epsilon[1]
+      M_S1mS2_ni1 <- M_S1_ni1 - M_S2_ni1
+      M_S1mS2_ni1[M_S1mS2_ni1 < control$epsilon[2]] <- control$epsilon[2]
       # loglik
-      s_lik = 
-        sum(log(M_mu_no1)+log(M_h0_no1)-M_H_no1)-
-        sum(M_H_nr1)+
-        sum(log(1-M_S_nl1))+
-        sum(log(M_S1mS2_ni1))-
-        s_lambda*thetaRtheta
+      s_lik <-
+        sum(log(M_mu_no1) + log(M_h0_no1) - M_H_no1) -
+        sum(M_H_nr1) +
+        sum(log(1 - M_S_nl1)) +
+        sum(log(M_S1mS2_ni1)) -
+        s_lambda * thetaRtheta
       ## if likelihood decreases
-      if(s_lik<s_lik_OLD){
-        i       = 0            
-        s_omega = 1/s_kappa
-        while(s_lik<s_lik_OLD){
-          M_beta_p1 = M_beta_p1_OLD+s_omega*M_stepbeta_p1
-          M_mu_no1   = exp(M_X_nop%*%M_beta_p1)
-          M_mu_nr1   = exp(M_X_nrp%*%M_beta_p1)
-          M_mu_nl1   = exp(M_X_nlp%*%M_beta_p1)
-          M_mu_ni1   = exp(M_X_nip%*%M_beta_p1)
-          M_H_no1  = M_H0_no1 * M_mu_no1
-          M_H_nr1  = M_H0_nr1 * M_mu_nr1
-          M_H_nl1  = M_H0_nl1 * M_mu_nl1
-          M_H1_ni1 = M_H01_ni1* M_mu_ni1
-          M_H2_ni1 = M_H02_ni1* M_mu_ni1
-          M_S_no1  = exp(-M_H_no1)
-          M_S_nl1  = exp(-M_H_nl1)
-          M_S1_ni1 = exp(-M_H1_ni1)
-          M_S2_ni1 = exp(-M_H2_ni1)
+      if (s_lik < s_lik_OLD) {
+        i <- 0
+        s_omega <- 1 / s_kappa
+        while (s_lik < s_lik_OLD) {
+          M_beta_p1 <- M_beta_p1_OLD + s_omega * M_stepbeta_p1
+          M_mu_no1 <- exp(M_X_nop %*% M_beta_p1)
+          M_mu_nr1 <- exp(M_X_nrp %*% M_beta_p1)
+          M_mu_nl1 <- exp(M_X_nlp %*% M_beta_p1)
+          M_mu_ni1 <- exp(M_X_nip %*% M_beta_p1)
+          M_H_no1 <- M_H0_no1 * M_mu_no1
+          M_H_nr1 <- M_H0_nr1 * M_mu_nr1
+          M_H_nl1 <- M_H0_nl1 * M_mu_nl1
+          M_H1_ni1 <- M_H01_ni1 * M_mu_ni1
+          M_H2_ni1 <- M_H02_ni1 * M_mu_ni1
+          M_S_no1 <- exp(-M_H_no1)
+          M_S_nl1 <- exp(-M_H_nl1)
+          M_S1_ni1 <- exp(-M_H1_ni1)
+          M_S2_ni1 <- exp(-M_H2_ni1)
           # avoid division by 0
-          M_S_nl1[M_S_nl1==1]   = 1-control$epsilon[1]
-          M_S1_ni1[M_S1_ni1==1] = 1-control$epsilon[1]
-          M_S2_ni1[M_S2_ni1==1] = 1-control$epsilon[1]
-          M_S1mS2_ni1           = M_S1_ni1-M_S2_ni1  
-          M_S1mS2_ni1[M_S1mS2_ni1<control$epsilon[2]] = control$epsilon[2]
+          M_S_nl1[M_S_nl1 == 1] <- 1 - control$epsilon[1]
+          M_S1_ni1[M_S1_ni1 == 1] <- 1 - control$epsilon[1]
+          M_S2_ni1[M_S2_ni1 == 1] <- 1 - control$epsilon[1]
+          M_S1mS2_ni1 <- M_S1_ni1 - M_S2_ni1
+          M_S1mS2_ni1[M_S1mS2_ni1 < control$epsilon[2]] <- control$epsilon[2]
           # loglik
-          s_lik = 
-            sum(log(M_mu_no1)+log(M_h0_no1)-M_H_no1)-
-            sum(M_H_nr1)+
-            sum(log(1-M_S_nl1))+
-            sum(log(M_S1mS2_ni1))-
-            s_lambda*thetaRtheta
+          s_lik <-
+            sum(log(M_mu_no1) + log(M_h0_no1) - M_H_no1) -
+            sum(M_H_nr1) +
+            sum(log(1 - M_S_nl1)) +
+            sum(log(M_S1mS2_ni1)) -
+            s_lambda * thetaRtheta
           # update value of omega
-          if(s_omega>=1e-2){
-            s_omega = s_omega/s_kappa
-          }else{if(s_omega<1e-2&s_omega>=1e-5){
-            s_omega = s_omega*5e-2
-          }else{if(s_omega<1e-5){
-            s_omega = s_omega*1e-5    
-          }}}
-          i = i+1
-          if(i>500){break}                
+          if (s_omega >= 1e-2) {
+            s_omega <- s_omega / s_kappa
+          } else {
+            if (s_omega < 1e-2 & s_omega >= 1e-5) {
+              s_omega <- s_omega * 5e-2
+            } else {
+              if (s_omega < 1e-5) {
+                s_omega <- s_omega * 1e-5
+              }
+            }
+          }
+          i <- i + 1
+          if (i > 500) {
+            break
+          }
         }
       }
       ## update thetas
-      s_nu           = 1
-      M_theta_m1_OLD = M_theta_m1 
-      s_lik_OLD      = s_lik
-      M_gradthetaA_m1     = 
-        M_tpsi_nom%*%(1/M_h0_no1)+
-        M_tPsi_nlm%*%(M_S_nl1*M_mu_nl1/(1-M_S_nl1))+
-        M_tPsi2_nim%*%(M_S2_ni1*M_mu_ni1/(M_S1mS2_ni1))-
-        TwoLRtheta*(TwoLRtheta<0)+0.3        
-      M_gradthetaB_m1     = 
-        M_tPsi_nom%*%M_mu_no1+
-        M_tPsi_nrm%*%M_mu_nr1+
-        M_tPsi1_nim%*%(M_S1_ni1*M_mu_ni1/(M_S1mS2_ni1))+
-        TwoLRtheta*(TwoLRtheta>0)+0.3    
-      M_gradtheta_m1 = M_gradthetaA_m1-M_gradthetaB_m1
-      M_s_m1         = M_theta_m1/M_gradthetaB_m1
-      M_steptheta_p1 = M_s_m1 * M_gradtheta_m1
-      M_theta_m1     = M_theta_m1_OLD+s_nu*M_steptheta_p1
-      M_theta_m1[M_theta_m1<control$epsilon[2]] = control$epsilon[2]
-      M_h0_no1    = M_psi_nom%*%M_theta_m1
-      M_H0_no1    = M_Psi_nom%*%M_theta_m1
-      M_H0_nr1    = M_Psi_nrm%*%M_theta_m1
-      M_H0_nl1    = M_Psi_nlm%*%M_theta_m1
-      M_H01_ni1   = M_Psi1_nim%*%M_theta_m1
-      M_H02_ni1   = M_Psi2_nim%*%M_theta_m1
-      Rtheta      = M_R_mm%*%M_theta_m1
-      thetaRtheta = t(M_theta_m1)%*%Rtheta
-      TwoLRtheta  = s_lambda*2*Rtheta            
-      M_H_no1  = M_H0_no1 * M_mu_no1
-      M_H_nr1  = M_H0_nr1 * M_mu_nr1
-      M_H_nl1  = M_H0_nl1 * M_mu_nl1
-      M_H1_ni1 = M_H01_ni1* M_mu_ni1
-      M_H2_ni1 = M_H02_ni1* M_mu_ni1
-      M_S_no1  = exp(-M_H_no1)
-      M_S_nl1  = exp(-M_H_nl1)
-      M_S1_ni1 = exp(-M_H1_ni1)
-      M_S2_ni1 = exp(-M_H2_ni1)
+      s_nu <- 1
+      M_theta_m1_OLD <- M_theta_m1
+      s_lik_OLD <- s_lik
+      M_gradthetaA_m1 <-
+        M_tpsi_nom %*% (1 / M_h0_no1) +
+        M_tPsi_nlm %*% (M_S_nl1 * M_mu_nl1 / (1 - M_S_nl1)) +
+        M_tPsi2_nim %*% (M_S2_ni1 * M_mu_ni1 / (M_S1mS2_ni1)) -
+        TwoLRtheta * (TwoLRtheta < 0) + 0.3
+      M_gradthetaB_m1 <-
+        M_tPsi_nom %*% M_mu_no1 +
+        M_tPsi_nrm %*% M_mu_nr1 +
+        M_tPsi1_nim %*% (M_S1_ni1 * M_mu_ni1 / (M_S1mS2_ni1)) +
+        TwoLRtheta * (TwoLRtheta > 0) + 0.3
+      M_gradtheta_m1 <- M_gradthetaA_m1 - M_gradthetaB_m1
+      M_s_m1 <- M_theta_m1 / M_gradthetaB_m1
+      M_steptheta_p1 <- M_s_m1 * M_gradtheta_m1
+      M_theta_m1 <- M_theta_m1_OLD + s_nu * M_steptheta_p1
+      M_theta_m1[M_theta_m1 < control$epsilon[2]] <- control$epsilon[2]
+      M_h0_no1 <- M_psi_nom %*% M_theta_m1
+      M_H0_no1 <- M_Psi_nom %*% M_theta_m1
+      M_H0_nr1 <- M_Psi_nrm %*% M_theta_m1
+      M_H0_nl1 <- M_Psi_nlm %*% M_theta_m1
+      M_H01_ni1 <- M_Psi1_nim %*% M_theta_m1
+      M_H02_ni1 <- M_Psi2_nim %*% M_theta_m1
+      Rtheta <- M_R_mm %*% M_theta_m1
+      thetaRtheta <- t(M_theta_m1) %*% Rtheta
+      TwoLRtheta <- s_lambda * 2 * Rtheta
+      M_H_no1 <- M_H0_no1 * M_mu_no1
+      M_H_nr1 <- M_H0_nr1 * M_mu_nr1
+      M_H_nl1 <- M_H0_nl1 * M_mu_nl1
+      M_H1_ni1 <- M_H01_ni1 * M_mu_ni1
+      M_H2_ni1 <- M_H02_ni1 * M_mu_ni1
+      M_S_no1 <- exp(-M_H_no1)
+      M_S_nl1 <- exp(-M_H_nl1)
+      M_S1_ni1 <- exp(-M_H1_ni1)
+      M_S2_ni1 <- exp(-M_H2_ni1)
       # avoid division by 0
-      M_S_nl1[M_S_nl1==1]   = 1-control$epsilon[1]
-      M_S1_ni1[M_S1_ni1==1] = 1-control$epsilon[1]
-      M_S2_ni1[M_S2_ni1==1] = 1-control$epsilon[1]
-      M_S1mS2_ni1           = M_S1_ni1-M_S2_ni1  
-      M_S1mS2_ni1[M_S1mS2_ni1<control$epsilon[2]] = control$epsilon[2]
+      M_S_nl1[M_S_nl1 == 1] <- 1 - control$epsilon[1]
+      M_S1_ni1[M_S1_ni1 == 1] <- 1 - control$epsilon[1]
+      M_S2_ni1[M_S2_ni1 == 1] <- 1 - control$epsilon[1]
+      M_S1mS2_ni1 <- M_S1_ni1 - M_S2_ni1
+      M_S1mS2_ni1[M_S1mS2_ni1 < control$epsilon[2]] <- control$epsilon[2]
       # loglik
-      s_lik = 
-        sum(log(M_mu_no1)+log(M_h0_no1)-M_H_no1)-
-        sum(M_H_nr1)+
-        sum(log(1-M_S_nl1))+
-        sum(log(M_S1mS2_ni1))-
-        s_lambda*thetaRtheta
+      s_lik <-
+        sum(log(M_mu_no1) + log(M_h0_no1) - M_H_no1) -
+        sum(M_H_nr1) +
+        sum(log(1 - M_S_nl1)) +
+        sum(log(M_S1mS2_ni1)) -
+        s_lambda * thetaRtheta
       ## if likelihood decreases
-      if(s_lik<s_lik_OLD){
-        i       = 0
-        s_omega = 1/s_kappa
-        while(s_lik<s_lik_OLD){
-          M_theta_m1= M_theta_m1_OLD+s_omega*M_steptheta_p1
-          M_theta_m1[M_theta_m1<control$epsilon[2]] = control$epsilon[2]
-          M_h0_no1    = M_psi_nom%*%M_theta_m1
-          M_H0_no1    = M_Psi_nom%*%M_theta_m1
-          M_H0_nr1    = M_Psi_nrm%*%M_theta_m1
-          M_H0_nl1    = M_Psi_nlm%*%M_theta_m1
-          M_H01_ni1   = M_Psi1_nim%*%M_theta_m1
-          M_H02_ni1   = M_Psi2_nim%*%M_theta_m1
-          Rtheta      = M_R_mm%*%M_theta_m1
-          thetaRtheta = t(M_theta_m1)%*%Rtheta            
-          TwoLRtheta  = s_lambda*2*Rtheta            
-          M_H_no1  = M_H0_no1 * M_mu_no1
-          M_H_nr1  = M_H0_nr1 * M_mu_nr1
-          M_H_nl1  = M_H0_nl1 * M_mu_nl1
-          M_H1_ni1 = M_H01_ni1* M_mu_ni1
-          M_H2_ni1 = M_H02_ni1* M_mu_ni1
-          M_S_no1  = exp(-M_H_no1)
-          M_S_nl1  = exp(-M_H_nl1)
-          M_S1_ni1 = exp(-M_H1_ni1)
-          M_S2_ni1 = exp(-M_H2_ni1)
+      if (s_lik < s_lik_OLD) {
+        i <- 0
+        s_omega <- 1 / s_kappa
+        while (s_lik < s_lik_OLD) {
+          M_theta_m1 <- M_theta_m1_OLD + s_omega * M_steptheta_p1
+          M_theta_m1[M_theta_m1 < control$epsilon[2]] <- control$epsilon[2]
+          M_h0_no1 <- M_psi_nom %*% M_theta_m1
+          M_H0_no1 <- M_Psi_nom %*% M_theta_m1
+          M_H0_nr1 <- M_Psi_nrm %*% M_theta_m1
+          M_H0_nl1 <- M_Psi_nlm %*% M_theta_m1
+          M_H01_ni1 <- M_Psi1_nim %*% M_theta_m1
+          M_H02_ni1 <- M_Psi2_nim %*% M_theta_m1
+          Rtheta <- M_R_mm %*% M_theta_m1
+          thetaRtheta <- t(M_theta_m1) %*% Rtheta
+          TwoLRtheta <- s_lambda * 2 * Rtheta
+          M_H_no1 <- M_H0_no1 * M_mu_no1
+          M_H_nr1 <- M_H0_nr1 * M_mu_nr1
+          M_H_nl1 <- M_H0_nl1 * M_mu_nl1
+          M_H1_ni1 <- M_H01_ni1 * M_mu_ni1
+          M_H2_ni1 <- M_H02_ni1 * M_mu_ni1
+          M_S_no1 <- exp(-M_H_no1)
+          M_S_nl1 <- exp(-M_H_nl1)
+          M_S1_ni1 <- exp(-M_H1_ni1)
+          M_S2_ni1 <- exp(-M_H2_ni1)
           # avoid division by 0
-          M_S_nl1[M_S_nl1==1]   = 1-control$epsilon[1]
-          M_S1_ni1[M_S1_ni1==1] = 1-control$epsilon[1]
-          M_S2_ni1[M_S2_ni1==1] = 1-control$epsilon[1]
-          M_S1mS2_ni1           = M_S1_ni1-M_S2_ni1  
-          M_S1mS2_ni1[M_S1mS2_ni1<control$epsilon[2]] = control$epsilon[2]
+          M_S_nl1[M_S_nl1 == 1] <- 1 - control$epsilon[1]
+          M_S1_ni1[M_S1_ni1 == 1] <- 1 - control$epsilon[1]
+          M_S2_ni1[M_S2_ni1 == 1] <- 1 - control$epsilon[1]
+          M_S1mS2_ni1 <- M_S1_ni1 - M_S2_ni1
+          M_S1mS2_ni1[M_S1mS2_ni1 < control$epsilon[2]] <- control$epsilon[2]
           # loglik
-          s_lik = 
-            sum(log(M_mu_no1)+log(M_h0_no1)-M_H_no1)-
-            sum(M_H_nr1)+
-            sum(log(1-M_S_nl1))+
-            sum(log(M_S1mS2_ni1))-
-            s_lambda*thetaRtheta
+          s_lik <-
+            sum(log(M_mu_no1) + log(M_h0_no1) - M_H_no1) -
+            sum(M_H_nr1) +
+            sum(log(1 - M_S_nl1)) +
+            sum(log(M_S1mS2_ni1)) -
+            s_lambda * thetaRtheta
           # update omega
-          if(s_omega>=1e-2){
-            s_omega = s_omega/s_kappa
-          }else{if(s_omega<1e-2&s_omega>=1e-5){
-            s_omega = s_omega*5e-2
-          }else{if(s_omega<1e-5){
-            s_omega = s_omega*1e-5    
-          }}}
-          i = i+1
-          if(i>500){break}                
-        }    
+          if (s_omega >= 1e-2) {
+            s_omega <- s_omega / s_kappa
+          } else {
+            if (s_omega < 1e-2 & s_omega >= 1e-5) {
+              s_omega <- s_omega * 5e-2
+            } else {
+              if (s_omega < 1e-5) {
+                s_omega <- s_omega * 1e-5
+              }
+            }
+          }
+          i <- i + 1
+          if (i > 500) {
+            break
+          }
+        }
       }
-      if(all(c(abs(M_beta_p1-M_beta_p1_OLD),abs(M_theta_m1-M_theta_m1_OLD))<s_convlimit)){break}
-      if(control$max.iter[1]==1){if(any(k==seq(0,control$max.iter[3],control$max.iter[2]))){
-        control$epsilon[2] = control$epsilon[2]*10}}
+      if (all(c(abs(M_beta_p1 - M_beta_p1_OLD), abs(M_theta_m1 - M_theta_m1_OLD)) < s_convlimit)) {
+        break
+      }
+      if (control$max.iter[1] == 1) {
+        if (any(k == seq(0, control$max.iter[3], control$max.iter[2]))) {
+          control$epsilon[2] <- control$epsilon[2] * 10
+        }
+      }
     }
-    
-    # H matrix 
-    H = HRinv = matrix(0,p+m,p+m)    
-    H[1:p,1:p] = 
-      M_tX_nop%*%diag(c(M_H_no1),n.ctype[2],n.ctype[2])%*%M_X_nop+
-      M_tX_nrp%*%diag(c(M_H_nr1),n.ctype[1],n.ctype[1])%*%M_X_nrp+
-      M_tX_nlp%*%diag(c((M_S_nl1/(1-M_S_nl1)^2*M_H_nl1^2-M_S_nl1/(1-M_S_nl1)*M_H_nl1)),n.ctype[3],n.ctype[3])%*%M_X_nlp+            
-      M_tX_nip%*%diag(c((M_S1_ni1*M_S2_ni1/M_S1mS2_ni1^2*(M_H2_ni1-M_H1_ni1)^2+
-                           (M_S1_ni1*M_H1_ni1-M_S2_ni1*M_H2_ni1)/M_S1mS2_ni1
-      )),n.ctype[4],n.ctype[4])%*%M_X_nip                
-    H[1:p,(p+1):(p+m)] =  
-      M_tX_nop%*%diag(c(M_mu_no1),n.ctype[2],n.ctype[2])%*%M_Psi_nom+
-      M_tX_nrp%*%diag(c(M_mu_nr1),n.ctype[1],n.ctype[1])%*%M_Psi_nrm+
-      M_tX_nlp%*%diag(c((M_S_nl1/(1-M_S_nl1)^2*M_H_nl1-M_S_nl1/(1-M_S_nl1))*M_mu_nl1),n.ctype[3],n.ctype[3])%*%M_Psi_nlm+
-      M_tX_nip%*%diag(c(M_S1_ni1*M_S2_ni1/M_S1mS2_ni1^2*(M_H2_ni1-M_H1_ni1)*M_mu_ni1),n.ctype[4],n.ctype[4])%*%(M_Psi2_nim-M_Psi1_nim)+
-      M_tX_nip%*%diag(c(M_S1_ni1/M_S1mS2_ni1*M_mu_ni1),n.ctype[4],n.ctype[4])%*%M_Psi1_nim-
-      M_tX_nip%*%diag(c(M_S2_ni1/M_S1mS2_ni1*M_mu_ni1),n.ctype[4],n.ctype[4])%*%M_Psi2_nim
-    H[(p+1):(p+m),1:p] = t(H[1:p,(p+1):(p+m)])               
-    H[(p+1):(p+m),(p+1):(p+m)] =  
-      M_tpsi_nom%*%diag(c(1/M_h0_no1^2),n.ctype[2],n.ctype[2])%*%M_psi_nom+
-      M_tPsi_nlm%*%diag(c(M_S_nl1/(1-M_S_nl1)^2*M_mu_nl1^2),n.ctype[3],n.ctype[3])%*%M_Psi_nlm+
-      (M_tPsi2_nim-M_tPsi1_nim)%*%diag(c(M_S1_ni1*M_S2_ni1/M_S1mS2_ni1^2*M_mu_ni1^2),n.ctype[4],n.ctype[4])%*%(M_Psi2_nim-M_Psi1_nim)
-    s_lambda_old   = s_lambda
-    s_df_old       = s_df
-    s_sigma2_old   = 1/(2*s_lambda_old)
-    #pos            = c(if(noX){FALSE}else{rep(TRUE,p)},M_theta_m1>control$min.theta)
-    pos            = c(if(noX){FALSE}else{rep(TRUE,p)},(M_theta_m1>control$min.theta & apply(H[(p+1):(p+m),(p+1):(p+m)],2,sum)>0))
-    #MM: (G+Q)^-1
-    temp           = try(chol2inv(chol(H[pos,pos]+(1/s_sigma2_old)*M_Rstar_ll[pos,pos])),silent=T)  
-    if(class(temp)[1]!="try-error"&!any(is.infinite(temp))){
-      HRinv[pos,pos]=temp
-    ##MM: is ginv(H[pos,pos]) right? Forgot Q?
-    }else{HRinv[pos,pos]=MASS::ginv(H[pos,pos])}
-    s_df           = m-sum(diag(HRinv%*%M_Rstar_ll))/s_sigma2_old
-    s_sigma2       = c(t(M_theta_m1)%*%M_R_mm%*%M_theta_m1/s_df)    
-    s_lambda       = 1/(2*s_sigma2)
-    TwoLRtheta     = s_lambda*2*Rtheta        
-    full.iter      = full.iter+k
-    if((full.iter/iter)>(control$max.iter[2]*.975)){control$epsilon[2] = control$epsilon[2]*10}        
-    if(full.iter>control$max.iter[3]){break}                
-    if((k<control$max.iter[2])&
-       (abs(s_df-s_df_old)<(control$tol*10))
-    ){break}
-  }
-  s_lambda        = control$smooth = s_lambda_old
-  s_correction    = c(exp(-mean_j%*%M_beta_p1)) 
-  M_thetatilde_m1 = M_theta_m1
-  M_theta_m1      = M_theta_m1*s_correction
-  
-  ###                                    
-  ### Inference                          
-  ###                                    
-  # M_corr_ll = cbind(rbind(diag(rep(1,p)),s_correction*matrix(rep(M_thetatilde_m1,p)*rep(-mean_j,each=m),ncol=p)),
-                    # rbind(matrix(0,ncol=m,nrow=p),diag(rep(s_correction,m))))
-  M_corr_ll = cbind(rbind(diag(rep(1,p)),s_correction*matrix(rep(M_thetatilde_m1,p)*rep(-M_beta_p1,each=m),ncol=p)),
-                    rbind(matrix(0,ncol=m,nrow=p),diag(rep(s_correction,m))))
-  M_corr_ll[!pos,] = 0
 
-  
-  M_2    = H+2*s_lambda*M_Rstar_ll
-  Q = matrix(NA,n,p+m)
-  if(ctypeTF[1]){Q[ctype[,1],1:p] = rep(-M_H_nr1,p)*M_X_nrp}
-  if(ctypeTF[2]){Q[ctype[,2],1:p] = rep((1-M_H_no1),p)*M_X_nop}
-  if(ctypeTF[3]){Q[ctype[,3],1:p] = rep(M_S_nl1*M_H_nl1/(1-M_S_nl1),p)*M_X_nlp}
-  if(ctypeTF[4]){Q[ctype[,4],1:p] = rep((M_H2_ni1*M_S2_ni1-M_H1_ni1*M_S1_ni1)/M_S1mS2_ni1,p)*M_X_nip}
-  if(ctypeTF[1]){Q[ctype[,1],-c(1:p)] = rep(-M_mu_nr1,m)*M_Psi_nrm}
-  if(ctypeTF[2]){Q[ctype[,2],-c(1:p)] = rep(1/M_h0_no1,m)*M_psi_nom-rep(M_mu_no1,m)*M_Psi_nom}
-  if(ctypeTF[3]){Q[ctype[,3],-c(1:p)] = rep(M_S_nl1*M_mu_nl1/(1-M_S_nl1),m)*M_Psi_nlm}
-  if(ctypeTF[4]){Q[ctype[,4],-c(1:p)] = rep(M_S2_ni1*M_mu_ni1/(M_S1mS2_ni1),m)*M_Psi2_nim-
-    rep(M_S1_ni1*M_mu_ni1/(M_S1mS2_ni1),m)*M_Psi1_nim}
-  Sp = Q-matrix(rep(c(rep(0,p),TwoLRtheta),n),n,byrow=T)/n
-  Q = t(Sp)%*%Sp
-  #pos   = c(if(noX){FALSE}else{rep(TRUE,p)},M_theta_m1>control$min.theta)
-  pos            = c(if(noX){FALSE}else{rep(TRUE,p)},(M_theta_m1>control$min.theta & apply(H[(p+1):(p+m),(p+1):(p+m)],2,sum)>0))
-  Minv_1 = Minv_2 = Hinv = matrix(0,p+m,p+m)                        
-  temp = try(chol2inv(chol(M_2[pos,pos])),silent=T) 
-  if(class(temp)[1]!="try-error"){
-    Minv_2[pos,pos] = temp        
-    cov_NuNu_M2QM2  = M_corr_ll%*%(Minv_2%*%Q%*%Minv_2)%*%t(M_corr_ll)
-    cov_NuNu_M2HM2  = M_corr_ll%*%(Minv_2%*%H%*%Minv_2)%*%t(M_corr_ll)
-    se.Eta_M2QM2    = sqrt(diag(cov_NuNu_M2QM2))
-    se.Eta_M2HM2    = sqrt(diag(cov_NuNu_M2HM2))            
-  }else{
-    cov_NuNu_M2QM2  = cov_NuNu_M2HM2 = matrix(NA,p+m,p+m)
-    se.Eta_M2QM2    = se.Eta_M2HM2   = rep(NA,p+m)
+    # --- Hessian and smoothing parameter update (df-based) ---
+    # H matrix
+    H <- HRinv <- matrix(0, p + m, p + m)
+    ## OLD: diag() creates full n x n matrices
+    # H[1:p,1:p] =
+    #   M_tX_nop%*%diag(c(M_H_no1),n.ctype[2],n.ctype[2])%*%M_X_nop+
+    #   M_tX_nrp%*%diag(c(M_H_nr1),n.ctype[1],n.ctype[1])%*%M_X_nrp+
+    #   M_tX_nlp%*%diag(c((M_S_nl1/(1-M_S_nl1)^2*M_H_nl1^2-M_S_nl1/(1-M_S_nl1)*M_H_nl1)),n.ctype[3],n.ctype[3])%*%M_X_nlp+
+    #   M_tX_nip%*%diag(c((M_S1_ni1*M_S2_ni1/M_S1mS2_ni1^2*(M_H2_ni1-M_H1_ni1)^2+
+    #                        (M_S1_ni1*M_H1_ni1-M_S2_ni1*M_H2_ni1)/M_S1mS2_ni1
+    #   )),n.ctype[4],n.ctype[4])%*%M_X_nip
+    ## PREV: use element-wise multiplication with pre-computed M_tX
+    # H[1:p,1:p] =
+    #   M_tX_nop %*% (c(M_H_no1) * M_X_nop)+
+    #   M_tX_nrp %*% (c(M_H_nr1) * M_X_nrp)+
+    #   M_tX_nlp %*% (c(M_S_nl1/(1-M_S_nl1)^2*M_H_nl1^2-M_S_nl1/(1-M_S_nl1)*M_H_nl1) * M_X_nlp)+
+    #   M_tX_nip %*% (c(M_S1_ni1*M_S2_ni1/M_S1mS2_ni1^2*(M_H2_ni1-M_H1_ni1)^2+
+    #                     (M_S1_ni1*M_H1_ni1-M_S2_ni1*M_H2_ni1)/M_S1mS2_ni1) * M_X_nip)
+    ## NEW: use crossprod()
+    H[1:p, 1:p] <-
+      crossprod(M_X_nop, c(M_H_no1) * M_X_nop) +
+      crossprod(M_X_nrp, c(M_H_nr1) * M_X_nrp) +
+      crossprod(M_X_nlp, c(M_S_nl1 / (1 - M_S_nl1)^2 * M_H_nl1^2 - M_S_nl1 / (1 - M_S_nl1) * M_H_nl1) * M_X_nlp) +
+      crossprod(M_X_nip, c(M_S1_ni1 * M_S2_ni1 / M_S1mS2_ni1^2 * (M_H2_ni1 - M_H1_ni1)^2 +
+        (M_S1_ni1 * M_H1_ni1 - M_S2_ni1 * M_H2_ni1) / M_S1mS2_ni1) * M_X_nip)
+    ## OLD: diag() creates full n x n matrices
+    # H[1:p,(p+1):(p+m)] =
+    #   M_tX_nop%*%diag(c(M_mu_no1),n.ctype[2],n.ctype[2])%*%M_Psi_nom+
+    #   M_tX_nrp%*%diag(c(M_mu_nr1),n.ctype[1],n.ctype[1])%*%M_Psi_nrm+
+    #   M_tX_nlp%*%diag(c((M_S_nl1/(1-M_S_nl1)^2*M_H_nl1-M_S_nl1/(1-M_S_nl1))*M_mu_nl1),n.ctype[3],n.ctype[3])%*%M_Psi_nlm+
+    #   M_tX_nip%*%diag(c(M_S1_ni1*M_S2_ni1/M_S1mS2_ni1^2*(M_H2_ni1-M_H1_ni1)*M_mu_ni1),n.ctype[4],n.ctype[4])%*%(M_Psi2_nim-M_Psi1_nim)+
+    #   M_tX_nip%*%diag(c(M_S1_ni1/M_S1mS2_ni1*M_mu_ni1),n.ctype[4],n.ctype[4])%*%M_Psi1_nim-
+    #   M_tX_nip%*%diag(c(M_S2_ni1/M_S1mS2_ni1*M_mu_ni1),n.ctype[4],n.ctype[4])%*%M_Psi2_nim
+    ## PREV: use element-wise multiplication with pre-computed M_tX
+    # H[1:p,(p+1):(p+m)] =
+    #   M_tX_nop %*% (c(M_mu_no1) * M_Psi_nom)+
+    #   M_tX_nrp %*% (c(M_mu_nr1) * M_Psi_nrm)+
+    #   M_tX_nlp %*% (c((M_S_nl1/(1-M_S_nl1)^2*M_H_nl1-M_S_nl1/(1-M_S_nl1))*M_mu_nl1) * M_Psi_nlm)+
+    #   M_tX_nip %*% (c(M_S1_ni1*M_S2_ni1/M_S1mS2_ni1^2*(M_H2_ni1-M_H1_ni1)*M_mu_ni1) * (M_Psi2_nim-M_Psi1_nim))+
+    #   M_tX_nip %*% (c(M_S1_ni1/M_S1mS2_ni1*M_mu_ni1) * M_Psi1_nim)-
+    #   M_tX_nip %*% (c(M_S2_ni1/M_S1mS2_ni1*M_mu_ni1) * M_Psi2_nim)
+    ## NEW: use crossprod()
+    H[1:p, (p + 1):(p + m)] <-
+      crossprod(M_X_nop, c(M_mu_no1) * M_Psi_nom) +
+      crossprod(M_X_nrp, c(M_mu_nr1) * M_Psi_nrm) +
+      crossprod(M_X_nlp, c((M_S_nl1 / (1 - M_S_nl1)^2 * M_H_nl1 - M_S_nl1 / (1 - M_S_nl1)) * M_mu_nl1) * M_Psi_nlm) +
+      crossprod(M_X_nip, c(M_S1_ni1 * M_S2_ni1 / M_S1mS2_ni1^2 * (M_H2_ni1 - M_H1_ni1) * M_mu_ni1) * (M_Psi2_nim - M_Psi1_nim)) +
+      crossprod(M_X_nip, c(M_S1_ni1 / M_S1mS2_ni1 * M_mu_ni1) * M_Psi1_nim) -
+      crossprod(M_X_nip, c(M_S2_ni1 / M_S1mS2_ni1 * M_mu_ni1) * M_Psi2_nim)
+    H[(p + 1):(p + m), 1:p] <- t(H[1:p, (p + 1):(p + m)])
+    ## OLD: diag() creates full n x n matrices
+    # H[(p+1):(p+m),(p+1):(p+m)] =
+    #   M_tpsi_nom%*%diag(c(1/M_h0_no1^2),n.ctype[2],n.ctype[2])%*%M_psi_nom+
+    #   M_tPsi_nlm%*%diag(c(M_S_nl1/(1-M_S_nl1)^2*M_mu_nl1^2),n.ctype[3],n.ctype[3])%*%M_Psi_nlm+
+    #   (M_tPsi2_nim-M_tPsi1_nim)%*%diag(c(M_S1_ni1*M_S2_ni1/M_S1mS2_ni1^2*M_mu_ni1^2),n.ctype[4],n.ctype[4])%*%(M_Psi2_nim-M_Psi1_nim)
+    ## NEW: use element-wise multiplication
+    H[(p + 1):(p + m), (p + 1):(p + m)] <-
+      M_tpsi_nom %*% (c(1 / M_h0_no1^2) * M_psi_nom) +
+      M_tPsi_nlm %*% (c(M_S_nl1 / (1 - M_S_nl1)^2 * M_mu_nl1^2) * M_Psi_nlm) +
+      (M_tPsi2_nim - M_tPsi1_nim) %*% (c(M_S1_ni1 * M_S2_ni1 / M_S1mS2_ni1^2 * M_mu_ni1^2) * (M_Psi2_nim - M_Psi1_nim))
+    s_lambda_old <- s_lambda
+    s_df_old <- s_df
+    s_sigma2_old <- 1 / (2 * s_lambda_old)
+    # pos            = c(if(noX){FALSE}else{rep(TRUE,p)},M_theta_m1>control$min.theta)
+    pos <- c(if (noX) {
+      FALSE
+    } else {
+      rep(TRUE, p)
+    }, (M_theta_m1 > control$min.theta & apply(H[(p + 1):(p + m), (p + 1):(p + m)], 2, sum) > 0))
+    # MM: (G+Q)^-1
+    temp <- try(chol2inv(chol(H[pos, pos] + (1 / s_sigma2_old) * M_Rstar_ll[pos, pos])), silent = T)
+    if (class(temp)[1] != "try-error" & !any(is.infinite(temp))) {
+      HRinv[pos, pos] <- temp
+      ## MM: is ginv(H[pos,pos]) right? Forgot Q?
+    } else {
+      HRinv[pos, pos] <- MASS::ginv(H[pos, pos])
+    }
+    s_df <- m - sum(diag(HRinv %*% M_Rstar_ll)) / s_sigma2_old
+    s_sigma2 <- c(t(M_theta_m1) %*% M_R_mm %*% M_theta_m1 / s_df)
+    s_lambda <- 1 / (2 * s_sigma2)
+    TwoLRtheta <- s_lambda * 2 * Rtheta
+    full.iter <- full.iter + k
+    if ((full.iter / iter) > (control$max.iter[2] * .975)) {
+      control$epsilon[2] <- control$epsilon[2] * 10
+    }
+    if (full.iter > control$max.iter[3]) {
+      break
+    }
+    if ((k < control$max.iter[2]) &
+      (abs(s_df - s_df_old) < (control$tol * 10))
+    ) {
+      break
+    }
   }
-  temp = try(chol2inv(chol(H[pos,pos])),silent=T) 
-  if(class(temp)[1]!="try-error"){
-    Hinv[pos,pos] = temp
-    cov_NuNu_H    = M_corr_ll%*%Hinv%*%t(M_corr_ll) 
-    se.Eta_H      = sqrt(diag(cov_NuNu_H))
-  }else{
-    cov_NuNu_H  = matrix(NA,p+m,p+m)
-    se.Eta_H    = rep(NA,p+m)
+  s_lambda <- control$smooth <- s_lambda_old
+  s_correction <- c(exp(-mean_j %*% M_beta_p1))
+  M_thetatilde_m1 <- M_theta_m1
+  M_theta_m1 <- M_theta_m1 * s_correction
+
+  ###
+  ### Inference
+  ###
+  # M_corr_ll = cbind(rbind(diag(rep(1,p)),s_correction*matrix(rep(M_thetatilde_m1,p)*rep(-mean_j,each=m),ncol=p)),
+  # rbind(matrix(0,ncol=m,nrow=p),diag(rep(s_correction,m))))
+  M_corr_ll <- cbind(
+    rbind(diag(rep(1, p)), s_correction * matrix(rep(M_thetatilde_m1, p) * rep(-M_beta_p1, each = m), ncol = p)),
+    rbind(matrix(0, ncol = m, nrow = p), diag(rep(s_correction, m)))
+  )
+  M_corr_ll[!pos, ] <- 0
+
+
+  M_2 <- H + 2 * s_lambda * M_Rstar_ll
+  Q <- matrix(NA, n, p + m)
+  if (ctypeTF[1]) {
+    Q[ctype[, 1], 1:p] <- rep(-M_H_nr1, p) * M_X_nrp
   }
-  mx.seNu.l5=as.data.frame(cbind(se.Eta_M2QM2,se.Eta_M2HM2,se.Eta_H))
-  colnames(mx.seNu.l5)=c("M2QM2","M2HM2","H")
-  rownames(mx.seNu.l5)[(p+1):(p+m)] = paste("Theta",1:m,sep="")        
-  rownames(mx.seNu.l5)[(1:p)] = paste("Beta",1:p,sep="")
-  fit         = list(coef=list(Beta=c(M_beta_p1),Theta=c(M_theta_m1)*(M_theta_m1>control$min.theta)),
-                     iter = c(iter,full.iter))
-  fit$se      = list(Beta=mx.seNu.l5[1:p,],Theta=mx.seNu.l5[(p+1):(p+m),])
-  fit$covar   = list(M2QM2=cov_NuNu_M2QM2,M2HM2=cov_NuNu_M2HM2,H=cov_NuNu_H)      
-  fit$knots   = knots
-  fit$control = control
-  fit$call    = match.call()
-  fit$dim     = list(n = n, n.obs = sum(observed), n.ties = sum(ties), p = p, m = knots$m)
-  fit$data    = list(time = y, censoring=y[,3L], X = X, name = data.name)# list(name = data.name)#
-  fit$df      = s_df
-  fit$ploglik = s_lik
-  fit$loglik  = s_lik+s_lambda*thetaRtheta
-  class(fit)  = "coxph_mpl"
+  if (ctypeTF[2]) {
+    Q[ctype[, 2], 1:p] <- rep((1 - M_H_no1), p) * M_X_nop
+  }
+  if (ctypeTF[3]) {
+    Q[ctype[, 3], 1:p] <- rep(M_S_nl1 * M_H_nl1 / (1 - M_S_nl1), p) * M_X_nlp
+  }
+  if (ctypeTF[4]) {
+    Q[ctype[, 4], 1:p] <- rep((M_H2_ni1 * M_S2_ni1 - M_H1_ni1 * M_S1_ni1) / M_S1mS2_ni1, p) * M_X_nip
+  }
+  if (ctypeTF[1]) {
+    Q[ctype[, 1], -c(1:p)] <- rep(-M_mu_nr1, m) * M_Psi_nrm
+  }
+  if (ctypeTF[2]) {
+    Q[ctype[, 2], -c(1:p)] <- rep(1 / M_h0_no1, m) * M_psi_nom - rep(M_mu_no1, m) * M_Psi_nom
+  }
+  if (ctypeTF[3]) {
+    Q[ctype[, 3], -c(1:p)] <- rep(M_S_nl1 * M_mu_nl1 / (1 - M_S_nl1), m) * M_Psi_nlm
+  }
+  if (ctypeTF[4]) {
+    Q[ctype[, 4], -c(1:p)] <- rep(M_S2_ni1 * M_mu_ni1 / (M_S1mS2_ni1), m) * M_Psi2_nim -
+      rep(M_S1_ni1 * M_mu_ni1 / (M_S1mS2_ni1), m) * M_Psi1_nim
+  }
+  Sp <- Q - matrix(rep(c(rep(0, p), TwoLRtheta), n), n, byrow = T) / n
+  Q <- t(Sp) %*% Sp
+  # pos   = c(if(noX){FALSE}else{rep(TRUE,p)},M_theta_m1>control$min.theta)
+  pos <- c(if (noX) {
+    FALSE
+  } else {
+    rep(TRUE, p)
+  }, (M_theta_m1 > control$min.theta & apply(H[(p + 1):(p + m), (p + 1):(p + m)], 2, sum) > 0))
+  Minv_1 <- Minv_2 <- Hinv <- matrix(0, p + m, p + m)
+  temp <- try(chol2inv(chol(M_2[pos, pos])), silent = T)
+  if (class(temp)[1] != "try-error") {
+    Minv_2[pos, pos] <- temp
+    cov_NuNu_M2QM2 <- M_corr_ll %*% (Minv_2 %*% Q %*% Minv_2) %*% t(M_corr_ll)
+    cov_NuNu_M2HM2 <- M_corr_ll %*% (Minv_2 %*% H %*% Minv_2) %*% t(M_corr_ll)
+    se.Eta_M2QM2 <- sqrt(diag(cov_NuNu_M2QM2))
+    se.Eta_M2HM2 <- sqrt(diag(cov_NuNu_M2HM2))
+  } else {
+    cov_NuNu_M2QM2 <- cov_NuNu_M2HM2 <- matrix(NA, p + m, p + m)
+    se.Eta_M2QM2 <- se.Eta_M2HM2 <- rep(NA, p + m)
+  }
+  temp <- try(chol2inv(chol(H[pos, pos])), silent = T)
+  if (class(temp)[1] != "try-error") {
+    Hinv[pos, pos] <- temp
+    cov_NuNu_H <- M_corr_ll %*% Hinv %*% t(M_corr_ll)
+    se.Eta_H <- sqrt(diag(cov_NuNu_H))
+  } else {
+    cov_NuNu_H <- matrix(NA, p + m, p + m)
+    se.Eta_H <- rep(NA, p + m)
+  }
+  mx.seNu.l5 <- as.data.frame(cbind(se.Eta_M2QM2, se.Eta_M2HM2, se.Eta_H))
+  colnames(mx.seNu.l5) <- c("M2QM2", "M2HM2", "H")
+  rownames(mx.seNu.l5)[(p + 1):(p + m)] <- paste("Theta", 1:m, sep = "")
+  rownames(mx.seNu.l5)[(1:p)] <- paste("Beta", 1:p, sep = "")
+  fit <- list(
+    coef = list(Beta = c(M_beta_p1), Theta = c(M_theta_m1) * (M_theta_m1 > control$min.theta)),
+    iter = c(iter, full.iter)
+  )
+  fit$se <- list(Beta = mx.seNu.l5[1:p, ], Theta = mx.seNu.l5[(p + 1):(p + m), ])
+  fit$covar <- list(M2QM2 = cov_NuNu_M2QM2, M2HM2 = cov_NuNu_M2HM2, H = cov_NuNu_H)
+  fit$knots <- knots
+  fit$control <- control
+  fit$call <- match.call()
+  fit$dim <- list(n = n, n.obs = sum(observed), n.ties = sum(ties), p = p, m = knots$m)
+  fit$data <- list(time = y, censoring = y[, 3L], X = X, name = data.name) # list(name = data.name)#
+  fit$df <- s_df
+  fit$ploglik <- s_lik
+  fit$loglik <- s_lik + s_lambda * thetaRtheta
+  class(fit) <- "coxph_mpl"
   fit
 }
 
@@ -487,6 +693,69 @@ coxph_mpl=function(formula,data,subset,na.action,control,...){
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+#' Ancillary Arguments for Controlling \code{coxph_mpl} Fits
+#'
+#' Set numeric and algorithmic controls for \code{coxph_mpl} fits. The function
+#' validates inputs (e.g., number of events per basis element, iteration limits)
+#' to avoid impossible settings.
+#'
+#' @param n.obs Number of fully observed (non-censored) outcomes. Required when
+#'   \code{basis == "uniform"} to derive an acceptable range for
+#'   \code{n.events_basis}.
+#' @param basis Basis used to approximate the baseline hazard. One of
+#'   \code{"uniform"}, \code{"gaussian"}, \code{"msplines"}, or
+#'   \code{"epanechikov"}. Defaults to \code{"uniform"}.
+#' @param smooth Smoothing parameter value. Defaults to \code{NULL} (estimated
+#'   via REML). Set to \code{0} for maximum-likelihood estimates. Must be
+#'   non-negative.
+#' @param max.iter Integer vector of length 3 giving maximum iterations for (1)
+#'   smoothing parameter updates, (2) inner beta/theta updates, and (3) total
+#'   inner iterations. Defaults to \code{c(150, 7.5e4, 1e6)}.
+#' @param tol Convergence tolerance on parameter change between iterations.
+#'   Defaults to \code{1e-7}.
+#' @param n.knots Integer vector of length 2 controlling internal knots for
+#'   non-uniform bases. The first entry sets quantile knots between
+#'   \code{range.quant}; the second sets equally spaced knots outside that
+#'   range. Defaults to \code{c(8, 2)} for M-splines and \code{c(0, 20)}
+#'   otherwise.
+#' @param n.events_basis Integer giving the number of fully observed outcomes
+#'   per uniform basis element. Must lie in \code{[1, floor(n.obs/2)]}. Defaults
+#'   to \code{round(3.5 * log(n.obs) - 7.5)} when valid.
+#' @param range.quant Length-2 numeric vector giving the quantile range used
+#'   when setting quantile knots for non-uniform bases. Defaults to
+#'   \code{c(0.075, 0.9)}.
+#' @param cover.sigma.quant Proportion of fully observed outcomes targeted
+#'   within the 0.025-0.975 interval of truncated Gaussian bases tied to
+#'   quantile knots. Defaults to \code{0.25}.
+#' @param cover.sigma.fixed Proportion of the outcome range targeted within the
+#'   0.025-0.975 interval of untruncated Gaussian bases tied to fixed knots.
+#'   Defaults to \code{0.25}.
+#' @param min.theta Minimum baseline hazard parameter value reported; estimates
+#'   below are treated as zero (active constraints). Defaults to \code{1e-10}.
+#' @param penalty Integer specifying penalty order. First- and second-order
+#'   penalties are available for \code{"uniform"} and \code{"gaussian"} bases;
+#'   \code{"epanechikov"} uses second-order; \code{"msplines"} uses
+#'   \code{order - 1}. Defaults to \code{2}.
+#' @param order Integer order for \code{"msplines"} and \code{"epanechikov"}
+#'   bases (default \code{3}). Order 1 M-splines correspond to uniform bases;
+#'   order 2 to triangular bases.
+#' @param kappa Step-size reduction factor (>1) used when the penalised
+#'   likelihood fails to increase. Defaults to \code{1 / 0.6}.
+#' @param epsilon Length-2 numeric vector giving safeguards for survival and
+#'   baseline hazard values to avoid logarithm issues. Defaults to
+#'   \code{c(1e-16, 1e-10)}.
+#' @param ties Strategy for handling duplicated fully observed outcomes when
+#'   defining knot sequences. Use \code{"epsilon"} to jitter duplicates with
+#'   small random noise; use \code{"unique"} to drop duplicates. Defaults to
+#'   \code{"epsilon"}.
+#' @param seed Optional seed (integer vector compatible with
+#'   \code{.Random.seed}) used when \code{ties == "epsilon"}; preserves the
+#'   current RNG state when set.
+#'
+#' @return A list with validated control settings (class
+#'   \code{"coxph_mpl.control"}).
+#' @seealso [coxph_mpl()]
+#' @export
 coxph_mpl.control <- function(n.obs=NULL, basis = "uniform", smooth = NULL, max.iter=c(1.5e+2,7.5e+4,1e+6), tol=1e-7, 
                               n.knots = NULL, n.events_basis = NULL, range.quant = c(0.075,.9),
                               cover.sigma.quant = .25, cover.sigma.fixed=.25, min.theta = 1e-10,
@@ -533,7 +802,7 @@ basis.name_mpl <- function(k){
   }else{if(k == "m" | k == "msplines" | k == "mspline"){"msplines"
   }else{if(k == "gauss" | k == "gaussian"){"gaussian"
   }else{if(k == "epa" | k == "epanechikov"){"epanechikov"
-  }else{stop("Unkown basis choice", call. = FALSE)}}}}
+  }else{stop("Unknown basis choice", call. = FALSE)}}}}
 }
 
 
@@ -578,7 +847,7 @@ knots_mpl=function(control,events){
     m          = length(Alpha)-1
     Delta      = Alpha[2L:(m+1L)]-Alpha[1L:m]
     list(m=m,Alpha=Alpha,Delta=Delta)
-  }else{stop("Unkown basis choice")}}}
+  }else{stop("Unknown basis choice")}}}
 }
 
 
@@ -780,7 +1049,6 @@ penalty_mpl=function(control,knots){
     }}
   M_R_mm
 }
-
 
 
 

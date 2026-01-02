@@ -1,0 +1,75 @@
+---
+title: "Getting Started with survivalMPL"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with survivalMPL}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+set.seed(1)
+```
+
+## Overview
+
+`survivalMPL` fits Cox proportional hazards models with right, left, and interval censoring using maximum penalised likelihood (MPL). The baseline hazard is estimated with a smooth basis (step function, Gaussian, M-splines, or Epanechnikov) and non-negativity constraints are enforced during optimisation.
+
+Below are two small examples: a right-censored fit on the `survival::lung` data and an interval-censored fit on the bundled `bcos2` data. To keep the vignette fast to build, we use modest iteration limits in `coxph_mpl.control()`.
+
+## Right-censored example (`lung`)
+
+```{r lung-fit}
+library(survivalMPL)
+library(survival)
+
+lung <- na.omit(lung[, c("time", "status", "age", "sex", "ph.karno", "wt.loss")])
+
+fit_lung <- coxph_mpl(
+  Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss,
+  data = lung,
+  control = coxph_mpl.control(
+    n.obs = sum(lung$status == 2),
+    max.iter = c(40, 2000, 4000),
+    smooth = 0
+  )
+)
+
+summary(fit_lung)
+```
+
+You can inspect the baseline hazard components or predict survival curves:
+
+```{r lung-predict}
+pred_lung <- predict(fit_lung, type = "survival")
+head(pred_lung)
+```
+
+## Interval-censored example (`bcos2`)
+
+```{r interval-fit}
+data(bcos2)
+
+fit_bcos <- coxph_mpl(
+  Surv(left, right, type = "interval2") ~ treatment,
+  data = bcos2,
+  control = coxph_mpl.control(
+    basis = "msplines",
+    n.obs = nrow(bcos2),
+    max.iter = c(40, 2000, 4000),
+    smooth = 0
+  )
+)
+
+summary(fit_bcos)
+```
+
+Predicted survival for the two treatment groups:
+
+```{r interval-predict}
+pred_bcos <- predict(fit_bcos, type = "survival", i = 1:2)
+head(pred_bcos)
+```
+
+For richer diagnostics, see `plot(fit_bcos)`, `plot(predict(fit_bcos))`, and `plot(residuals(fit_lung))`.

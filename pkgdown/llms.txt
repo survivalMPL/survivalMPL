@@ -1,0 +1,137 @@
+# survivalMPL
+
+Penalised maximum likelihood fits for Cox proportional hazards models
+with right, left, and interval censoring. Baseline hazards are smoothed
+via flexible bases (step, Gaussian, M-splines, Epanechnikov) with
+non-negativity enforced during optimisation.
+
+## Features
+
+- Cox PH models with right, left, and interval censoring
+- Smoothed baseline hazard with multiple basis choices
+- Penalised likelihood with REML or fixed smoothing
+- Inference for coefficients, baseline hazard/survival, predictions, and
+  residuals
+
+## Installation
+
+``` r
+# CRAN (when available)
+install.packages("survivalMPL")
+
+# From a local checkout
+install.packages(".", repos = NULL, type = "source")
+# or
+remotes::install_local(".")
+```
+
+## Quick start
+
+### Right-censored example (`survival::lung`)
+
+``` r
+library(survivalMPL)
+library(survival)
+
+lung <- na.omit(lung[, c("time", "status", "age", "sex", "ph.karno", "wt.loss")])
+
+fit_lung <- coxph_mpl(
+  Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss,
+  data = lung,
+  control = coxph_mpl.control(
+    n.obs = sum(lung$status == 2),
+    max.iter = c(40, 2000, 4000),
+    smooth = 0
+  )
+)
+
+summary(fit_lung)
+plot(predict(fit_lung, type = "survival"))
+```
+
+### Interval-censored example (`bcos2`)
+
+``` r
+data(bcos2)
+
+fit_bcos <- coxph_mpl(
+  Surv(left, right, type = "interval2") ~ treatment,
+  data = bcos2,
+  control = coxph_mpl.control(
+    basis = "msplines",
+    n.obs = nrow(bcos2),
+    max.iter = c(40, 2000, 4000),
+    smooth = 0
+  )
+)
+
+summary(fit_bcos)
+plot(predict(fit_bcos, type = "survival", i = 1))
+```
+
+## Resources
+
+- Vignette: `vignettes/getting-started.Rmd`
+- Reference documentation:
+  [`?coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md),
+  [`?coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md),
+  [`?predict.coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/predict.coxph_mpl.md),
+  [`?residuals.coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/residuals.coxph_mpl.md)
+
+If you build the pkgdown site, the homepage will render this README
+along with the vignette and reference pages under `pkgdown/`.
+
+# Package index
+
+## All functions
+
+- [`bcos2`](https://CRAN.R-project.org/package=survivalMPL/reference/bcos2.md)
+  : Breast Cosmesis Data
+
+- [`coef(`*`<summary.coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/coef.coxph_mpl.md)
+  [`coef(`*`<coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/coef.coxph_mpl.md)
+  :
+
+  Extract Coefficients from `coxph_mpl` Fits
+
+- [`coxph_mpl.control()`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)
+  :
+
+  Ancillary Arguments for Controlling `coxph_mpl` Fits
+
+- [`coxph_mpl.object`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.object.md)
+  : MPL Proportional Hazards Regression Object
+
+- [`coxph_mpl()`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)
+  [`print(`*`<coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)
+  : Fit Cox Proportional Hazards Regression Model Via MPL
+
+- [`plot(`*`<coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/plot.coxph_mpl.md)
+  :
+
+  Plot a `coxph_mpl` Object
+
+- [`predict(`*`<coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/predict.coxph_mpl.md)
+  [`plot(`*`<predict.coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/predict.coxph_mpl.md)
+  : Predictions for a Cox Model Fit via MPL
+
+- [`residuals(`*`<coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/residuals.coxph_mpl.md)
+  [`plot(`*`<residuals.coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/residuals.coxph_mpl.md)
+  : Residuals for a Cox Model Fit via MPL
+
+- [`print(`*`<summary.coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/summary.coxph_mpl.md)
+  [`summary(`*`<coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/summary.coxph_mpl.md)
+  :
+
+  Print Method for `summary.coxph_mpl`
+
+- [`survivalMPL-package`](https://CRAN.R-project.org/package=survivalMPL/reference/survivalMPL-package.md)
+  [`survivalMPL`](https://CRAN.R-project.org/package=survivalMPL/reference/survivalMPL-package.md)
+  : Penalised Maximum Likelihood for Survival Analysis Models
+
+# Articles
+
+### Articles
+
+- [Getting Started with
+  survivalMPL](https://CRAN.R-project.org/package=survivalMPL/articles/getting-started.md):

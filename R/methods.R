@@ -1,4 +1,37 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' Plot a \code{coxph_mpl} Object
+#'
+#' Plot the bases used to estimate the baseline hazard along with the estimated
+#' baseline hazard, cumulative baseline hazard, and baseline survival functions.
+#' Each plot can be toggled with \code{which}.
+#'
+#' @param x A fitted model of class \code{"coxph_mpl"}.
+#' @param se Inference method for confidence intervals. One of \code{"H"},
+#'   \code{"M2QM2"}, or \code{"M2HM2"}. Default is \code{"M2QM2"}.
+#' @param ask Logical; whether to prompt before each plot. See
+#'   [graphics::par()]. Default \code{TRUE}.
+#' @param which Integer vector selecting plots to produce (subset of \code{1:4}).
+#' @param upper.quantile Quantile of the response used to set the upper x-axis
+#'   limit for baseline function plots. Default \code{0.95}.
+#' @param ... Additional arguments passed to plotting functions.
+#'
+#' @details Bases whose estimates are near zero (below \code{min.theta} in
+#'   [coxph_mpl.control()]) are drawn with dashed lines. Confidence intervals
+#'   are obtained via the delta method.
+#' @seealso [coxph_mpl()], [coxph_mpl.control()], [coxph_mpl.object()],
+#'   [summary.coxph_mpl()]
+#' @examples
+#' \dontrun{
+#' data(lung)
+#' fit_mpl <- coxph_mpl(Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss,
+#'                      data = lung)
+#' par(mfrow = c(2, 2))
+#' plot(fit_mpl, ask = FALSE, cex.main = 0.75)
+#' }
+#' @export
+#' @method plot coxph_mpl
+#' @importFrom grDevices devAskNewPage gray terrain.colors
+#' @importFrom graphics abline arrows axis legend lines mtext plot points polygon rect
 plot.coxph_mpl=function(x,se="M2QM2",ask=TRUE,which=1:4,upper.quantile=.95,...){
   which.plot=rep(TRUE,4)
   if(!is.null(which)){which.plot[-which]=FALSE}
@@ -79,9 +112,19 @@ plot.coxph_mpl=function(x,se="M2QM2",ask=TRUE,which=1:4,upper.quantile=.95,...){
   }
 }
 
-
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' Print Method for \code{summary.coxph_mpl}
+#'
+#' @rdname summary.coxph_mpl
+#' @param x An object of class \code{"summary.coxph_mpl"}.
+#' @param se Inference method to display. One of \code{"H"}, \code{"M2QM2"}, or
+#'   \code{"M2HM2"}. Default is \code{"M2QM2"}.
+#' @param ... Additional arguments passed to [base::print()].
+#'
+#' @return Invisibly returns \code{x}.
+#' @seealso [summary.coxph_mpl()], [coxph_mpl()], [coxph_mpl.control()]
+#' @export
+#' @method print summary.coxph_mpl
 print.summary.coxph_mpl=function(x,se="M2QM2",...) {
   inf = x$inf
   cat("\n")
@@ -127,9 +170,13 @@ print.summary.coxph_mpl=function(x,se="M2QM2",...) {
 }
 
 
-
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' @rdname coxph_mpl
+#' @param x An object of class \code{"coxph_mpl"}.
+#' @param ... Additional arguments passed to [base::print()].
+#' @return Invisibly returns \code{x}.
+#' @export
+#' @method print coxph_mpl
 print.coxph_mpl=function(x, ...) {
   cat("\n")
   print(x$call)
@@ -142,9 +189,39 @@ print.coxph_mpl=function(x, ...) {
   print(x$coef$Theta, ...)
   cat("\n")
 }
-
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' Summarise a \code{coxph_mpl} Object
+#'
+#' Extracts additional information for a fitted model and returns an object
+#' suitable for printing. Baseline hazard parameters smaller than
+#' \code{min.theta} are omitted unless \code{full = TRUE}.
+#'
+#' @param object A fitted model of class \code{"coxph_mpl"}.
+#' @param se Inference method. One of \code{"H"}, \code{"M2QM2"}, or
+#'   \code{"M2HM2"}. Default is \code{"M2QM2"}.
+#' @param full Logical; if \code{TRUE}, include inference for baseline hazard
+#'   parameters. Default \code{FALSE}.
+#' @param ... Additional arguments passed to methods.
+#'
+#' @return An object of class \code{"summary.coxph_mpl"} with components:
+#'   \item{Beta}{Matrix of regression estimates, standard errors, z-statistics,
+#'   and p-values.}
+#'   \item{Theta}{Baseline hazard estimates (or, if \code{full = TRUE}, a matrix
+#'   of estimates with standard errors, z-statistics, and p-values).}
+#'   \item{inf}{List with convergence details, penalised likelihood value, and
+#'   control settings.}
+#' @seealso [coxph_mpl()], [coxph_mpl.control()], [plot.coxph_mpl()]
+#' @importFrom stats printCoefmat
+#' @examples
+#' \dontrun{
+#' data(lung)
+#' fit_mpl <- coxph_mpl(Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss,
+#'                      data = lung)
+#' summary(fit_mpl, full = TRUE)
+#' summary(fit_mpl, se = "M2HM2")
+#' }
+#' @export
+#' @method summary coxph_mpl
 summary.coxph_mpl=function(object,se="M2QM2",full=FALSE,...) {
   col.names = c("Estimate", "Std. Error", "z-value", "Pr(>|z|)")
   seB   = object$se$Beta[[se]]
@@ -163,24 +240,63 @@ summary.coxph_mpl=function(object,se="M2QM2",full=FALSE,...) {
   class(out) = "summary.coxph_mpl"
   out
 }
-
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	
+#' Extract Coefficients from \code{coxph_mpl} Fits
+#'
+#' @param object An object of class \code{"coxph_mpl"} or
+#'   \code{"summary.coxph_mpl"}.
+#' @param parameters Parameter set of interest: \code{"Beta"} for regression
+#'   coefficients or \code{"Theta"} for baseline hazard parameters. Default
+#'   \code{"Beta"}.
+#' @param ... Additional arguments passed to methods.
+#'
+#' @details For \code{summary.coxph_mpl} inputs with \code{parameters == "Theta"},
+#'   only baseline hazard estimates exceeding \code{min.theta} are reported.
+#' @return A vector of coefficients or a matrix with estimates, standard errors,
+#'   z-statistics, and p-values.
+#' @seealso [coxph_mpl()], [summary.coxph_mpl()]
+#' @export
+#' @rdname coef.coxph_mpl
+#' @method coef summary.coxph_mpl
 coef.summary.coxph_mpl=function(object, parameters = "Beta", ...) {
   object[[parameters]]
 }
 
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	
+#' @export
+#' @rdname coef.coxph_mpl
+#' @method coef coxph_mpl
 coef.coxph_mpl=function(object, parameters = "Beta", ...) {
   out = object$coef[[parameters]]
   if(parameters == "Beta") names(out) = colnames(object$data$X)
   else names(out) = 1:object$dim$m
   out
 }
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	
+#' Residuals for a Cox Model Fit via MPL
+#'
+#' Compute martingale and Cox-Snell residuals for a \code{coxph_mpl} model. The
+#' returned object has a plot method.
+#'
+#' @param object A fitted model of class \code{"coxph_mpl"}.
+#' @param ... Additional arguments (currently unused).
+#'
+#' @return A data frame of class \code{"residuals.coxph_mpl"} with columns
+#'   \code{time1}, \code{time2}, \code{censoring}, \code{coxsnell}, and
+#'   \code{martingale}.
+#' @references Farrington (2000), Collett (2003), Moeschberger (2003).
+#' @seealso [coxph_mpl()], [predict.coxph_mpl()], [summary.coxph_mpl()]
+#' @examples
+#' \dontrun{
+#' data(lung)
+#' fit_mpl <- coxph_mpl(Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss,
+#'                      data = lung)
+#' par(mfrow = c(1, 2))
+#' plot(residuals(fit_mpl), which = 1:2, ask = FALSE)
+#' }
+#' @export
+#' @method residuals coxph_mpl
 residuals.coxph_mpl=function(object,...) {
   control  = object$control
   out = as.data.frame(matrix(NA,object$dim$n,5))
@@ -209,9 +325,16 @@ residuals.coxph_mpl=function(object,...) {
   class(out) =c("residuals.coxph_mpl","data.frame")
   out
 }
-
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' @export
+#' @rdname residuals.coxph_mpl
+#' @method plot residuals.coxph_mpl
+#' @param x An object of class \code{"residuals.coxph_mpl"}.
+#' @param ask Logical; whether to prompt before each plot. Default \code{TRUE}.
+#' @param which Integer vector selecting residual plots (\code{1:2}).
+#' @param upper.quantile Quantile used to bound the y-axis for Cox-Snell
+#'   residuals when \code{which == 3}. Default \code{0.95}.
+#' @param ... Additional plotting parameters.
 plot.residuals.coxph_mpl=function(x,ask=TRUE,which=1:2,upper.quantile=.95,...){
   prob = upper.quantile
   which.plot=rep(TRUE,2)
@@ -247,6 +370,42 @@ plot.residuals.coxph_mpl=function(x,ask=TRUE,which=1:2,upper.quantile=.95,...){
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' Predictions for a Cox Model Fit via MPL
+#'
+#' Compute predicted instantaneous risk or survival probabilities for a fitted
+#' \code{coxph_mpl} model.
+#'
+#' @param object A fitted model of class \code{"coxph_mpl"}.
+#' @param se Inference method for confidence intervals. One of \code{"H"},
+#'   \code{"M2QM2"}, or \code{"M2HM2"}. Default \code{"M2QM2"}.
+#' @param type Prediction type: \code{"risk"} for instantaneous risk or
+#'   \code{"survival"} for survival probability. Default \code{"risk"}.
+#' @param i Optional integer index of the observation whose covariates are used.
+#'   Defaults to mean covariates.
+#' @param time Optional numeric vector of times at which to predict. Defaults to
+#'   1000 equally spaced times over the outcome range.
+#' @param upper.quantile Quantile of the response used to bound the x-axis when
+#'   plotting. Default \code{0.95}.
+#' @param ... Additional arguments passed to methods.
+#'
+#' @return A data frame of class \code{"predict.coxph_mpl"} with columns
+#'   \code{time}, \code{risk} or \code{survival}, \code{se}, \code{low}, and
+#'   \code{high}.
+#' @details Predictions incorporate the baseline hazard or cumulative baseline
+#'   hazard, giving absolute (not relative) risk and survival estimates.
+#'   Standard errors and confidence intervals are computed via the delta method
+#'   and truncated to the parameter range.
+#' @seealso [coxph_mpl()], [coxph_mpl.control()], [residuals.coxph_mpl()],
+#'   [summary.coxph_mpl()]
+#' @examples
+#' \dontrun{
+#' data(lung)
+#' fit_mpl <- coxph_mpl(Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss,
+#'                      data = lung)
+#' plot(predict(fit_mpl))
+#' }
+#' @export
+#' @method predict coxph_mpl
 predict.coxph_mpl=function(object,se="M2QM2",type="risk",i=NULL,time=NULL,upper.quantile=.95,...) {
   prob  = upper.quantile
   covar = object$covar[[se]]
@@ -297,6 +456,11 @@ predict.coxph_mpl=function(object,se="M2QM2",type="risk",i=NULL,time=NULL,upper.
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' @export
+#' @rdname predict.coxph_mpl
+#' @method plot predict.coxph_mpl
+#' @param x An object of class \code{"predict.coxph_mpl"}.
+#' @param ... Additional plotting parameters.
 plot.predict.coxph_mpl=function(x,...){
   inf     = attr(x,"inf")
   colw    = terrain.colors(3)[1:2]
@@ -333,6 +497,3 @@ plot.predict.coxph_mpl=function(x,...){
            col=c(colw[1],confcol,gray(.5)),ncol=1,bty="n",cex=.75)
   }
 }
-
-
-
