@@ -36,7 +36,7 @@ R/
 │  # --- Core fitting ---
 ├── control.R                 # coxph_mpl.control()
 ├── coxph.R                   # coxph_mpl() main fitting engine (slimmed)
-├── optim-helpers.R           # compute_loglik(), step_halve(), update_quantities()
+├── optim-helpers.R           # compute_loglik(), step_halve(), update_quantities() [DEFERRED]
 │
 │  # --- S3 methods (one file per generic) ---
 ├── plot.R                    # plot.coxph_mpl()
@@ -70,7 +70,7 @@ R/
 ```
 
 **Key functions:**
-- `register_basis(name, aliases, knots_fn, matrix_fn, penalty_fn, label, ...)` — adds entry to registry
+- `register_basis(spec)` — adds a single spec list to the registry (see contract below)
 - `get_basis(name)` — resolves any alias to full entry; informative error if unknown
 - `list_bases()` — returns `data.frame(name, label)` of all registered bases
 
@@ -87,24 +87,40 @@ R/
 
 ### Each `basis-*.R` File Contract
 
-Every basis file must define exactly three functions and a spec list:
+Every basis file must define exactly three functions and a spec list.
+Use dot-prefixed names to keep them private:
 
 ```r
-knots_<name>  <- function(control, events)           → list(m, Alpha, Delta, ...)
-matrix_<name> <- function(x, knots, order, which)    → n × m matrix
-penalty_<name><- function(control, knots)             → m × m matrix
+.compute_alpha_knots(control, events)  ← shared helper in basis.R, call from knots_fn
+
+.<name>_knots_fn   <- function(control, events)        → list(m, Alpha, Delta, ...)
+.<name>_matrix_fn  <- function(x, knots, order, which) → n × m matrix (or list(psi,Psi))
+.<name>_penalty_fn <- function(control, knots)          → m × m matrix
 
 .<name>_spec <- list(
-  name             = "...",
-  aliases          = c(...),
-  knots_fn         = knots_<name>,
-  matrix_fn        = matrix_<name>,
-  penalty_fn       = penalty_<name>,
-  label            = "...",
+  name             = "...",          # canonical name used internally
+  aliases          = c(...),          # any shorter aliases accepted by get_basis()
+  knots_fn         = .<name>_knots_fn,
+  matrix_fn        = .<name>_matrix_fn,
+  penalty_fn       = .<name>_penalty_fn,
+  label            = "...",          # display string for plots/summaries
   default_n_knots  = c(8, 2),
-  penalty_order_fn = function(p, order) ...
+  penalty_order_fn = function(p, order) ...  # see note below
 )
 ```
+
+**`penalty_order_fn` values by basis** (non-trivial — matches original `penalty.order_mpl()`):
+
+| Basis | `penalty_order_fn` |
+|-------|--------------------|
+| uniform | `function(p, order) { p <- as.integer(p); ifelse(p > 0 & p < 3, p, 2) }` |
+| gaussian | same as uniform |
+| msplines | `function(p, order) order - 1L` |
+| epanechnikov | `function(p, order) 2L` |
+
+> Getting this wrong causes a silent wrong penalty — the bug existed in the
+> original `penalty.order_mpl()` (`'epa'` case), fixed here by moving ownership
+> to each basis spec.
 
 ### `zzz.R` — Load Hook (avoids `Collate:` ordering issues)
 
@@ -270,15 +286,18 @@ Replace call sites one at a time (lowest risk first):
 
 | Step | File         | Change                                              |
 |------|--------------|-----------------------------------------------------|
-| 4.1  | `coxph.R`    | `basis.name_mpl()` → `resolve_basis_name()`         |
-| 4.2  | `coxph.R`    | `penalty.order_mpl()` → `compute_penalty_order()`   |
-| 4.3  | `coxph.R`    | `knots_mpl()` → `compute_knots()`                   |
-| 4.4  | `coxph.R`    | `penalty_mpl()` → `compute_penalty()`               |
-| 4.5  | `coxph.R`    | `basis_mpl()` → `compute_basis_matrix()`            |
-| 4.6  | `plot.R`     | `if/else` label → `basis_label()`                   |
+| 4.1  | `control.R`  | `basis.name_mpl()` → `resolve_basis_name()`         |
+| 4.2  | `control.R`  | `penalty.order_mpl()` → `compute_penalty_order()`   |
+| 4.3  | `coxph.r`    | `knots_mpl()` → `compute_knots()`                   |
+| 4.4  | `coxph.r`    | `penalty_mpl()` → `compute_penalty()`               |
+| 4.5  | `coxph.r`    | 6× `basis_mpl()` → `compute_basis_matrix()`         |
+| 4.6  | `plot.R`     | 2× `basis_mpl()` → `compute_basis_matrix()` + `if/else` label → `basis_label()` |
 | 4.7  | `summary.R`  | `if/else` label → `basis_label()`                   |
-| 4.8  | `residuals.R`| `basis_mpl()` → `compute_basis_matrix()`            |
-| 4.9  | `predict.R`  | `basis_mpl()` → `compute_basis_matrix()`            |
+| 4.8  | `residuals.R`| 2× `basis_mpl()` → `compute_basis_matrix()`         |
+| 4.9  | `predict.R`  | 2× `basis_mpl()` → `compute_basis_matrix()`         |
+
+> Note: 4.1/4.2 touch `control.R` (not `coxph.r`) because `basis.name_mpl()` and
+> `penalty.order_mpl()` were moved there in Phase 1.
 
 **Checkpoint 4 (after EACH step):**
 ```r
@@ -294,9 +313,10 @@ git commit -m "phase 4: all call sites connected to registry dispatchers"
 ### Phase 5 — Cleanup & Proof of Concept
 
 **Actions:**
-1. Delete now-empty internal functions from `coxph.R`:
-   `basis.name_mpl()`, `penalty.order_mpl()`, `knots_mpl()`, `basis_mpl()`, `penalty_mpl()`
-2. Create `R/basis-bsplines.R` (placeholder implementations)
+1. Delete now-empty internal functions:
+   - `basis.name_mpl()`, `penalty.order_mpl()` from `control.R`
+   - `knots_mpl()`, `basis_mpl()`, `penalty_mpl()` from `coxph.r`
+2. Create `R/basis-bsplines.R` (skeleton using `splines::splineDesign()` + numerical penalty)
 3. Add `register_basis(.bsplines_spec)` to `zzz.R`
 4. Address items from `TODO.R`:
    - Fix `data(lung)` issue → use `survival::lung` or `LazyData` in DESCRIPTION
@@ -322,8 +342,12 @@ git tag v-modular-registry-complete
 ## How to Add a New Basis (Post-Refactor)
 
 ```
-1. CREATE  R/basis-newtype.R    ← implement knots_fn, matrix_fn, penalty_fn
-                                    define .<newtype>_spec
+1. CREATE  R/basis-newtype.R    ← implement .<newtype>_knots_fn,
+                                              .<newtype>_matrix_fn,
+                                              .<newtype>_penalty_fn
+                                   define .<newtype>_spec list
+                                   call .compute_alpha_knots() for the knot sequence
+                                   set penalty_order_fn correctly (see table above)
 2. ADD     one line to zzz.R   ← register_basis(.<newtype>_spec)
 3. DONE    — zero changes to any other existing file
 ```
