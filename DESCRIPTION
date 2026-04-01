@@ -20,6 +20,7 @@ Suggests: knitr,
     rmarkdown,
     pkgdown,
     testthat (>= 3.0.0)
+Config/testthat/edition: 3
 NeedsCompilation: no
 LazyData: true
 License: LGPL (>= 2)
