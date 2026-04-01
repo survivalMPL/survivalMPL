@@ -20,6 +20,26 @@
 .basis_registry <- new.env(parent = emptyenv())
 
 
+# ── Shared helpers ────────────────────────────────────────────────────────────
+
+#' Compute the Alpha knot sequence from event times.
+#' Called by every basis-specific knots_fn.
+#' @keywords internal
+.compute_alpha_knots <- function(control, events) {
+  if (control$n.knots[2] == 0L) {
+    quantile(events, seq(0, 1, length.out = control$n.knots[1] + 2L))
+  } else {
+    Alpha1 <- quantile(events,
+                       seq(0, control$range.quant[2],
+                           length.out = control$n.knots[1] + 1L))
+    Alpha2 <- seq(quantile(events, control$range.quant[2]),
+                  range(events)[2L],
+                  length = control$n.knots[2] + 2L)
+    c(Alpha1, Alpha2[-1L])
+  }
+}
+
+
 #' Register a New Basis Type
 #'
 #' @param spec A list with the following named elements:
