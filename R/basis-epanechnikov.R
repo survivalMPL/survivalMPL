@@ -139,7 +139,7 @@
   aliases          = c("e", "epa", "epanechnikov"),
   label            = "Epanechnikov",
   default_n_knots  = c(8L, 2L),
-  penalty_order_fn = function(p, order) p,
+  penalty_order_fn = function(p, order) 2L,
   knots_fn         = .epanechnikov_knots_fn,
   matrix_fn        = .epanechnikov_matrix_fn,
   penalty_fn       = .epanechnikov_penalty_fn

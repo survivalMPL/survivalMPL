@@ -86,7 +86,7 @@ coxph_mpl.control <- function(n.obs=NULL, basis = "uniform", smooth = NULL, max.
                               n.knots = NULL, n.events_basis = NULL, range.quant = c(0.075,.9),
                               cover.sigma.quant = .25, cover.sigma.fixed=.25, min.theta = 1e-10,
                               penalty = 2L, order = 3L, kappa = 1/.6, epsilon = c(1e-16,1e-10), ties = "epsilon", seed = NULL){
-  basis        = basis.name_mpl(basis)
+  basis        = resolve_basis_name(basis)
   max.iter     = c(ifelse(is.null(smooth),ifelse(max.iter[1]>0,as.integer(max.iter[1]),1.5e+2),1L),
                    ifelse(max.iter[2]>0,as.integer(max.iter[2]),7.5e+4),
                    ifelse(length(max.iter)==2,1e+6,
@@ -95,7 +95,7 @@ coxph_mpl.control <- function(n.obs=NULL, basis = "uniform", smooth = NULL, max.
   tol          = ifelse(tol>0 & tol<1,tol,1e-7)
   order        = ifelse(order>0 & order<6,as.integer(order),3L)
   min.theta    = ifelse(min.theta>0 & min.theta<1e-3,min.theta,1e-10)
-  penalty      = penalty.order_mpl(penalty,basis,order)
+  penalty      = compute_penalty_order(basis, penalty, order)
   kappa        = ifelse(kappa>1, kappa, 1/.6)
   cover.sigma.quant  = ifelse(cover.sigma.quant>0 & cover.sigma.quant<0.4,cover.sigma.quant,.75)
   cover.sigma.fixed  = ifelse(cover.sigma.fixed>0 & cover.sigma.fixed<0.4,cover.sigma.fixed,.75)

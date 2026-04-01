@@ -39,10 +39,7 @@ print.summary.coxph_mpl=function(x,se="M2QM2",...) {
   cat("Regression parameters : ",deparse(inf$call[[2]]),"\n",sep="")
   printCoefmat(x$Beta, P.values=TRUE, has.Pvalue=TRUE,...)    
   cat("\nBaseline hasard parameters approximated using",
-      if(inf$control$basis=="uniform"){"a step function"}else{
-        if(inf$control$basis=="gaussian"){"Gaussian splines"}else{
-          if(inf$control$basis=="msplines"){"M-splines"}else{
-            "Epanechikov splines"}}},":\n")
+      basis_label(inf$control$basis),":\n")
   if(inf$control$basis=="uniform"){
     cat(paste(" (",inf$dim$m," equal events bins)\n",sep=""))
   }else{

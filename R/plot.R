@@ -47,15 +47,11 @@ plot.coxph_mpl=function(x,se="M2QM2",ask=TRUE,which=1:4,upper.quantile=.95,...){
   colw      = terrain.colors(x$dim$m+1)
   prob      = upper.quantile
   #quant     = quantile(x$data$time,prob=prob)
-  M_psi_Xm  = basis_mpl(V_x_X,knots,control$basis,control$order,which=1)    
+  M_psi_Xm  = compute_basis_matrix(V_x_X,knots,control$basis,control$order,which=1)    
   if(which.plot[1]){
     plot(1,1,pch="",xlim=range(V_x_X),ylim=max(M_psi_Xm)*c(-.05,1),axes=FALSE,
          xlab="Survival time",ylab=expression(psi[u]^{o}*(t)),
-         main=paste(if(control$basis=="uniform"){"Uniform"}else{
-           if(control$basis=="gaussian"){"Gaussian"}else{
-             if(control$basis=="msplines"){"M-spline"}else{
-               if(control$basis=="epanechikov"){"Epanechikov"}}}},
-           " bases used to approximate the baseline hazard\n",
+         main=paste(basis_label(control$basis),           " bases used to approximate the baseline hazard\n",
            "(",x$dim$m," bases)",sep=""))
     abline(v=knots$Alpha,col=gray(.9))
     #abline(v=quant,col=gray(.5),lty=2)
@@ -75,7 +71,7 @@ plot.coxph_mpl=function(x,se="M2QM2",ask=TRUE,which=1:4,upper.quantile=.95,...){
     cov_ThetaTheta = x$covar[[se]][-c(1:x$dim$p),-c(1:x$dim$p)]    
     xlim = range(x$knots$Alpha)
     plot_bh <- function(j,V_x_X,Theta,covar,control,knots,pos,prob,xlim,...){
-      M_Ppsi_Xm   = basis_mpl(V_x_X,knots,control$basis,control$order,which=as.numeric(j>1)+1)
+      M_Ppsi_Xm   = compute_basis_matrix(V_x_X,knots,control$basis,control$order,which=as.numeric(j>1)+1)
       V_sd2.Hh0.X = diag(M_Ppsi_Xm[,]%*%covar[,]%*%t(M_Ppsi_Xm[,]))
       pos.var     = V_sd2.Hh0.X>0
       V_Hh0_X     = c(M_Ppsi_Xm%*%matrix(Theta,ncol=1))[pos.var]

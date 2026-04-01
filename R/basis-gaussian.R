@@ -122,7 +122,7 @@
   aliases          = c("g", "gauss"),
   label            = "Gaussian",
   default_n_knots  = c(8L, 2L),
-  penalty_order_fn = function(p, order) p,
+  penalty_order_fn = function(p, order) { p <- as.integer(p); ifelse(p > 0L & p < 3L, p, 2L) },
   knots_fn         = .gaussian_knots_fn,
   matrix_fn        = .gaussian_matrix_fn,
   penalty_fn       = .gaussian_penalty_fn

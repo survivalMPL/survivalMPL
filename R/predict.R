@@ -57,7 +57,7 @@ predict.coxph_mpl=function(object,se="M2QM2",type="risk",i=NULL,time=NULL,upper.
   # risk
   out = data.frame(time = V_x_X, mid = NA, se = NA, low = NA, high = NA)
   if(type=="risk"){
-    M_psi_Xm = basis_mpl(V_x_X,object$knots,object$control$basis,object$control$order,which=1)
+    M_psi_Xm = compute_basis_matrix(V_x_X,object$knots,object$control$basis,object$control$order,which=1)
     out$mid  = Mu*M_psi_Xm%*%Theta
     # correction factor
     M_corr_mpm = matrix(c(rep(M_psi_Xm%*%Theta*Mu,p)*rep(Beta,each=n.x),Mu*M_psi_Xm),ncol=p+m)
@@ -66,7 +66,7 @@ predict.coxph_mpl=function(object,se="M2QM2",type="risk",i=NULL,time=NULL,upper.
     out$high   = out$mid + 2*out$se
     # survival
   }else{
-    M_Psi_Xm = basis_mpl(V_x_X,object$knots,object$control$basis,object$control$order,which=2)
+    M_Psi_Xm = compute_basis_matrix(V_x_X,object$knots,object$control$basis,object$control$order,which=2)
     out$mid  = exp(-Mu*M_Psi_Xm%*%Theta)
     # correction factor
     M_corr_mpm = rep(-out$mid*Mu,p+m)*matrix(c(rep(M_Psi_Xm%*%Theta,p)*rep(Beta,each=n.x),M_Psi_Xm),ncol=p+m)

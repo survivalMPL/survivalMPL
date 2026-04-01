@@ -52,7 +52,7 @@
   aliases          = c("u", "uni"),
   label            = "Uniform",
   default_n_knots  = c(8L, 2L),
-  penalty_order_fn = function(p, order) order - 1L,
+  penalty_order_fn = function(p, order) { p <- as.integer(p); ifelse(p > 0L & p < 3L, p, 2L) },
   knots_fn         = .uniform_knots_fn,
   matrix_fn        = .uniform_matrix_fn,
   penalty_fn       = .uniform_penalty_fn

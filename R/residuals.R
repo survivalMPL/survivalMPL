@@ -33,14 +33,14 @@ residuals.coxph_mpl=function(object,...) {
   i.obs = which(object$data$censoring==1)
   i.l   = which(object$data$censoring==2)
   i.ic  = which(object$data$censoring==3)
-  M_Psi_Xm1 = basis_mpl(out$time1,object$knots,control$basis,control$order,which=2)
+  M_Psi_Xm1 = compute_basis_matrix(out$time1,object$knots,control$basis,control$order,which=2)
   S1 = exp(-exp(object$data$X%*%object$coef$Beta)*M_Psi_Xm1%*%object$coef$Theta)
   r = rep(NA, object$dim$n)
   if(length(i.r)>0) r[i.r]   = 1 - log(S1[i.r])
   if(length(i.obs)>0) r[i.obs] = -log(S1[i.obs])
   if(length(i.l)>0) r[i.l]   = (1-S1[i.l]*(1-log(S1[i.l])))/(1-S1[i.l])
   if(length(i.ic)>0) {
-    M_Psi_Xm2 = basis_mpl(out$time2[i.ic],object$knots,control$basis,control$order,which=2)
+    M_Psi_Xm2 = compute_basis_matrix(out$time2[i.ic],object$knots,control$basis,control$order,which=2)
     S2 = exp(-exp(object$data$X[i.ic,,drop=F]%*%object$coef$Beta)*M_Psi_Xm2%*%object$coef$Theta)
     r[i.ic]  = (S1[i.ic]*(1-log(S1[i.ic])) - S2*(1-log(S2)))/(S1[i.ic] - S2)
   }

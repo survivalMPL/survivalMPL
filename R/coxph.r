@@ -144,7 +144,7 @@ coxph_mpl <- function(formula, data, subset, na.action, control, ...) {
   mean_j <- apply(X, 2, mean)
   XC <- X - rep(mean_j, each = n)
   # knot sequence and psi matrices
-  knots <- knots_mpl(
+  knots <- compute_knots(
     control,
     c(
       t_i1[ctype[, "i"]],
@@ -165,42 +165,42 @@ coxph_mpl <- function(formula, data, subset, na.action, control, ...) {
   s_kappa <- control$kappa
   s_t1 <- knots$Alpha[1]
   s_tn <- max(knots$Alpha)
-  M_R_mm <- penalty_mpl(control, knots)
+  M_R_mm <- compute_penalty(control, knots)
   M_Rstar_ll <- rbind(matrix(0, p, p + m), cbind(matrix(0, m, p), M_R_mm))
   s_convlimit <- control$tol
   M_X_nop <- XC[ctype[, 2], , drop = FALSE]
   # M_tX_nop    = t(M_X_nop)  # OLD:  replaced with crossprod()
-  M_psi_nom <- basis_mpl(t_i1, knots, control$basis,
+  M_psi_nom <- compute_basis_matrix(t_i1, knots, control$basis,
     control$order,
     which = 1
   )[ctype[, 2], , drop = FALSE]
   M_tpsi_nom <- t(M_psi_nom)
-  M_Psi_nom <- basis_mpl(t_i1, knots, control$basis,
+  M_Psi_nom <- compute_basis_matrix(t_i1, knots, control$basis,
     control$order,
     which = 2
   )[ctype[, 2], , drop = FALSE]
   M_tPsi_nom <- t(M_Psi_nom)
   M_X_nrp <- XC[ctype[, 1], , drop = FALSE]
   # M_tX_nrp    = t(M_X_nrp)  # OLD:  replaced with crossprod()
-  M_Psi_nrm <- basis_mpl(t_i1, knots, control$basis,
+  M_Psi_nrm <- compute_basis_matrix(t_i1, knots, control$basis,
     control$order,
     which = 2
   )[ctype[, 1], , drop = FALSE]
   M_tPsi_nrm <- t(M_Psi_nrm)
   M_X_nlp <- XC[ctype[, 3], , drop = FALSE]
   # M_tX_nlp    = t(M_X_nlp)  # OLD:  replaced with crossprod()
-  M_Psi_nlm <- basis_mpl(t_i1, knots, control$basis,
+  M_Psi_nlm <- compute_basis_matrix(t_i1, knots, control$basis,
     control$order,
     which = 2
   )[ctype[, 3], , drop = FALSE]
   M_tPsi_nlm <- t(M_Psi_nlm)
   M_X_nip <- XC[ctype[, 4], , drop = FALSE]
   # M_tX_nip    = t(M_X_nip)  # OLD:  replaced with crossprod()
-  M_Psi1_nim <- basis_mpl(t_i1, knots, control$basis,
+  M_Psi1_nim <- compute_basis_matrix(t_i1, knots, control$basis,
     control$order,
     which = 2
   )[ctype[, 4], , drop = FALSE]
-  M_Psi2_nim <- basis_mpl(t_i2, knots, control$basis,
+  M_Psi2_nim <- compute_basis_matrix(t_i2, knots, control$basis,
     control$order,
     which = 2
   )[ctype[, 4], , drop = FALSE]
