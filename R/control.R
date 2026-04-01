@@ -1,24 +1,4 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-basis.name_mpl <- function(k){
-  if(k == "discr"| k == "discretized" | k == "discretised" | k == "unif" | k == "uniform"){"uniform"
-  }else{if(k == "m" | k == "msplines" | k == "mspline"){"msplines"
-  }else{if(k == "gauss" | k == "gaussian"){"gaussian"
-  }else{if(k == "epa" | k == "epanechikov"){"epanechikov"
-  }else{stop("Unknown basis choice", call. = FALSE)}}}}}
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-penalty.order_mpl <- function(p,basis,order){
-  p = as.integer(p)
-  switch(basis,
-         'uniform'     = ifelse(p>0 & p<3,p,2),
-         'gaussian'    = ifelse(p>0 & p<3,p,2),
-         'msplines'    = order-1,
-         'epanechikov' = 2)
-}
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' Ancillary Arguments for Controlling \code{coxph_mpl} Fits
 #'
 #' Set numeric and algorithmic controls for \code{coxph_mpl} fits. The function
