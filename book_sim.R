@@ -194,7 +194,7 @@ simulate_mel <- function(n, pi_E, a1, a2) {
 # Error in if (s_lik < s_lik_OLD) { : missing value where TRUE/FALSE needed
 tic("A pseudo melanoma study example (Old version)")
 for(i in c(1:6, 8:21, 23:40, 42:54, 56:63, 65:93, 95:106)){
-set.seed(41)
+set.seed(i)
 # print(i)
 ch2_mel_dat <- simulate_mel(300, 0.37, 0.6, 1.2)
 max(ch2_mel_dat$t_L)
