@@ -15,21 +15,15 @@ non-negativity enforced during optimisation.
 
 ## Installation
 
-``` r
-# CRAN (when available)
-install.packages("survivalMPL")
-
-# From a local checkout
-install.packages(".", repos = NULL, type = "source")
-# or
-remotes::install_local(".")
-```
+    # CRAN (when available)
+    install.packages("survivalMPL")
 
 ## Quick start
 
 ### Right-censored example (`survival::lung`)
 
 ``` r
+
 library(survivalMPL)
 library(survival)
 
@@ -52,6 +46,7 @@ plot(predict(fit_lung, type = "survival"))
 ### Interval-censored example (`bcos2`)
 
 ``` r
+
 data(bcos2)
 
 fit_bcos <- coxph_mpl(
@@ -77,6 +72,3 @@ plot(predict(fit_bcos, type = "survival", i = 1))
   [`?coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md),
   [`?predict.coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/predict.coxph_mpl.md),
   [`?residuals.coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/residuals.coxph_mpl.md)
-
-If you build the pkgdown site, the homepage will render this README
-along with the vignette and reference pages under `pkgdown/`.

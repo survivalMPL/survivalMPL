@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pdftotext \"c:\\\\GIT\\\\survivalMPL.package\\\\old_sources\\\\Penalized_likelihood_based_survival_data_analysis_using_R_05_04_24.pdf\" -)"
+    ]
+  }
+}

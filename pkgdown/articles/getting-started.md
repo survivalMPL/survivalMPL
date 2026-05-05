@@ -17,6 +17,7 @@ vignette fast to build, we use modest iteration limits in
 ## Right-censored example (`lung`)
 
 ``` r
+
 library(survivalMPL)
 #> Loading required package: survival
 #> Loading required package: MASS
@@ -63,7 +64,7 @@ summary(fit_lung)
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 #> 
-#> Baseline hasard parameters approximated using a step function :
+#> Baseline hasard parameters approximated using Uniform :
 #>  (11 equal events bins)
 #>            1            2            3            4            5            6 
 #> 3.091190e-03 3.073782e-03 8.005268e-03 6.378672e-03 5.284837e-03 6.891828e-03 
@@ -77,6 +78,7 @@ You can inspect the baseline hazard components or predict survival
 curves:
 
 ``` r
+
 pred_lung <- predict(fit_lung, type = "survival")
 head(pred_lung)
 #>        time  survival           se       low      high
@@ -91,6 +93,7 @@ head(pred_lung)
 ## Interval-censored example (`bcos2`)
 
 ``` r
+
 data(bcos2)
 
 fit_bcos <- coxph_mpl(
@@ -130,7 +133,7 @@ summary(fit_bcos)
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 #> 
-#> Baseline hasard parameters approximated using M-splines :
+#> Baseline hasard parameters approximated using M-Splines :
 #>  (2 (min/max) + 8 quantile knots + 2 equally spaced knots + 3 (order) - 2 = 13 parameters) 
 #>            1            2            3            4            5            6 
 #> 4.284005e-02 1.608827e-02 5.030707e-02 3.116483e-02 1.317693e-01 1.213149e-01 
@@ -145,6 +148,7 @@ summary(fit_bcos)
 Predicted survival for the two treatment groups:
 
 ``` r
+
 pred_bcos <- predict(fit_bcos, type = "survival", i = 1:2)
 #> Warning: only the first observation will be considered
 head(pred_bcos)

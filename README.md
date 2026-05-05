@@ -17,11 +17,6 @@ Penalised maximum likelihood fits for Cox proportional hazards models with right
 ```r
 # CRAN (when available)
 install.packages("survivalMPL")
-
-# From a local checkout
-install.packages(".", repos = NULL, type = "source")
-# or
-remotes::install_local(".")
 ```
 
 ## Quick start
@@ -42,6 +37,7 @@ fit_lung <- coxph_mpl(
     smooth = 0
   )
 )
+
 
 summary(fit_lung)
 plot(predict(fit_lung, type = "survival"))
@@ -69,5 +65,3 @@ plot(predict(fit_bcos, type = "survival", i = 1))
 ## Resources
 - Vignette: `vignettes/getting-started.Rmd`
 - Reference documentation: `?coxph_mpl`, `?coxph_mpl.control`, `?predict.coxph_mpl`, `?residuals.coxph_mpl`
-
-If you build the pkgdown site, the homepage will render this README along with the vignette and reference pages under `pkgdown/`.

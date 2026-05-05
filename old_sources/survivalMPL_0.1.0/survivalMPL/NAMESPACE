@@ -1,0 +1,27 @@
+useDynLib(survivalMPL)
+
+export(
+"coxph_mpl",
+"print.coxph_mpl",
+"coef.coxph_mpl",
+"summary.coxph_mpl",
+"print.summary.coxph_mpl",
+"coef.summary.coxph_mpl",
+"plot.coxph_mpl",
+"coxph_mpl.control",
+"residuals.coxph_mpl",
+"plot.residuals.coxph_mpl",
+"predict.coxph_mpl",
+"plot.predict.coxph_mpl"
+)
+S3method(print, coxph_mpl)
+S3method(coef, coxph_mpl)
+S3method(summary, coxph_mpl)
+S3method(plot, coxph_mpl)
+S3method(print, summary.coxph_mpl)
+S3method(coef, summary.coxph_mpl)
+S3method(residuals, coxph_mpl)
+S3method(plot, residuals.coxph_mpl)
+S3method(predict, coxph_mpl)
+S3method(plot, predict.coxph_mpl)
+import(survival)

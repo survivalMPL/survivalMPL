@@ -16,13 +16,21 @@ home:
 
 navbar:
   structure:
-    left: [home, reference, articles, news]
+    left: [home, reference, tutorials, news]
   components:
+    tutorials:
+      text: Tutorials
+      menu:
+        - text: Getting Started
+          href: articles/getting-started.html
+        - text: Interval Censoring
+          href: articles/interval-censoring.html
     news:
       text: News
       href: news/index.html
 
 articles:
-  - title: Articles
+  - title: Tutorials
     contents:
       - getting-started
+      - interval-censoring

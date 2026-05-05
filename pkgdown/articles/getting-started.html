@@ -30,7 +30,13 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="active nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
+<li class="active nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorials" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorials</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials">
+<li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
+    <li><a class="dropdown-item" href="../articles/interval-censoring.html">Interval Censoring</a></li>
+  </ul>
+</li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -130,7 +136,7 @@ use modest iteration limits in <code><a href="../reference/coxph_mpl.control.htm
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Baseline hasard parameters approximated using a step function :</span></span>
+<span><span class="co">#&gt; Baseline hasard parameters approximated using Uniform :</span></span>
 <span><span class="co">#&gt;  (11 equal events bins)</span></span>
 <span><span class="co">#&gt;            1            2            3            4            5            6 </span></span>
 <span><span class="co">#&gt; 3.091190e-03 3.073782e-03 8.005268e-03 6.378672e-03 5.284837e-03 6.891828e-03 </span></span>
@@ -194,7 +200,7 @@ curves:</p>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Baseline hasard parameters approximated using M-splines :</span></span>
+<span><span class="co">#&gt; Baseline hasard parameters approximated using M-Splines :</span></span>
 <span><span class="co">#&gt;  (2 (min/max) + 8 quantile knots + 2 equally spaced knots + 3 (order) - 2 = 13 parameters) </span></span>
 <span><span class="co">#&gt;            1            2            3            4            5            6 </span></span>
 <span><span class="co">#&gt; 4.284005e-02 1.608827e-02 5.030707e-02 3.116483e-02 1.317693e-01 1.213149e-01 </span></span>

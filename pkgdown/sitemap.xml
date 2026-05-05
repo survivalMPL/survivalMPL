@@ -1,8 +1,8 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/404.html</loc></url>
-<url><loc>https://CRAN.R-project.org/package=survivalMPL/AGENTS.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/getting-started.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/index.html</loc></url>
+<url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/interval-censoring.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/authors.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/index.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/news/index.html</loc></url>

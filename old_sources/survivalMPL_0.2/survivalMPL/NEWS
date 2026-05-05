@@ -1,0 +1,13 @@
+survivalMPL v0.1.2 (Release date: 2017-10-13)
+==============
+
+Changes:
+
+* change of maintainer (Maurizio Manuguerra)
+
+survivalMPL v0.2 (Release date: 2017-12-11)
+==============
+
+Changes:
+
+* interval censoring implementation

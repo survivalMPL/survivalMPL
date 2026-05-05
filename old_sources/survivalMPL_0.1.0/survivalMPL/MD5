@@ -1,0 +1,14 @@
+10ed0486fe9f39990f3519fdb782d95f *DESCRIPTION
+e9ce893ba9a356874c7160bcb53db3d5 *NAMESPACE
+9084c8e8fd2eb955471f235a8974834b *R/coxph.r
+9704f1c24e8477009059696b9237a8f6 *man/coef.coxph_mpl.Rd
+3682fa0071cad3e0460a0a3e15d3e383 *man/coxph_mpl.Rd
+52fe7560349ea47ea75c044895686d52 *man/coxph_mpl.control.Rd
+4512673bf8edde2ba764795fad80d8a3 *man/coxph_mpl.object.Rd
+c6b4e30ac4102fa177e53920d6aa9678 *man/plot.coxph_mpl.Rd
+5fdcdec334534046cc6f2b785ee60d6a *man/predict.coxph_mpl.Rd
+45999435f17cefb199123d1f23bc67d3 *man/residuals.coxph_mpl.Rd
+85135ccfe2df4ff37363257b570714ba *man/summary.coxph_mpl.Rd
+62ee482275f7f26dca36d04bc093f421 *man/survivalMPL-package.Rd
+2a6f9e9e044a78154d3cfda5936d6f48 *src/Makevars
+f483024b44a6118d29e134ee24ca2966 *src/coxphfit4.c

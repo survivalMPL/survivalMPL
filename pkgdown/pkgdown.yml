@@ -1,9 +1,10 @@
-pandoc: 3.1.9
+pandoc: 3.9.0.2
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   getting-started: getting-started.html
-last_built: 2026-01-02T15:26Z
+  interval-censoring: interval-censoring.html
+last_built: 2026-05-04T21:41Z
 urls:
   reference: https://CRAN.R-project.org/package=survivalMPL/reference
   article: https://CRAN.R-project.org/package=survivalMPL/articles
