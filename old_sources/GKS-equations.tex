@@ -1,0 +1,1118 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[10pt,a4paper,oneside]{article}      
+\usepackage{makeidx}
+\usepackage[applemac]{inputenc}
+\usepackage{ae}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+%\usepackage[german,french]{babel}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{tabularx}
+%\usepackage{floatflt}
+\usepackage{url}
+\usepackage{caption}
+\usepackage{rotating}
+\usepackage{graphicx}
+\usepackage{longtable}
+\DeclareGraphicsExtensions{.pdf, .jpg}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage[OT1]{fontenc}
+\usepackage{tensor}
+\usepackage[linesnumbered,vlined]{algorithm2e}
+\def\Small{\fontsize{8pt}{8pt}\selectfont}
+
+
+\pagestyle{headings}
+
+\textwidth=6.5in
+\textheight=9.5in
+\topmargin=0.0in
+\oddsidemargin=0in 
+\baselineskip=5pt
+\headheight=0.5cm
+\setlength{\abovecaptionskip}{0.01cm}   
+\setlength{\belowcaptionskip}{0.01cm} 
+
+
+\title{MPL equations and algorithm in matrix form\\ for the Cox proportional hazard model}
+\date{\today}
+\author{Dominique-L. Couturier}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
+  
+% this makes list spacing much better. Alvin's code
+\newenvironment{my_itemize}{
+\begin{itemize}
+  \setlength{\itemsep}{1pt}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}}{\end{itemize}
+}
+
+% math
+\newcommand{\bs}[1]{\boldsymbol{#1}}
+\newcommand{\thetab}{\bs\theta}
+\newcommand{\betab}{\bs\beta}
+\newcommand{\epsilonb}{\bs\epsilon}
+\newcommand{\alphab}{\bs\alpha}
+\newcommand{\sigmab}{\bs\sigma}
+\newcommand{\xib}{\bs\xi}
+%\newcommand{\thetab}{\mbox{\boldmath$\theta$}}
+%\newcommand{\betab}{\mbox{\boldmath$\beta$}}
+%\newcommand{\epsilonb}{\mbox{\boldmath$\epsilon$}}
+%\newcommand{\alphab}{\mbox{\boldmath$\alpha$}}
+%\newcommand{\sigmab}{\mbox{\boldmath$\sigma$}}
+%\newcommand{\xib}{\mbox{\boldmath$\xi$}}
+
+
+% table sizes
+\def\Small{\fontsize{9pt}{10pt}\selectfont}
+\def\SMall{\fontsize{10pt}{11pt}\selectfont}
+\def\SMAll{\fontsize{8pt}{8pt}\selectfont}
+\def\SMALl{\fontsize{7pt}{7pt}\selectfont}
+\def\SMALL{\fontsize{6pt}{6pt}\selectfont}
+\def\Tiny{\fontsize{5pt}{5pt}\selectfont}
+\def\TINY{\fontsize{3pt}{3pt}\selectfont}
+\def\MainAppendixSize{\fontsize{14pt}{14pt}\selectfont}
+
+\maketitle
+\par\noindent \textit{{\small This document is a complement to the article of Jun, HŽritier and L™ (2013) describing in detail and in matrix form the ``Newton multiplicative iterative'' algorithm when approximating the baseline hazard function with a step function or with splines using a Gaussian or an Epanechnikov basis, or M-splines.}}
+%%%
+%%%
+\section*{Notation} 
+%%%
+%%%
+\par\noindent 
+\begin{align*}
+\mathbf{A}=\tensor*[_{\mathbb{M}}]{\big\{}{^n_{i=1}} \  a_{ij}  \tensor*[^m_{j=1}]{\big\}}{}  & \text{\ \ \ an ($n$ x $m$) matrix}, \\
+\mathbf{a}=\tensor*[_{\mathbb{V}}]{\big\{}{^n_{i=1}} \  a_{i}  \tensor*[]{\big\}}{}  & \text{\ \ \ a vector of length $n$}, \\
+a & \text{\ \ \ a scalar}, \\
+\mathbf{A}^{T},\mathbf{a}^{T} & \text{\ \ \ transposed matrix/vector}, \\
+\mathbf{A}^{-1} & \text{\ \ \ inverse of $\mathbf{A}$}, \\
+\langle \mathbf{a}\rangle & \text{\ \ \ squared diagonal matrix with vector $\mathbf{a}$ on the diagonal and 0 elsewhere}, \\
+\text{diag}(\mathbf{A}) &  \text{\ \ \ column vector of the diagonal elements of $\mathbf{A}$},\\
+\mathbf{A}\circ \mathbf{B} & \text{\ \ \ Hadamard (elementwise) product}, \\
+\mathbf{A} / \mathbf{B} & \text{\ \ \ Hadamard (elementwise) division}, \\
+\mathbf{A}\otimes \mathbf{B} & \text{\ \ \ Kronecker product}, \\
+\log(\mathbf{A}) = \tensor*[_{\mathbb{M}}]{\big\{}{^n_{i=1}} \  \log(a_{ij})  \tensor*[^m_{j=1}]{\big\}}{} & \text{\ \ \  elementwise logarithm of $\mathbf{A}$}, \\
+\mathbf{A}^{+} = \tensor*[_{\mathbb{M}}]{\big\{}{^n_{i=1}} \  a_{ij}\iota(a_{ij}>0)  \tensor*[^m_{j=1}]{\big\}}{} & \text{\ \ \  matrix $\mathbf{A}$ with its negative elements replaced by 0}, \\
+\mathbf{A}^{\dotplus} = \tensor*[_{\mathbb{M}}]{\big\{}{^n_{i=1}} \  a_{ij}^{\iota(a_{ij}\geqslant\epsilon)}\epsilon^{\iota(a_{ij}<\epsilon)}  \tensor*[^m_{j=1}]{\big\}}{} & \text{\ \ \  matrix $\mathbf{A}$ with its elements smaller than $\epsilon$ replaced by  $\epsilon$, where $\epsilon>0$}, \\
+\mathbf{1}_{n} & \text{\ \ \ column vector of 1 of length $n$}, \\
+\mathbf{I}_{n} = \langle \mathbf{1}_{n} \rangle &  \text{\ \ \ ($n$ x $n$) identity matrix}, \\
+\iota{(\cdot)} & \text{\ \ \ indicator function which equal 1 if the condition holds and 0 otherwise}. 
+\end{align*}
+
+%%%
+%%%
+\section{Baseline and cumulative baseline equations} 
+%%%
+%%%
+\par\noindent For the $i$th outcome, the Cox proportional hazard model is given by
+\begin{equation}
+h(t_{i})=h_{0}(t_{i})e^{\mathbf{x}_{i}^{T}\betab}.
+\end{equation}
+where:
+\begin{my_itemize}
+\item[$\triangleright$] $t_{i}$ denotes the $i$th outcome and $i=1,...,n$,
+\item[$\triangleright$]  $\mathbf{x}_{i}=(x_{i1},...,x_{ip})$ is the centred covariate vector corresponding to the $i$th observation,
+\item[$\triangleright$]  $\betab=(\beta_{1},...,\beta_{p})^{T}$ is the regression coefficient vector.
+\item[$\triangleright$]  $h_{0}(\cdot)$ is the baseline hazard function.\\
+\end{my_itemize}
+
+\par\noindent The baseline hazard $h_{0}(t)$ may be modelled using the following general expression [refer to Ma, HŽritier and L™ (2013)]:
+\begin{equation}
+h_{0}(t)=\sum\limits_{u=1}^{m}\theta_{u}\psi_{u}(t)
+\end{equation}
+We will consider here two kinds of $\psi-$functions, the step function and the splines with a Gaussian basis, leading to different baseline hazard estimators. 
+
+%%%
+\subsection{Step function approximation} \label{subsec:discretised}
+\par\noindent If the baseline hazard is approximated using a step function, the range of the data, $[t_{(1)},t_{(n)}]$ is split in $m$ sets, $\mathcal{S}_{1},...,\mathcal{S}_{m}$, such that $\bigcup^{m}_{u=1}\mathcal{S}_{u}=[t_{(1)},t_{(n)}]$, $\mathcal{S}_{u}\bigcap\mathcal{S}_{v}=\varnothing$ if $u\neq v$.\\
+ $\psi_{u}(t)$ may be a uniform distribution with support $S_{u}=[\alpha_{u},\alpha_{u+1}]$, leading to the following expressions of $\psi_{u}(t)$, $\Psi_{u}(t)$, and of the baseline and cumulative baseline hazard functions:
+\begin{align}
+\psi_{u}(t) &= \frac{\iota(\alpha_{u}\leqslant t <\alpha_{u+1})}{\alpha_{u+1}-\alpha_{u}} ,\label{eq:psi:discretised:unif} \\ 
+\Psi_{u}(t) &= \int\limits_{t_{(1)}}^{t}\psi_{u}(v)dv = \iota(\alpha_{u}\leqslant t)\left(\frac{t-\alpha_{u}}{\alpha_{u+1}-\alpha_{u}}\right)^{\iota(t <\alpha_{u+1})}, \label{eq:Psi:discretised:unif}  \\
+h_{0}(t) &= \sum\limits_{u=1}^{m}\theta_{u}\psi_{u}(t) = \sum\limits_{u=1}^{m}\theta_{u}\frac{\iota(\alpha_{u}\leqslant t <\alpha_{u+1})}{\alpha_{u+1}-\alpha_{u}}, \\ 
+H_{0}(t) &= \int\limits_{t_{(1)}}^{t}h_{0}(v)dv = \sum\limits_{u=1}^{m} \theta_{u} \Psi_{u}(t) = \sum\limits_{u=1}^{m}\theta_{u}\iota(\alpha_{u}\leqslant t)\left(\frac{t-\alpha_{u}}{\alpha_{u+1}-\alpha_{u}}\right)^{\iota(t <\alpha_{u+1})}, 
+\end{align}
+where $t_{(1)}\leqslant t \leqslant t_{(n)}$, $\alpha_{u}\in \mathbb{R}$, $\alpha_{u}\leqslant \alpha_{u+1}$ and $\Psi_{u}(\alpha_{u+1})=1$ for all $u=1,...,m.$\\
+As the penalty function [refer to Section \ref{sec:penlik}] influences the estimation of $\bs\theta=\tensor*[_{\mathbb{V}}]{\big\{}{^m_{u=1}} \ \theta_{u} \tensor*[]{\big\}}{}$, it is more appropriate, when approximating $h_{0}(t)$ with a step function, to define $\psi_{u}(t)$ such that $\theta_{u}=h_{0}(t)$ for $\alpha_{u}\leqslant t <\alpha_{u+1}$. Thus,
+\begin{align}
+\psi_{u}(t) &= \iota(\alpha_{u}\leqslant t <\alpha_{u+1}), \label{eq:Psi:discretised:step} \\ 
+\Psi_{u}(t) &= \int\limits_{t_{(1)}}^{t}\psi_{u}(v)dv =  \iota(\alpha_{u}\leqslant t)\left[t^{\iota(t<\alpha_{u+1})}\alpha^{\iota(\alpha_{u+1}\leqslant t)}_{u+1}-\alpha_{u}\right] \label{eq:Psi:discretised:step}  \\
+h_{0}(t) &= \sum\limits_{u=1}^{m}\theta_{u}\psi_{u}(t) = \sum\limits_{u=1}^{m}\theta_{u}\iota(\alpha_{u}\leqslant t <\alpha_{u+1}), \\ 
+H_{0}(t) &= \int\limits_{t_{(1)}}^{t}h_{0}(v)dv = \sum\limits_{u=1}^{m} \theta_{u} \Psi_{u}(t) = 
+\sum\limits_{u=1}^{m}\theta_{u}\iota(\alpha_{u}\leqslant t)\left[t^{\iota(t<\alpha_{u+1})}\alpha^{\iota(\alpha_{u+1}\leqslant t)}_{u+1}-\alpha_{u}\right], 
+\end{align}
+where $t_{(1)}\leqslant t \leqslant t_{(n)}$, $\alpha_{u}\in \mathbb{R}$ and $\alpha_{u}\leqslant \alpha_{u+1}$. \\
+In their article, Jun, HŽritier and L™ (2013) use the $\psi-$ function described in (\ref{eq:Psi:discretised:step}) but define $\Psi_{u}(t)$ and $H_{0}(t)$ in the following way: 
+\begin{align} 
+\Psi_{u}(t) &= \iota(\alpha_{u}\leqslant t)(\alpha_{u+1}-\alpha_{u}), \label{eq:Psi:discretised:jun}  \\
+H_{0}(t) &=  \sum\limits_{u=1}^{m}\theta_{u}\iota(\alpha_{u}\leqslant t)(\alpha_{u+1}-\alpha_{u}), 
+\end{align}
+such that $\Psi_{u}(t) \neq \int_{t_{(1)}}^{t}\psi_{u}(v)dv$ and $H_{0}(t) \neq \int_{t_{(1)}}^{t}h_{0}(v)dv$.% (This \textit{seems} to lead to better $\betab$-estimates in terms of MSE and to worse $h_{0}(t)$-estimates for large values of $t$).
+
+\pagebreak
+%%%
+\subsection{Spline approximation using Gaussian bases} \label{subsec:gaussian}
+\par\noindent If the baseline hazard is approximated using splines with a Gaussian basis, $\psi_{u}(t)$ is a truncated Gaussian distribution with location parameter $\alpha_{u}$, scale parameter $\sigma_{u}$ and range $[t_{(1)},t_{(n)}]$. This leads to the following expressions of $\psi_{u}(t)$, $\Psi_{u}(t)$, and of the baseline and cumulative baseline hazard functions:
+\begin{align}
+\psi_{u}(t) &= \frac{1}{\sigma_{u}\delta_{u}} \phi\left(\frac{t-\alpha_{u}}{\sigma_{u}}\right),\label{eq:psi:gaussian} \\ 
+\Psi_{u}(t) &= \int\limits_{t_{(1)}}^{t}\psi_{u}(v)dv = \frac{1}{\delta_{u}}\left[ \Phi\left(\frac{t-\alpha_{u}}{\sigma_{u}}\right)- \Phi\left(\frac{t_{(1)}-\alpha_{u}}{\sigma_{u}}\right)\right],\label{eq:Psi:gaussian} \\
+h_{0}(t) &= \sum\limits_{u=1}^{m}\theta_{u}\psi_{u}(t) = \sum\limits_{u=1}^{m}\frac{\theta_{u}}{\sigma_{u}\delta_{u}} \phi\left(\frac{t-\alpha_{u}}{\sigma_{u}}\right), \\ 
+H_{0}(t) &= \int\limits_{t_{(1)}}^{t}h_{0}(v)dv = \sum\limits_{u=1}^{m} \theta_{u} \Psi_{u}(t) = \sum\limits_{u=1}^{m}\frac{\theta_{u}}{\delta_{u}}\left[ \Phi\left(\frac{t-\alpha_{u}}{\sigma_{u}}\right) - \Phi\left(\frac{t_{(1)}-\alpha_{u}}{\sigma_{u}}\right)\right], 
+\end{align}
+where:
+\begin{my_itemize}
+\item[$\triangleright$]  $\phi(\cdot)$ and $\Phi(\cdot)$ respectively are the density and cumulative density functions of the standard Gaussian distribution,
+\item[$\triangleright$]  $t_{(1)}\leqslant t \leqslant t_{(n)}$,
+\item[$\triangleright$]  $\delta_{u}=\Phi\left(\frac{t_{(n)}-\alpha_{u}}{\sigma_{u}}\right) - \Phi\left(\frac{t_{(1)}-\alpha_{u}}{\sigma_{u}}\right)$,
+\item[$\triangleright$]  $\alpha_{u}\in \mathbb{R}$ and $\sigma_{u}>0$.\\
+\end{my_itemize}
+
+
+%%%
+\subsection{M-spline approximation} \label{subsec:mspline}
+\par\noindent If the baseline hazard is approximated using M-splines of order $o$, we get the following expressions of $\psi^{o}_{u}(t)$, $\Psi^{o}_{u}(t)$, and of the baseline and cumulative baseline hazard functions:
+\begin{align}
+\psi^{o}_{u}(t) &=
+\begin{cases}
+\frac{\iota(\alpha^{\star}_{u}\leqslant t < \alpha^{\star}_{u+1})}{\alpha^{\star}_{u+1}-\alpha^{\star}_{u}} & \text{if } o=1, \\
+\frac{o}{o-1} \frac{\iota(\alpha^{\star}_{u}\leqslant t < \alpha^{\star}_{u+o})}{\alpha^{\star}_{u+o} - \alpha^{\star}_{u}} 
+		\left[\left(t-\alpha^{\star}_{u} \right)\psi^{o-1}_{u}(t) + \left(\alpha^{\star}_{u+o}-t \right)\psi^{o-1}_{u+1}(t) \right] & \text{otherwise},
+\end{cases}\label{eq:psi:mspline} \\ 
+\Psi^{o}_{u}(t) &= \int\limits_{-\infty}^{t}\psi^{o}_{u}(v)dv =
+\iota(\alpha^{\star}_{u}>t)\left[\sum\limits_{v=u+1}^{\text{min}(u+o,m+1)}\frac{\alpha^{\star\star}_{v+o+1}-\alpha^{\star\star}_{v}}{o+1}\psi^{o+1}_{v}(t)\right]^{\iota(\alpha^{\star}_{u}<t<\alpha^{\star}_{u+o})},\\
+h_{0}(t) &= \sum\limits_{u=1}^{{\color{blue} m}}\theta_{u}\psi^{o}_{u}(t), \\ 
+H_{0}(t) &= \int\limits_{t_{(1)}}^{t}h_{0}(v)dv = \sum\limits_{u=1}^{{\color{blue} m}} \theta_{u} \Psi^{o}_{u}(t), 
+\end{align}
+where:
+\begin{my_itemize}
+\item[$\triangleright$]  $t_{(1)}\leqslant t \leqslant t_{(n)}$,
+\item[$\triangleright$] $\alpha_{u}$ the $u$th element of $\bs\alpha$, the knots vector of length $n_{\alpha}$, $\alpha_{u} \in \mathbb{R}$ and $\alpha_{u}<\alpha_{u+1}$, 
+\item[$\triangleright$] ${\color{blue} m = n_{\alpha}+o-2}$,
+\item[$\triangleright$]  $\bs\alpha^{\star}=\left[\min(\bs\alpha)\mathbf{1}^{T}_{o-1},\bs\alpha^{T}, \max(\bs\alpha)\mathbf{1}^{T}_{o-1}\right]^{T}$,
+\item[$\triangleright$]  $\bs\alpha^{\star\star}=\left[\min(\bs\alpha)\mathbf{1}^{T}_{o},\bs\alpha^{T}, \max(\bs\alpha)\mathbf{1}^{T}_{o}\right]^{T}$.
+\end{my_itemize}
+We will later only consider $o=3$, i.e., M-splines of order 3, as the integration of $\psi^{3}_{u}(t)$ second derivative products, used to define (\ref{eq:R2:gaussian}), is easily obtained.
+We get the following nice M-spline integration properties: $\int\limits_{-\infty}^{\alpha^{\star}_{u}}\psi^{o}_{u}(v)dv=0$, $\int\limits_{\alpha^{\star}_{u}}^{\alpha^{\star}_{u+o}}\psi^{o}_{u}(v)dv=1$ and $\int\limits_{\alpha^{\star}_{u+o}}^{\alpha^{\star}_{\infty}}\psi^{o}_{u}(v)dv=0$.
+
+
+%%%
+\subsection{Spline approximation using Epanechnikov bases} \label{subsec:epa}
+\par\noindent If the baseline hazard is approximated using splines with a Epanechnikov basis of ``order'' $o$, $\psi^{o}_{u}(t)$ is a (possibly truncated) Epanechnikov density function, and we get the following expressions of $\psi^{o}_{u}(t)$, $\Psi^{o}_{u}(t)$, and of the baseline and cumulative baseline hazard functions:
+\begin{align}
+% psi
+\psi^{o}_{u}(t) &= \label{eq:psi:epa}
+\begin{cases}
+% psi u=1
+\frac{12 \ \iota(\alpha^{\star}_{u}\leqslant t < \alpha^{\star}_{u+o}) (t-\alpha^{\star}_{u+o})(t-2\alpha^{\star}_{u}+\alpha^{\star}_{u+o})}
+       { (2\alpha^{\star}_{u}-2\alpha^{\star}_{u+o})^{3}} & \text{if } u=1, \\
+% psi 1<u<m
+\frac{6\ \iota(\alpha^{\star}_{u}\leqslant t < \alpha^{\star}_{u+o}) (t-\alpha^{\star}_{u})(t-\alpha^{\star}_{u+o})}
+       { (\alpha^{\star}_{u}-\alpha^{\star}_{u+o})^{3}} & \text{if } 1<u<m, \\
+% psi u=m,
+\frac{12 \ \iota(\alpha^{\star}_{u}\leqslant t < \alpha^{\star}_{u+o}) (t-\alpha^{\star}_{u})(t+\alpha^{\star}_{u}-2\alpha^{\star}_{u+o})}
+       { (2\alpha^{\star}_{u}-2\alpha^{\star}_{u+o})^{3}} & \text{if } u=m, \\
+\end{cases} \\ 
+% PSI
+\Psi^{o}_{u}(t) &= \int\limits_{-\infty}^{t}\psi^{o}_{u}(v)dv =
+\begin{cases}
+% u=1
+\iota(\alpha^{\star}_{u}>t)\left[\frac{(t-\alpha^{\star}_{u})(t^{2} - 2 t\alpha^{\star}_{u} - 2\alpha^{\star2}_{u} + 6 \alpha^{\star}_{u}\alpha^{\star}_{u+o}- 3\alpha^{\star2}_{u+o})}
+       {2(\alpha^{\star}_{u}-\alpha^{\star}_{u+o})^{3}}\right]^{\iota(\alpha^{\star}_{u}<t<\alpha^{\star}_{u+o})}& u=1, \\
+% psi 1<u<m
+\iota(\alpha^{\star}_{u}>t)\left[\frac{(t-\alpha^{\star}_{u})^{2}(2t+\alpha^{\star}_{u}-3\alpha^{\star}_{u+o})}
+       {(\alpha^{\star}_{u}-\alpha^{\star}_{u+o})^{3}}\right]^{\iota(\alpha^{\star}_{u}<t<\alpha^{\star}_{u+o})}& 1<u<m, \\
+% u=m
+\iota(\alpha^{\star}_{u}>t)\left[\frac{(t-\alpha^{\star}_{u})^{2}(t+2\alpha^{\star}_{u}-3\alpha^{\star}_{u+o})}
+       {2(\alpha^{\star}_{u}-\alpha^{\star}_{u+o})^{3}}\right]^{\iota(\alpha^{\star}_{u}<t<\alpha^{\star}_{u+o})}& u>1, 
+\end{cases}\\
+h_{0}(t) &= \sum\limits_{u=1}^{{\color{blue} m}}\theta_{u}\psi^{o}_{u}(t), \\ 
+H_{0}(t) &= \int\limits_{t_{(1)}}^{t}h_{0}(v)dv = \sum\limits_{u=1}^{{\color{blue} m}} \theta_{u} \Psi^{o}_{u}(t), 
+\end{align}
+where:
+\begin{my_itemize}
+\item[$\triangleright$]  $t_{(1)}\leqslant t \leqslant t_{(n)}$,
+\item[$\triangleright$] $\alpha_{u}$ the $u$th element of $\bs\alpha$, the knots vector of length $n_{\alpha}$, $\alpha_{u} \in \mathbb{R}$ and $\alpha_{u}<\alpha_{u+1}$, 
+\item[$\triangleright$] ${\color{blue} m = n_{\alpha}+o-2}$,
+\item[$\triangleright$]  $\bs\alpha^{\star}=\left[\min(\bs\alpha)\mathbf{1}^{T}_{o-1},\bs\alpha^{T}, \max(\bs\alpha)\mathbf{1}^{T}_{o-1}\right]^{T}$.
+\end{my_itemize}
+We get the following nice integration properties as with M-splines: \\
+$\int\limits_{-\infty}^{\alpha^{\star}_{u}}\psi^{o}_{u}(v)dv=0$, $\int\limits_{\alpha^{\star}_{u}}^{\alpha^{\star}_{u+o}}\psi^{o}_{u}(v)dv=1$ and $\int\limits_{\alpha^{\star}_{u+o}}^{\alpha^{\star}_{\infty}}\psi^{o}_{u}(v)dv=0$.
+
+%%%
+\subsection{Spline approximation using cosine bases} \label{subsec:cos}
+\par\noindent If the baseline hazard is approximated using splines with a cosine basis of ``order'' $o$, $\psi^{o}_{u}(t)$ is a (possibly truncated) cosine density function, and we get the following expressions of $\psi^{o}_{u}(t)$, $\Psi^{o}_{u}(t)$, and of the baseline and cumulative baseline hazard functions:
+
+\begin{align}
+\psi^{o}_{u}(t) &= \label{eq:psi:cos}
+\begin{cases}
+% psi u=1
+\frac{\pi\ \iota(\alpha^{\star}_{u}\leqslant t < \alpha^{\star}_{u+o})\ \text{Sin}\left[\frac{\pi(t-\alpha^{\star}_{u+o})}{2\alpha^{\star}_{u}-2\alpha^{\star}_{u+o}}\right]}
+                                    {2(\alpha^{\star}_{u+o}-\alpha^{\star}_{u})} & \text{if } u=1, \\
+% psi 1<u<m
+\frac{\pi\ \iota(\alpha^{\star}_{u}\leqslant t < \alpha^{\star}_{u+o})\ \text{Sin}\left[\frac{\pi(t-\alpha^{\star}_{u+o})}{\alpha^{\star}_{u}-\alpha^{\star}_{u+o}}\right]}
+                                    {2(\alpha^{\star}_{u+o}-\alpha^{\star}_{u})} & \text{if } 1<u<m, \\
+% psi u=m,
+\frac{\pi\ \iota(\alpha^{\star}_{u}\leqslant t < \alpha^{\star}_{u+o})\ \text{Sin}\left[\frac{\pi(t+\alpha^{\star}_{u}-2\alpha^{\star}_{u+o})}{2\alpha^{\star}_{u}-2\alpha^{\star}_{u+o}}\right]}
+                                    {2(\alpha^{\star}_{u+o}-\alpha^{\star}_{u})}  & \text{if } u=m, \\
+\end{cases} \\ 
+% PSI
+\Psi^{o}_{u}(t) &= \int\limits_{-\infty}^{t}\psi^{o}_{u}(v)dv =
+\begin{cases}
+% u=1
+\iota(\alpha^{\star}_{u}>t)\text{ Sin}\left[\frac{\pi(t-3\alpha^{\star}_{u}+2\alpha^{\star}_{u+o})}{2(\alpha^{\star}_{u}-\alpha^{\star}_{u+o})}\right]^{\iota(\alpha^{\star}_{u}<t<\alpha^{\star}_{u+o})}& u=1, \\
+% psi 1<u<m
+\iota(\alpha^{\star}_{u}>t)\left\{\text{Sin}\left[\frac{\pi(t-3\alpha^{\star}_{u}+2\alpha^{\star}_{u+o})}{2(\alpha^{\star}_{u}-\alpha^{\star}_{u+o})}\right]^{2}\right\}^{\iota(\alpha^{\star}_{u}<t<\alpha^{\star}_{u+o})}& 1<u<m, \\
+% u=m
+\iota(\alpha^{\star}_{u}>t)\left\{1-\text{Sin}\left[\frac{\pi(t-4\alpha^{\star}_{u}+3\alpha^{\star}_{u+o})}{2(\alpha^{\star}_{u}-\alpha^{\star}_{u+o})}\right]\right\}^{\iota(\alpha^{\star}_{u}<t<\alpha^{\star}_{u+o})}& u>1, 
+\end{cases}\\
+h_{0}(t) &= \sum\limits_{u=1}^{{\color{blue} m}}\theta_{u}\psi^{o}_{u}(t), \\ 
+H_{0}(t) &= \int\limits_{t_{(1)}}^{t}h_{0}(v)dv = \sum\limits_{u=1}^{{\color{blue} m}} \theta_{u} \Psi^{o}_{u}(t), 
+\end{align}
+where:
+\begin{my_itemize}
+\item[$\triangleright$]  $t_{(1)}\leqslant t \leqslant t_{(n)}$,
+\item[$\triangleright$] $\alpha_{u}$ the $u$th element of $\bs\alpha$, the knots vector of length $n_{\alpha}$, $\alpha_{u} \in \mathbb{R}$ and $\alpha_{u}<\alpha_{u+1}$, 
+\item[$\triangleright$] ${\color{blue} m = n_{\alpha}+o-2}$,
+\item[$\triangleright$]  $\bs\alpha^{\star}=\left[\min(\bs\alpha)\mathbf{1}^{T}_{o-1},\bs\alpha^{T}, \max(\bs\alpha)\mathbf{1}^{T}_{o-1}\right]^{T}$.
+\end{my_itemize}
+We get the following nice integration properties as with M-splines and Epanechnikov bases: \\
+$\int\limits_{-\infty}^{\alpha^{\star}_{u}}\psi^{o}_{u}(v)dv=0$, $\int\limits_{\alpha^{\star}_{u}}^{\alpha^{\star}_{u+o}}\psi^{o}_{u}(v)dv=1$ and $\int\limits_{\alpha^{\star}_{u+o}}^{\alpha^{\star}_{\infty}}\psi^{o}_{u}(v)dv=0$.
+
+
+%%%
+%%%
+%\pagebreak
+\section{Penalised likelihood}\label{sec:penlik}
+%%%
+%%%
+\par\noindent The penalised log-likelihood of $\betab$ and $\thetab$ given the fixed known or chosen elements, $\mathcal{L}_{p}(\betab,\thetab|\mathbf{t},\xib,\mathbf{X},\lambda,\bs\Upsilon)$, is given by
+\begin{align}
+\mathcal{L}_{p}(\betab,\thetab|\mathbf{t},\xib,\mathbf{X},\lambda,\bs\Upsilon)
+&=\mathcal{L}(\betab,\thetab|\mathbf{t},\xib,\mathbf{X})-\lambda \mathbf{J}(\thetab)\\
+&=\mathbf{1}_{n}^{T}\bs{\mathcal{L}}-\lambda \mathbf{J}(\thetab),\label{eq:penlik:general}
+\end{align}
+where:
+\begin{my_itemize}
+\item[$\triangleright$]  $\betab=(\beta_{1},...,\beta_{p})^{T}$ is the regression coefficient vector,
+\item[$\triangleright$]  $\thetab=(\theta{1},...,\theta_{m})^{T}$ is the Gaussian kernel coefficient vector,
+\item[$\triangleright$]  $\mathbf{t}$ is the outcome vector of length $n$,
+\item[$\triangleright$]  $\xib$ is a vector of length $n$ defined as following:
+\begin{align}
+\xib= \tensor*[_{\mathbb{V}}]{\big\{}{^n_{i=1}} \ \xi_{i} \tensor*[]{\big\}}{}=\tensor*[_{\mathbb{V}}]{\big\{}{^n_{i=1}} \ \iota(i \in \mathcal{O}) \tensor*[]{\big\}}{},\label{eq:xib}
+\end{align}
+where $\mathcal{O}$~denotes the set of fully observed (i.e., non censored) outcomes.
+\item[$\triangleright$]  $\mathbf{X}$ is the ($n$ x $p$) centered covariate matrix,
+\item[$\triangleright$] $\bs\Upsilon$ is the set of self-defined parameter vectors of the $\psi-$ and $\Psi-$ functions. \\
+When $\psi_{u}(t)$ and  $\psi_{v}(t)$ are defined as in Section \ref{subsec:discretised}, $\bs\Upsilon=\alphab$, where
+\begin{my_itemize}
+\item[$\triangleright$]  $\alphab=(\alpha_{1},...,\alpha_{m+1})^{T}$ is the vector of breaks of $[t_{(1)},t_{(n)}]$ in $m$ sets as described in Section \ref{subsec:discretised}, 
+\end{my_itemize}
+and when $\psi_{u}(t)$ and  $\psi_{v}(t)$ are defined as in Section \ref{subsec:gaussian}, $\bs\Upsilon=[\alphab^{T},\sigmab^{T},\bs\delta^{T}]^{T}$, where 
+\begin{my_itemize}
+\item[$\triangleright$]  $\alphab=(\alpha_{1},...,\alpha_{m})^{T}$ is the Gaussian kernel location parameter vector of length $m$,
+\item[$\triangleright$]  $\sigmab=(\sigma_{1},...,\sigma_{m})^{T}$ is the Gaussian kernel scale parameter vector of length $m$,
+\item[$\triangleright$]  $\bs\delta=(\delta_{1},...,\delta_{m})^{T}$ is a vector of $m$ constants forcing each truncated Gaussian basis to integrate to~1 on $[t_{(1)},t_{(n)}]$.
+\end{my_itemize}
+\item[$\triangleright$]  $\lambda$ is the MPL smoothing parameter with $\lambda \in [0;\infty[$,
+\item[$\triangleright$]  $\bs{\mathcal{L}}$ is a vector of length $n$ defined in the following way:
+\begin{align}
+\bs{\mathcal{L}}=\tensor*[_{\mathbb{V}}]{\big\{}{^n_{i=1}} \  \mathcal{L}_{i}  \tensor*[]{\big\}}{} &= 
+\tensor*[_{\mathbb{V}}]{\bigg\{}{^n_{i=1}} \  \xi_{i} \log\left[\bs{\psi}(t_{i})^{T}\thetab e^{\mathbf{x}_{i}^{T}\betab} \right]  - \bs{\Psi}(t_{i})^{T}\thetab e^{\mathbf{x}_{i}^{T}\betab}  \tensor*[]{\bigg\}}{} \label{eq:logLikvector}  \\
+&= \xib \circ \log\left[\bs\psi(t)\thetab \circ e^{\mathbf{X}\betab}\right]-\bs\Psi(t)\thetab \circ e^{\mathbf{X}\betab},
+\end{align}
+where
+\begin{align}
+\bs\psi(\mathbf{t})&=\tensor*[_{\mathbb{M}}]{\big\{}{^n_{i=1}} \  \psi_{u}(t_{i})  \tensor*[^m_{u=1}]{\big\}}{}, \\
+\bs\Psi(\mathbf{t})&=\tensor*[_{\mathbb{M}}]{\big\{}{^n_{i=1}} \  \Psi_{u}(t_{i})  \tensor*[^m_{u=1}]{\big\}}{}, \\
+\bs\psi_{i}(t_{i})&=\tensor*[_{\mathbb{V}}]{\big\{}{^m_{u=1}} \  \psi_{u}(t_{i})  \tensor*[]{\big\}}{}, \\
+\bs\Psi_{i}(t_{i})&=\tensor*[_{\mathbb{V}}]{\big\{}{^m_{u=1}} \  \Psi_{u}(t_{i})  \tensor*[]{\big\}}{}, \\
+\end{align}
+such that $h_{0}(\mathbf{t})=\bs\psi(\mathbf{t})\bs\theta$, $h_{0}(t_{i})=\bs\psi(t_{i})^{T}\bs\theta$, $H_{0}(\mathbf{t})=\bs\Psi(\mathbf{t})\bs\theta$, $H_{0}(t_{i})=\bs\Psi(t_{i})^{T}\bs\theta$ and $\mathcal{L}(\betab,\thetab|\mathbf{t},\xib,\mathbf{X})=\mathbf{1}_{n}^{T}\bs{\mathcal{L}}$ is the (non-penalised) log-likelihood of $\betab$ and $\thetab$.
+\item[$\triangleright$]  $\mathbf{J}(\thetab)$ is the penalty function. 
+\end{my_itemize}
+
+
+\vspace{.5cm}
+\par\noindent We will later only consider quadratic penalty functions such that $\mathbf{J}(\thetab)=\thetab^{T}\mathbf{R}\thetab$ where $\mathbf{R}$ is a penalty matrix defined below. We will also re-express (\ref{eq:penlik:general}) using $\gamma = \frac{\lambda}{1+\lambda}$, a smoothing parameter belonging to the range $[0,1[$. As $\lambda = \frac{\gamma}{1-\gamma}$, the ($1-\gamma$ scaled) penalised log-likelihood of $\betab$ and $\thetab$ given the fixed known or chosen elements, $\mathcal{L}^{\star}_{p}(\betab,\thetab|\mathbf{t},\xib,\mathbf{X},\gamma,\bs\Upsilon,\mathbf{R})$, is given by
+\begin{align}
+\mathcal{L}^{\star}_{p}(\betab,\thetab|\mathbf{t},\xib,\mathbf{X},\gamma,\bs\Upsilon,\mathbf{R}) = 
+(1-\gamma)\mathcal{L}_{p}(\betab,\thetab|\mathbf{t},\xib,\mathbf{X},\gamma,\bs\Upsilon,\mathbf{R})
+&= (1-\gamma) \left( \mathbf{1}_{n}^{T}\bs{\mathcal{L}}- \frac{\gamma}{1-\gamma} \thetab^{T}\mathbf{R}\thetab\right),\label{eq:penlik}\\
+&={\color{blue} (1-\gamma)} \mathbf{1}_{n}^{T}{\color{blue} \bs{\mathcal{L}}}- \gamma \thetab^{T}\mathbf{R}\thetab,\label{eq:penlik}\\
+&= \mathbf{1}_{n}^{T}{\color{blue} \bs{\mathcal{L}}^{\star}}- \gamma \thetab^{T}\mathbf{R}\thetab,\label{eq:penlik}
+\end{align}
+where $\mathbf{R}$ is the ($m$ x $m$) roughness penalty matrix defined in next Section. 
+
+%%%
+%%%
+\subsection{R penalty matrices}\label{sec:R}
+%%%
+%%%
+We describe here, when available, the first and second order penalties $\mathbf{R}$ penalty matrices corresponding to the baseline hazard approximations considered in Section \ref{subsec:discretised} to \ref{subsec:epa}. The first and second order penalty matrices, $\mathbf{R}_{1}$ and $\mathbf{R}_{2}$, are defined in the following way: 
+\begin{align}
+\mathbf{R}_{1} &= 
+\tensor*[_{\mathbb{M}}]{\big\{}{^m_{u=1}} \  r_{1_{uv}}  \tensor*[^m_{v=1}]{\big\}}{} = 
+\tensor*[_{\mathbb{M}}]{\Bigg\{}{^m_{u=1}} \  \int_{t(1)}^{t(n)} \frac{\partial}{\partial t}\psi_{u}(t)  \frac{\partial}{\partial t}\psi_{v}(t)  dt \tensor*[^m_{v=1}]{\Bigg\}}{},\label{eq:R1:gaussian}\\
+\mathbf{R}_{2} &=
+\tensor*[_{\mathbb{M}}]{\big\{}{^m_{u=1}} \  r_{2_{uv}}  \tensor*[^m_{v=1}]{\big\}}{} = 
+\tensor*[_{\mathbb{M}}]{\Bigg\{}{^m_{u=1}} \  \int_{t(1)}^{t(n)} \frac{\partial^{2}}{\partial t \partial t}\psi_{u}(t)  \frac{\partial^{2}}{\partial t \partial t}\psi_{v}(t)  dt \tensor*[^m_{v=1}]{\Bigg\}}{}.\label{eq:R2:gaussian}
+\end{align}
+
+%% discretised hazard
+\subsubsection{Step function approximation}\label{sec:R:discretised}
+\par\noindent When $\psi_{u}(t)$ and  $\Psi_{v}(t)$ are defined as in Section \ref{subsec:discretised}, the following first and second order penalty matrices, $\mathbf{R}_{1}$ and $\mathbf{R}_{2}$, are used: \\
+\begin{equation}
+\mathbf{R}_{1} = 
+\small{\begin{bmatrix}\label{eq:R1:discretised}
+   \phantom{-}1    &                     -1  &                           &                           &                            &                          &                            \\%[0.3em]
+    		    -1    & \phantom{-}2  &                      -1 &                            &                            &                          &                            \\%[0.3em]
+                              &                      -1 &   \phantom{-}2 &                       -1 &                            &                          &                            \\
+                              &                           &              \ddots  &               \ddots  &              \ddots  &                             &                             \\
+                              &                           &                           &                     -1   &  \phantom{-}2  &                       -1 &                              \\
+                              &                           &                           &                            &                      -1 &  \phantom{-}2 &                       -1  \\
+                              &                           &                           &                            &                            &                     -1  &   \phantom{-}1   \\
+                            
+     \end{bmatrix}},   
+\end{equation}
+ \begin{equation}       
+\mathbf{R}_{2} = 
+\small{\begin{bmatrix}\label{eq:R2:discretised}
+   \phantom{-}5    &                     -6  & \phantom{-} 1&                           &                            &                          &                            \\%[0.3em]
+    		    -6    & \phantom{-}9  &                     -4 &   \phantom{-}1 &                            &                          &                            \\%[0.3em]
+     \phantom{-}1  &                     -4 &                       6 & -                    4   &  \phantom{-} 1 &                          &                            \\
+                              &              \ddots &              \ddots  &               \ddots &              \ddots  &            \ddots   &                             \\
+                              &                          &   \phantom{-}1 &                     -4  & \phantom{-} 6  & -                    4 &  \phantom{-} 1   \\
+                              &                          &                           & \phantom{-} 1  &                      -4 & \phantom{-} 9 &                        -6 \\
+                              &                          &                           &                           & \phantom{-} 1 &                     -6  &   \phantom{-}5   \\
+                            
+     \end{bmatrix}}.     
+\end{equation}
+%% gaussian basis splines
+\subsubsection{Spline approximation using Gaussian bases}\label{sec:R:gaussian} When $\psi_{u}(t)$ and  $\Psi_{v}(t)$ are defined as in Section \ref{subsec:gaussian}, the elements $r_{1_{uv}}$ and $r_{2_{uv}}$ of $\mathbf{R}_{1}$ and $\mathbf{R}_{2}$ are defined in the following way: 
+\begin{align*}
+r_{1_{uv}}&= \frac{A_{1}(t_{(n)})+B_{1}(t_{(n)}) }{C_{1}(t_{(n)})}-\frac{A_{1}(t_{(1)})+B_{1}(t_{(1)}) }{C_{1}(t_{(1)})}, \\
+r_{2_{uv}}&= \frac{A_{2}(t_{(n)})+B_{2}(t_{(n)}) }{C_{2}(t_{(n)})}-\frac{A_{2}(t_{(1)})+B_{2}(t_{(1)}) }{C_{2}(t_{(1)})}, 
+\end{align*}
+where
+\small{
+\begin{align*}
+A_{1}(t)&= 
+\left(\sigma_{u}^{2}+\sigma_{v}^{2} \right)^{\frac{1}{2}}\left[(\alpha_{u}-t)\sigma_{u}^{2} +(\alpha_{v}-t)\sigma_{v}^{2}\right]
+\phi\left(\frac{t-\alpha_{u}}{\sigma_{u}}\right)\phi\left(\frac{t-\alpha_{v}}{\sigma_{v}}\right),\\
+B_{1}(t)&= 
+ \sigma_{u}\sigma_{v}\left[\sigma^{2}_{u}+\sigma^{2}_{2}-(\alpha_{u}-\alpha_{v})^{2}\right]  \ \phi\left[\frac{\alpha_{v}-\alpha_{u}}{(\sigma_{u}^2+\sigma_{v}^2)^{\frac{1}{2}}}\right]
+\Bigg\{\Phi\left[\frac{(t-\alpha_{v})\sigma_{u}^2+(t-\alpha_{u})\sigma_{v}^2}{\sigma_{u}\sigma_{v} (\sigma_{u}^2+\sigma_{v}^2)^{\frac{1}{2}}}\right]-\frac{1}{2}\Bigg\},\\
+C_{1}(t)&= 
+ \sigma_{u}\sigma_{v}(\sigma_{u}^2+\sigma_{v}^2)^\frac{5}{2}\delta_{u}\delta_{v},
+  \end{align*}
+  and
+   \begin{align*}
+A_{2}(t)&= 
+\left(\sigma_{u}^{2}+\sigma_{v}^{2} \right)^{\frac{1}{2}}
+\phi\left(\frac{t-\alpha_{u}}{\sigma_{u}}\right)\phi\left(\frac{t-\alpha_{v}}{\sigma_{v}}\right)
+\bigg\{
+\sigma_{u}^6 (\alpha_{v}-t) \left[\left(\alpha_{u}-t\right)^2-\sigma_{u}^{2}\right] \\
+& \ \ \ + 
+\sigma_{u}^{4}\sigma_{v}^{2} \left[(t-4 \alpha_{v}+3 \alpha_{u}) \sigma_{u}^2-(\alpha_{u}-t)^{2}(3 t-4 \alpha_{u}+\alpha_{v})\right] 
+-\sigma_{u}^2\sigma_{v}^4(\alpha_{v}-t)^2(3t-4\alpha_{u}+\alpha_{v})\\
+& \ \ \ +\sigma_{v}^6\left[(t+3\alpha_{v}-4\alpha_{u})\sigma_{u}^2-(\alpha_{v}-t)^2(t-\alpha_{u})\right] +\sigma_{v}^8(t-\alpha_{u})
+\bigg\},\\
+B_{2}(t)&= 
+\ \sigma_{u}^3\sigma_{v}^3 \ \phi\left[\frac{\alpha_{v}-\alpha_{u}}{(\sigma_{u}^2+\sigma_{v}^2)^{\frac{1}{2}}}\right]
+\Bigg\{\Phi\left[\frac{(t-\alpha_{v})\sigma_{u}^2+(t-\alpha_{u})\sigma_{v}^2}{\sigma_{u}\sigma_{v} (\sigma_{u}^2+\sigma_{v}^2)^{\frac{1}{2}}}\right]-\frac{1}{2}\Bigg\}
+\bigg\{\alpha_{v}^4+\alpha_{u}^4-4\alpha_{v}^3\alpha_{u}\\
+& \ \ \ + 6\alpha_{v}^2(\alpha_{u}^2-\sigma_{u}^2-\sigma_{v}^2)- 6\alpha_{u}^2(\sigma_{u}^2+\sigma_{v}^2)
+-4\alpha_{u}\alpha_{v}\left[\alpha_{u}^2-3(\sigma_{u}^2+\sigma_{v}^2)\right]+ 3(\sigma_{u}^2+\sigma_{v}^2)^2
+\bigg\},\\
+C_{2}(t)&= 
+\sigma_{u}^3\sigma_{v}^3(\sigma_{u}^2+\sigma_{v}^2)^\frac{9}{2}\delta_{u}\delta_{v}.
+ \end{align*}
+ }
+ 
+%% M-spline
+\subsubsection{M-spline approximation}\label{sec:R:spline} When $\psi^{o}_{u}(t)$ and  $\Psi^{o}_{v}(t)$ are defined as in Section \ref{subsec:mspline}, the $\mathbf{R}$ penalty matrix is (easily) defined only for penalty of order $o-1$. Thus, $\mathbf{R}_{1}$ is available when using M-splines of 2nd order ($o=2$), and $\mathbf{R}_{2}$ is available when using M-splines of 3rd order ($o=3$). The element $r_{o-1_{uv}}$ of $\mathbf{R}_{o-1}$ is defined in the following way: 
+\begin{align*}
+r_{o-1_{uv}}&= 
+\begin{cases}
+0 & \text{if } \alpha^{\star}_{u+o}<\alpha^{\star}_{v}, \\
+ & \text{otherwise}, 
+\end{cases}
+\end{align*}
+where $ \alpha^{\star}_{u}$ is the $u$th element of $\bs{\alpha}^{\star}$, as defined in Section \ref{subsec:mspline}.
+
+%% Epanechnikov
+\subsubsection{Spline approximation using Epanechnikov bases}\label{sec:R:epa} When $\psi^{o}_{u}(t)$ and  $\Psi^{o}_{v}(t)$ are defined as in Section \ref{subsec:epa}, the elements $r_{1_{uv}}$ and $r_{2_{uv}}$ of $\mathbf{R}_{1}$ and $\mathbf{R}_{2}$ are defined in the following way: 
+\begin{align*}
+{\color{red} r_{1_{uv}}}&=
+\begin{cases}
+\frac{3({\color{blue} \alpha^{\star}_{u+o}}-{\color{blue} \alpha^{\star}_{v}})\left[{\color{blue} \alpha^{\star2}_{v}}+{\color{blue} \alpha^{\star2}_{u+o}}+{\color{blue} \alpha^{\star}_{v}\alpha^{\star}_{u+o}} 
+            +3\alpha^{\star}_{u}\left(\alpha^{\star}_{u}-{\color{blue} \alpha^{\star}_{u+o}} -{\color{blue} \alpha^{\star}_{v}} \right)\right]}
+       {\left({\color{blue} \alpha^{\star}_{u+o}}-\alpha^{\star}_{u}\right)^{6}}  & \text{if } (u=1 \text{ or } v=1) \text{ and } \alpha^{\star}_{v}<\alpha^{\star}_{u+o}, \\
+\frac{6\left[\left({\color{blue} \alpha^{\star}_{u+o}}+\alpha^{\star}_{u}-2{\color{blue} \alpha^{\star}_{v}}\right)^{3}-\left({\color{blue} \alpha^{\star}_{u+o}}-\alpha^{\star}_{u}\right)^{3}\right]}
+       {\left({\color{blue} \alpha^{\star}_{u+o}}-\alpha^{\star}_{u}\right)^{6}}  & \text{if } 1<u<m \text{ and } \alpha^{\star}_{v}<\alpha^{\star}_{u+o}, \\
+\frac{3({\color{blue} \alpha^{\star}_{u+o}}-{\color{blue} \alpha^{\star}_{v}})^{3}}
+       {\left({\color{blue} \alpha^{\star}_{u+o}}-\alpha^{\star}_{u}\right)^{6}}  & \text{if } (u=m \text{ or } v=m) \text{ and } \alpha^{\star}_{v}<\alpha^{\star}_{u+o}, \\       
+0 &\text{otherwise}, \\ 
+\end{cases} \\
+r_{2_{uv}}&= 
+\begin{cases}
+\frac{4^{\iota(1<u<m)}4^{\iota(1<v<m)}9\left({\color{blue} \alpha^{\star}_{u+o}}-{\color{blue} \alpha^{\star}_{v}}\right)}
+       {\left(\alpha^{\star}_{u+o}-\alpha^{\star}_{u}\right)^{3}\left(\alpha^{\star}_{v+o}-\alpha^{\star}_{v}\right)^{3}} &\text{if }\alpha^{\star}_{v}< \alpha^{\star}_{u+o}, \\ 
+0 & \text{otherwise}, \\
+\end{cases} 
+\end{align*}
+where $ \alpha^{\star}_{u}$ is the $u$th element of $\bs{\alpha}^{\star}$, as defined in Section \ref{subsec:epa}.
+
+%% cosine
+\subsubsection{Spline approximation using cosine bases}\label{sec:R:cos} When $\psi^{o}_{u}(t)$ and  $\Psi^{o}_{v}(t)$ are defined as in Section \ref{subsec:cos}, the elements $r_{1_{uv}}$ and $r_{2_{uv}}$ of $\mathbf{R}_{1}$ and $\mathbf{R}_{2}$ are defined in the following way: 
+\begin{align*}
+{\color{red} r_{1_{uv}}}&=
+\begin{cases}
+\frac{\pi^{3}\left\{ 2\pi\left({\color{blue} \alpha^{\star}_{u+o}}-{\color{blue} \alpha^{\star}_{v}}\right)+\left(\alpha^{\star}_{u+o}-\alpha^{\star}_{u}\right)\text{ Sin}\left[\frac{2\pi\left({\color{blue} \alpha^{\star}_{u+o}}-{\color{blue} \alpha^{\star}_{v}}\right)}{\alpha^{\star}_{u+o}-\alpha^{\star}_{u}}\right] \right\}}
+      {4^{\iota(1<u<m)}4^{\iota(1<v<m)} 4\left({\color{blue} \alpha^{\star}_{u+o}}-\alpha^{\star}_{u}\right)^{4}} & \text{if }\alpha^{\star}_{v}< \alpha^{\star}_{u+o}, \\
+0 & \text{otherwise}, \\ 
+\end{cases} \\
+r_{2_{uv}}&= 
+\begin{cases}
+0 & \text{if } \alpha^{\star}_{u+o}<\alpha^{\star}_{v}, \\
+\frac{\pi^{5}}
+       {2^{\iota\left(1<u<m\right)}2^{\iota\left(1<v<m\right)}4\left({\color{blue} \alpha^{\star}_{u+o}}-\alpha^{\star}_{u}\right)^{2}\left(\alpha^{\star}_{v+o}-{\color{blue} \alpha^{\star}_{v}}\right)^{2}
+        \left[\left({\color{blue} \alpha^{\star}_{u+o}}-\alpha^{\star}_{u}\right)^{2}-\left(\alpha^{\star}_{v+o}-{\color{blue} \alpha^{\star}_{v}}\right)^{2}\right]} \\
+        \times
+       \Bigg\{
+	2\left(\alpha^{\star}_{v+o}-{\color{blue} \alpha^{\star}_{v}}\right)\text{Sin}\left[\frac{\pi\left(\alpha^{\star}_{v+o}-{\color{blue} \alpha^{\star}_{u+o}}\right)}{{\color{blue} \alpha^{\star}_{v}}-\alpha^{\star}_{v+o}}\right]\\
+      \ \ \ \ + \left(\alpha^{\star}_{v+o}-{\color{blue} \alpha^{\star}_{v}}+\alpha^{\star}_{u}-{\color{blue} \alpha^{\star}_{u+o}}\right)\text{Sin}\left[\frac{\pi\left({\color{blue} \alpha^{\star}_{v}}-{\color{blue} \alpha^{\star}_{u+o}}\right)}{\alpha^{\star}_{u}-{\color{blue} \alpha^{\star}_{u+o}}}\right]\\
+     \ \ \ \ + \left({\color{blue} \alpha^{\star}_{v}}-\alpha^{\star}_{v+o}+\alpha^{\star}_{u}-{\color{blue} \alpha^{\star}_{u+o}}\right)\text{Sin}\left[\frac{\pi\left({\color{blue} \alpha^{\star}_{v}}-2\alpha^{\star}_{u}+{\color{blue} \alpha^{\star}_{u+o}}\right)}{\alpha^{\star}_{u}-{\color{blue} \alpha^{\star}_{u+o}}}\right]
+        \Bigg\}
+& \text{otherwise}, 
+\end{cases} 
+\end{align*}
+where $ \alpha^{\star}_{u}$ is the $u$th element of $\bs{\alpha}^{\star}$, as defined in Section \ref{subsec:epa}.
+
+
+
+
+\pagebreak
+%%%
+%%%
+\section{Estimation}
+%%%
+%%%
+\par\noindent Optimisation of the penalised log-likelihood given in (\ref{eq:penlik:general}) is achieved by using the Newton multiplicative-algorithm described in Ma, HŽritier and L™ (2013), which requires the first and second derivatives of the objective function by $\betab$ and its first derivative by $\thetab$. Considering quadratic penalty functions of form $\mathbf{J}(\thetab)=\thetab^{T}\mathbf{R}\thetab$, these later are given by [refer to Section \ref{app:A1} to \ref{app:A3} of the appendix]: 
+\begin{align}
+%
+\frac{\partial }{\partial \betab}\mathcal{L}^{\star}_{p}= \bs{\mathcal{r}}_{\betab}
+&=(1-\gamma)\, \mathbf{X}^{T}\left[\xib-\bs\Psi(\mathbf{t})\thetab \circ  e^{\mathbf{X}\betab}  \right],\\
+%
+\frac{\partial^{2}}{\partial \betab \partial \betab } \mathcal{L}^{\star}_{p} = \bs{\mathcal{H}}_{\betab}
+&= (\gamma-1)\, \mathbf{X}^{T} \left\langle \bs{\Psi}(t)\thetab \circ e^{\mathbf{X}\betab} \right\rangle \mathbf{X} \label{estimationHassianBeta}  \\
+%&= (\gamma-1)\left(\mathbf{X}\circ \left\{ \mathbf{1}_{p}^{T} \otimes \left[\bs\Psi(\mathbf{t})\thetab \circ  e^{\mathbf{X}\betab} \right]\right\}\right) ^{T}\mathbf{X},\\
+%
+\frac{\partial }{\partial \thetab} \mathcal{L}^{\star}_{p} = \bs{\mathcal{r}}_{\thetab}&= 
+ (1-\gamma)\left\{ \bs{\psi}(\mathbf{t})^{T}\left[\bs\xi / \bs{\psi}(t)\thetab \right] - \bs{\Psi}(\mathbf{t})^{T} e^{\mathbf{X}\betab} \right\} - 2 \gamma \mathbf{R}\thetab.
+\end{align}
+\par\noindent Until convergence, the $\betab$ and $\thetab$ parameters are updated in the following way:
+\begin{align}
+%
+\betab^{(k)}&= \betab^{(k-1)}+\omega^{(k)} \bs{\mathcal{H}}^{(k)^{-1}}_{\betab} \bs{\mathcal{r}}^{(k)}_{\betab} \text{\ and then }\\
+%
+\thetab^{(k)}&= \thetab^{(k-1)}+\nu^{(k)}\mathbf{s}^{(k)^{T}} \bs{\mathcal{r}^{(k)}}_{\thetab},\\
+\end{align}
+where $k$ denotes the $k$th iteration and  
+\begin{align}
+%
+\bs{\mathcal{r}}_{\betab}^{(k)}&=
+(1-\gamma)\, \mathbf{X}^{T}\left[\xib-\bs\Psi(\mathbf{t})\thetab^{(k-1)} \circ  e^{\mathbf{X}\betab^{(k-1)}} \right],\\
+%
+\bs{\mathcal{H}}_{\betab}^{(k)} &=
+(\gamma-1)\, \mathbf{X}^{T} \left\langle \bs{\Psi}(t)\thetab^{(k-1)} \circ e^{\mathbf{X}\betab^{(k-1)}} \right\rangle \mathbf{X}, \\ 
+%(1-\gamma)\left(\mathbf{X}\circ \left\{ \mathbf{1}_{p}^{T} \otimes \left[\bs\Psi(\mathbf{t})\thetab^{(k-1)} \circ  e^{\mathbf{X}\betab^{(k-1)}} \right]\right\}\right) ^{T}\mathbf{X},\\
+%
+\bs{\mathcal{r}}_{\thetab}^{(k)} &=
+ (1-\gamma)\left\{ \bs{\psi}(\mathbf{t})^{T}\left[\bs\xi / \bs{\psi}(t)\thetab^{(k-1)} \right] - \bs{\Psi}(\mathbf{t})^{T} e^{\mathbf{X}\betab^{(k)}} \right\} 
+-2\gamma\mathbf{R}\thetab^{(k-1)},\\
+%
+\mathbf{s}^{(k)}&= \thetab^{(k-1)} / \left\{
+ (1-\gamma)\bs\Psi(\mathbf{t})^{T} e^{\mathbf{X}\betab^{(k)}} +
+\left[2\gamma\mathbf{R}\thetab^{(k-1)}\right]^{+}+
+ \epsilon \mathbf{1}_{m}\right\}.
+\end{align}
+
+\pagebreak
+%%%
+%%%
+\section{Implementation}
+%%%
+%%%
+\par\noindent  \textbf{Input}:
+ \begin{my_itemize}
+\item[$\triangleright$]  $\mathbf{t}$, the outcome vector of length $n$,  %{\color{blue}\texttt{[t\_i]}}
+\item[$\triangleright$]  $\xib$, a vector of length $n$ defined in (\ref{eq:xib}), %{\color{blue}\texttt{[xi\_i]}}
+\item[$\triangleright$]  $\mathbf{X}$ and $\mathbf{X}^{\dagger}$ the ($n$ x $p$) centred and non-centered covariate matrices, %{\color{blue}\texttt{[X]}}
+\item[$\triangleright$]  $\mathbf{R}$, an ($m$ x $m$) matrix defined in (\ref{eq:R1:discretised}) to (\ref{eq:R2:gaussian}),
+\item[$\triangleright$]  $\gamma$, the MPL smoothing parameter with $0<\gamma<1$,
+\item[$\triangleright$]  $\kappa>1$, a constant used to decrease the Newton step length when necessary,
+\item[$\triangleright$]  $\epsilon>0$, a (very small) constant used to avoid divisions by 0 or by to small values (like $10^{-300}$), 
+\item[$\triangleright$] the ($n$ x $m$) $\bs\psi-$ and $\bs\Psi-$ matrices:
+\begin{my_itemize}
+\item[$\triangleright$]  $\bs\psi(\mathbf{t})=\tensor*[_{\mathbb{M}}]{\bigg\{}{^n_{i=1}} \  \psi_{u}(t,\bs\Upsilon) \tensor*[^m_{u=1}]{\bigg\}}{_{\phantom{\betab}}},$
+\item[$\triangleright$]  $\bs\Psi(\mathbf{t})=\tensor*[_{\mathbb{M}}]{\bigg\{}{^n_{i=1}} \  \Psi_{u}(t,\bs\Upsilon) \tensor*[^m_{u=1}]{\bigg\}}{_{\phantom{\betab}}},$
+\end{my_itemize}
+\par\noindent where 
+\begin{my_itemize}
+\item[$\triangleright$]  $\psi-$ and $\Psi-$ functions are defined in Sections \ref{subsec:discretised} and \ref{subsec:gaussian}, 
+\item[$\triangleright$] $\bs\Upsilon$ is the set of self-defined parameter vectors of the $\psi-$ and $\Psi-$ functions:\\
+When $\psi_{u}(t)$ and  $\Psi_{v}(t)$ are defined as in Section \ref{subsec:discretised}, $\bs\Upsilon=\alphab$, where
+\begin{my_itemize}
+\item[$\triangleright$]  $\alphab=(\alpha_{1},...,\alpha_{m+1})^{T}$ is the vector of breaks of $[t_{(1)},t_{(n)}]$ in $m$ sets as described in Section \ref{subsec:discretised}.
+%\item[$\triangleright$] $t_{(1)} = \min(\mathbf{t})-\epsilon$.
+\end{my_itemize}
+When $\psi_{u}(t)$ and  $\Psi_{v}(t)$ are defined as in Section \ref{subsec:gaussian}, $\bs\Upsilon=[\alphab^{T},\sigmab^{T},\bs\delta^{T}]^{T}$, where 
+\begin{my_itemize}
+\item[$\triangleright$] $\alphab=(\alpha_{1},...,\alpha_{m})^{T}$ is the location parameter vector of of the $m$ truncated Gaussian densities,
+\item[$\triangleright$] $\sigmab=(\sigma_{1},...,\sigma_{m})^{T}$ is the scale parameter vector of of the $m$ truncated Gaussian densities.
+\item[$\triangleright$] $\bs\delta=(\delta_{1},...,\delta_{m})^{T}$ is a vector of $m$ constants forcing each Gaussian basis to integrate to~1 on $[t_{(1)},t_{(n)}]$.
+%\item[$\triangleright$] $t_{(1)} = \min(\mathbf{t})-\epsilon$ in (\ref{eq:Psi:gaussian}) and when defining $\bs\delta$.
+\end{my_itemize}
+\end{my_itemize}
+\end{my_itemize}
+% 
+
+
+
+\par\noindent \textbf{Output}:
+ \begin{my_itemize}
+ \item[$\triangleright$] $\widehat{\betab}$ and $\widehat{\thetab}$, the MPL model estimates,
+ \item[$\triangleright$] $\widehat{\mathcal{L}}_{p}$, the value of the penalised log-likelihood at convergence. \\
+ \end{my_itemize}
+
+\par\noindent \textbf{Initialise}:
+ \begin{my_itemize}
+ \item[$\triangleright$]  $\betab^{{(0)}} = \tensor*[_{\mathbb{V}}]{\big\{}{^p_{j=1}} \  \beta_{j}  \tensor*[]{\big\}}{} = \mathbf{1}_{p}$,
+ \item[$\triangleright$] $\thetab^{(0)} = \tensor*[_{\mathbb{V}}]{\big\{}{^m_{u=1}} \  \theta_{u}  \tensor*[]{\big\}}{} = \mathbf{1}_{m}$, 
+ %
+  \item[$\triangleright$] $\bs\mu^{(0)}=\tensor*[_{\mathbb{V}}]{\big\{}{^n_{i=1}} \  \mu_{i} \tensor*[]{\big\}}{} =e^{\mathbf{X}\betab^{(0)}}$, 
+ %
+ \item[$\triangleright$]  $l_{p}^{(0)}=(1-\gamma)\left\{\xib^{T} \log\left(\bs\psi(\mathbf{t})\thetab^{(0)} \circ \bs\mu^{(0)} \right)
+-  \mathbf{1}_{n}^{T}\left[\bs\Psi(\mathbf{t})\thetab^{(0)} \circ  \bs\mu^{(0)} \right]\right\}
+- \gamma \thetab^{(0)^{T}}\mathbf{R}\thetab^{(0)}$,
+%
+\item[$\triangleright$] $\varepsilon = 10^{6}$,
+\item[$\triangleright$] $k = 0$. \\
+ \end{my_itemize}
+
+\par\noindent \textbf{Remark}:\\
+For algorithmic reasons, all matrix products of form $\mathbf{XAY}$, where $\mathbf{A}$ is a diagonal matrix, are re-expressed as $\mathbf{X}^{\star}\mathbf{Y}$ or $\mathbf{X}\mathbf{Y}^{\star}$, where $\mathbf{X}^{\star}$ and $\mathbf{Y}^{\star}$ are re-scaled using elements of $\text{diag}(\mathbf{A})$, such that 
+$$ \mathbf{XAY} = \mathbf{X}^{\star}\mathbf{Y} = \mathbf{X}\mathbf{Y}^{\star}.$$
+For example, 
+\begin{align*}
+\frac{\partial^{2}}{\partial \betab \partial \betab } \mathcal{L}^{\star}_{p} = \mathcal{H}_{\betab}
+&= (\gamma-1)\, \mathbf{X}^{T} \left\langle \bs{\Psi}(t)\thetab \circ e^{\mathbf{X}\betab} \right\rangle \mathbf{X} \\
+&= (\gamma-1)\left(\mathbf{X}\circ \left\{ \mathbf{1}_{p}^{T} \otimes \left[\bs\Psi(\mathbf{t})\thetab \circ  e^{\mathbf{X}\betab} \right]\right\}\right) ^{T}\mathbf{X}.\\
+\end{align*} 
+ 
+ 
+\par\noindent \textbf{Estimation algorithm}:\\
+\begin{algorithm}[H]
+\RestyleAlgo{ruled} 
+ \Begin{
+ \While{$\varepsilon>10^{-20}$}{
+  $k  \leftarrow k+1$;\\
+%%
+%% update beta
+%%
+ {\color{blue} \textbf{update $\betab$}:}\\
+ %
+$\omega^{(k)}\,  \leftarrow 1$;\\
+%
+$\mathcal{r}_{\betab}^{(k)}\leftarrow 
+(1-\gamma)\, \mathbf{X}^{T}\left[\xib-\bs\Psi(\mathbf{t})\thetab^{(k-1)} \circ  \bs\mu^{(k-1)} \right]
+$;\\
+%
+$\mathcal{H}_{\betab}^{(k)} \leftarrow
+(1-\gamma)\left(\mathbf{X}\circ \left\{ \mathbf{1}_{p}^{T} \otimes \left[\bs\Psi(\mathbf{t})\thetab^{(k-1)} \circ  \bs\mu^{(k-1)} \right]\right\}\right) ^{T}\mathbf{X}
+$;\\
+%
+$\blacktriangledown_{\betab}^{(k)} \, \leftarrow
+\left(\mathcal{H}_{\betab}^{(k)} \right)^{-1} \mathcal{r}_{\betab}^{(k)}
+$;\\
+%
+$\betab^{(k)} \, \leftarrow 
+\betab^{(k-1)}+ \omega^{(k)} \blacktriangledown_{\betab}^{(k)}
+$;\\
+%
+$\bs\mu^{(k)}\, \leftarrow
+e^{\mathbf{X}\betab^{(k)}}
+$;\\
+%
+$\mathcal{L}_{p}^{\star (k-\frac{1}{2})} \leftarrow
+(1-\gamma)\left\{\xib^{T} \log\left(\bs\psi(\mathbf{t})\thetab^{(k-1)} \circ \bs\mu^{(k)} \right)
+-  \mathbf{1}_{n}^{T}\left[\bs\Psi(\mathbf{t})\thetab^{(k-1)} \circ  \bs\mu^{(k)} \right]\right\}
+- \gamma \thetab^{(k-1)^{T}}\mathbf{R}\thetab^{(k-1)}
+$;\\
+%% start if while 
+\If{$\mathcal{L}_{p}^{\star (k-\frac{1}{2})} <\mathcal{L}_{p}^{\star (k-1)}$}{
+\While{$\mathcal{L}_{p}^{\star (k-\frac{1}{2})} <\mathcal{L}_{p}^{\star (k-1)}$}{
+%
+$\omega^{(k)} \leftarrow \frac{\omega^{(k)}}{\kappa}
+$;\\ 
+%
+$\betab^{(k)} \leftarrow 
+\betab^{(k-1)}+ \omega^{(k)} \blacktriangledown_{\betab}^{(k)}
+$;\\
+%
+$\bs\mu^{(k)} \leftarrow
+e^{\mathbf{X}\betab^{(k)}}
+$;\\
+%
+$\mathcal{L}_{p}^{\star (k-\frac{1}{2})}\, \leftarrow
+(1-\gamma)\left\{\xib^{T} \log\left(\bs\psi(\mathbf{t})\thetab^{(k-1)} \circ \bs\mu^{(k)} \right)
+-  \mathbf{1}_{n}^{T}\left[\bs\Psi(\mathbf{t})\thetab^{(k-1)} \circ  \bs\mu^{(k)} \right]\right\}$\\   
+$\phantom{\mathcal{L}_{p}^{\star (k-\frac{1}{2})} \, \leftarrow}- \gamma \thetab^{(k-1)^{T}}\mathbf{R}\thetab^{(k-1)}
+$;\\   
+   }% end while
+   }% end if
+%%
+%% update \thetab
+%%
+{\color{blue} \textbf{update $\thetab$}:}\\
+%
+$\nu^{(k)}\,\,  \leftarrow 
+1
+$;\\
+%
+$\mathcal{r}_{\thetab}^{(k)} \leftarrow
+ (1-\gamma) \left(\left\{ \bs\psi(\mathbf{t}) / \left[\mathbf{1}_{m}^{T}\otimes \bs\psi(\mathbf{t})\thetab^{(k-1)} \right] \right\}^{T}\xib-
+                       \bs\Psi(\mathbf{t})^{T} \bs\mu^{(k)} \right)
+-2\gamma\mathbf{R}\thetab^{(k-1)}
+$;\\
+%
+$\mathbf{s}^{(k)}\, \, \leftarrow
+\thetab^{(k-1)} / \left\{
+(1-\gamma)\bs\Psi(\mathbf{t})^{T} \bs\mu^{(k)} +
+\left[2\gamma\mathbf{R}\thetab^{(k-1)}\right]^{+}+
+ \epsilon \mathbf{1}_{m}\right\}
+ $;\\
+%
+$\blacktriangledown_{\thetab}^{(k)}\, \leftarrow
+ \mathbf{s}^{(k)^{T}}\circ \mathcal{r}^{(k)}_{\thetab}
+ $;\\
+%
+$\thetab^{(k)} \, \leftarrow 
+\left(\thetab^{(k-1)}+ \nu^{(k)} \blacktriangledown_{\betab}^{(k)}\right)^{\dotplus}
+$;\\
+%
+$\mathcal{L}_{p}^{\star (k)} \leftarrow
+(1-\gamma)\left\{\xib^{T} \log\left(\bs\psi(\mathbf{t})\thetab^{(k)} \circ \bs\mu^{(k)} \right)
+-  \mathbf{1}_{n}^{T}\left[\bs\Psi(\mathbf{t})\thetab^{(k)} \circ  \bs\mu^{(k)} \right]\right\}
+- \gamma \thetab^{(k)^{T}}\mathbf{R}\thetab^{(k)}
+$;\\
+%% start if while 
+\If{$\mathcal{L}_{p}^{\star (k)} < \mathcal{L}_{p}^{\star (k-\frac{1}{2})}$}{
+\While{$\mathcal{L}_{p}^{\star (k)} < \mathcal{L}_{p}^{\star (k-\frac{1}{2})}$}{
+%
+$\nu^{(k)} \leftarrow \frac{\nu^{(k)}}{\kappa}
+$;\\ 
+%
+$\thetab^{(k)} \, \leftarrow 
+\left(\thetab^{(k-1)}+ \nu^{(k)} \blacktriangledown_{\betab}^{(k)}\right)^{\dotplus}
+$;\\
+%
+$\mathcal{L}_{p}^{\star (k)} \leftarrow
+(1-\gamma)\left\{\xib^{T} \log\left(\bs\psi(\mathbf{t})\thetab^{(k)} \circ \bs\mu^{(k)} \right)
+-  \mathbf{1}_{n}^{T}\left[\bs\Psi(\mathbf{t})\thetab^{(k)} \circ  \bs\mu^{(k)} \right]\right\}
+- \gamma \thetab^{(k)^{T}}\mathbf{R}\thetab^{(k)}
+$;\\
+   }% end while
+   }% end if
+{\color{blue} \textbf{update $\varepsilon$}:}\\
+$\varepsilon \leftarrow \text{max}\left(\mathbf{1}^{T}_{n}\left|\betab^{(k)}-\betab^{(k-1)} \right| + \mathbf{1}^{T}_{m}\left|\thetab^{(k)}-\thetab^{(k-1)} \right| \right)
+$;\\
+ }% end while big loob
+ $\widehat{\betab} \leftarrow \betab^{(k)}$;\\
+  $\widehat{\thetab} \leftarrow \thetab^{(k)} e^{\frac{1}{n}\mathbf{1}_{n}\mathbf{X}^{\dagger}}$;\\
+ }%end estimation
+ \end{algorithm}
+
+
+
+
+\pagebreak
+%%%
+%%%
+%%%
+\section{Inference}
+%%%
+%%%
+%%%
+Two cases, depending on values of $\lambda = \frac{\gamma}{1-\gamma}$, are considered. 
+%%%
+%%%
+\subsection{Asymptotics when $\frac{\gamma}{1-\gamma}\rightarrow 0$}
+%%%
+%%%
+When $\frac{\gamma}{1-\gamma}\rightarrow 0$, the penalty disappears and, under some regularity conditions, the asymptotic covariance matrix of $\bs\eta=(\betab^{T},\thetab^{T})^{T}$, $\mathbf{V}(\bs\eta)$, equals $(-\bs{\mathcal{H}})^{-1}(\bs\eta)$, where $\bs{\mathcal{H}}$ is the hessian matrix of the unpenalised likelihood function. The estimated asymptotic covariance matrix of $\widehat{\bs\eta}=(\widehat{\betab}^{T},\widehat{\thetab}^{T})^{T}$, $\widehat{\mathbf{V}}(\widehat{\bs\eta})$, is then obtained by pluggin-in $\widehat{\bs\eta}$ for $\bs\eta$ and using the empirical version of $\bs{\mathcal{H}}(\bs\eta)$. We then have
+\begin{align}
+\sqrt{n}(\widehat{\bs\eta}-\bs\eta)& \sim \text{MVN}\left[\mathbf{0}_{p+m},(-\widehat{\bs{\mathcal{H}}})^{-1}(\widehat{\bs\eta}) \right], \label{eq:inference1}
+\end{align}
+where $\text{MVN}()$ denotes the multivariate normal distribution and
+\begin{align}
+%%%
+- \widehat{\bs{\mathcal{H}}}(\widehat{\bs\eta})&= - \label{inferenceH1234}
+\begin{bmatrix}
+\widehat{\bs{\mathcal{H}}}_{1}(\widehat{\bs\eta})  &   
+\widehat{\bs{\mathcal{H}}}_{3}(\widehat{\bs\eta})   \\%[0.3em]
+\widehat{\bs{\mathcal{H}}}_{2}(\widehat{\bs\eta}) &  
+\widehat{\bs{\mathcal{H}}}_{4}(\widehat{\bs\eta})  \\%[0.3em]
+       \end{bmatrix} \\ %\Bigg\vert_{\widehat{\betab},\widehat{\thetab}} 
+&= -
+\begin{bmatrix}
+\frac{\partial^{2}}{\partial \betab \partial \betab^{T}} \bs{\mathcal{L}}^{\star}  &   
+\frac{\partial^{2}}{\partial \betab \partial \thetab^{T}} \bs{\mathcal{L}}^{\star}   \\%[0.3em]
+\frac{\partial^{2}}{\partial \thetab \partial \betab^{T}} \bs{\mathcal{L}}^{\star}  &  
+\frac{\partial^{2}}{\partial \thetab \partial \thetab^{T}} \bs{\mathcal{L}}^{\star}  \\%[0.3em]
+       \end{bmatrix}  \Bigg\vert_{\widehat{\betab},\widehat{\thetab}} \\
+       %
+%&= -\frac{1}{n} 
+%\small{\begin{bmatrix}
+%(\gamma-1) \mathbf{X}^{T} \left\langle \bs{\Psi}(t)\widehat{\thetab} \circ e^{\mathbf{X}\widehat{\betab}} \right\rangle \mathbf{X}   &   
+%(\gamma -1) \mathbf{X}^{T}  \big\langle e^{\mathbf{X}\widehat{\betab}}  \big\rangle\  \bs{\Psi}(\mathbf{t})   \\%[0.3em]
+%(\gamma-1) \bs{\Psi}(\mathbf{t})^{T} \big\langle e^{\mathbf{X}\widehat{\betab}} \big\rangle \ \mathbf{X} &  
+% (\gamma-1)  \bs{\psi}(\mathbf{t})^{T}\left\langle \bs\xi/ [\bs\psi(\mathbf{t})\widehat{\thetab}]^{2} \right\rangle\, \bs\psi(\mathbf{t}) -  2 \gamma\mathbf{R} \\%[0.3em]
+%       \end{bmatrix}}    \\
+%
+&= \phantom{-}
+\begin{bmatrix} 
+(1-\gamma) \mathbf{X}^{T} \left\langle \bs{\Psi}(t)\widehat{\thetab} \circ e^{\mathbf{X}\widehat{\betab}} \right\rangle \mathbf{X}   &   
+(1-\gamma) \mathbf{X}^{T}  \big\langle e^{\mathbf{X}\widehat{\betab}}  \big\rangle\  \bs{\Psi}(\mathbf{t})   \\%[0.3em]
+(1-\gamma) \bs{\Psi}(\mathbf{t})^{T} \big\langle e^{\mathbf{X}\widehat{\betab}} \big\rangle \ \mathbf{X} &  
+(1-\gamma)  \bs{\psi}(\mathbf{t})^{T}\left\langle \bs\xi/ [\bs\psi(\mathbf{t})\widehat{\thetab}]^{2} \right\rangle\, \bs\psi(\mathbf{t}) \\%[0.3em]
+       \end{bmatrix}. 
+%%%
+\end{align}
+As $\frac{\gamma}{1-\gamma}\rightarrow 0$, we have $\gamma \rightarrow 0$ such that
+\begin{align}
+- \widehat{\bs{\mathcal{H}}}(\widehat{\bs\eta})&= 
+\begin{bmatrix} 
+\mathbf{X}^{T} \left\langle \bs{\Psi}(t)\widehat{\thetab} \circ e^{\mathbf{X}\widehat{\betab}} \right\rangle \mathbf{X}   &   
+ \mathbf{X}^{T}  \big\langle e^{\mathbf{X}\widehat{\betab}}  \big\rangle\  \bs{\Psi}(\mathbf{t})   \\%[0.3em]
+ \bs{\Psi}(\mathbf{t})^{T} \big\langle e^{\mathbf{X}\widehat{\betab}} \big\rangle \ \mathbf{X} &  
+ \bs{\psi}(\mathbf{t})^{T}\left\langle \bs\xi/ [\bs\psi(\mathbf{t})\widehat{\thetab}]^{2} \right\rangle\, \bs\psi(\mathbf{t}) \\%[0.3em]
+       \end{bmatrix}. 
+\end{align}
+\noindent Refer to the appendix for detail. Note that $\widehat{\bs{\mathcal{H}}}_{3}(\widehat{\bs\eta})$ in (\ref{inferenceH1234}) is the sample estimate of  ${\bs{\mathcal{H}}}_{\betab}$ in (\ref{estimationHassianBeta}).\\
+When deducing the standard deviations of $\widehat{\bs\eta}$ from (\ref{eq:inference1}), 
+the standard deviation of $\widehat{\bs\theta}$ depends on $\widehat{\bs{\mathcal{H}}}_{3}(\widehat{\bs\eta})$ and $\widehat{\bs{\mathcal{H}}}_{4}(\widehat{\bs\eta})$, the second being (supposedly) more important than the first. Thus, when the baseline hazard is approximated by a step function as in (\ref{eq:Psi:discretised:step}), we have
+\begin{align}
+\widehat{\bs{\sigma}}^{2}_{\widehat{\bs{\theta}}} 
+&\cong \left\{ \text{diag}\left[\bs{\psi}(\mathbf{t})^{T}\left\langle \bs\xi/ [\bs\psi(\mathbf{t})\widehat{\thetab}]^{2} \right\rangle\, \bs\psi(\mathbf{t}) \right] \right\}^{-1}\\
+&\cong \frac{\widehat{\bs{\theta}}^{2}}{\bs{\psi}(\mathbf{t})\bs{\xi}},
+\end{align}
+where $\bs{\psi}(\mathbf{t})\bs{\xi}$ is a vector of length $m$ indicating the number of events per bin. Consequently, when the baseline hazard is approximated by a step function, $\widehat{{\sigma}}^{2}_{\widehat{{\theta}}} $ equals infinity for bins with no event (division by 0). The minimal number of event per bin should then be set to 1.   
+%%%
+%%%
+\subsection{Asymptotics for fixed $\frac{\gamma}{1-\gamma}$}
+%%%
+%%%
+The penalised log-likelihood given in (\ref{eq:penlik:general}) may be rewritten under the form of an M-estimator allowing us to obtain, under some regularity conditions, the asymptotic covariance matrix of $\bs\eta=(\betab^{T},\thetab^{T})^{T}$, $\mathbf{V}(\bs\eta)$, by the following sandwich formula [refer to Jun, HŽritier and L™ (2013), Section 4.2],
+\begin{align}
+\mathbf{V}(\bs\eta)= \mathbf{M}(\bs\eta)^{-1}\mathbf{Q}(\bs\eta)\mathbf{M}(\bs\eta)^{-1},\label{eq:MQM:th}
+\end{align}
+where
+\begin{my_itemize}
+\item[$\triangleright$] $\mathbf{M}(\bs\eta)=\text{E}\left(- \frac{\partial^{2}}{\partial \bs\eta \partial \bs\eta^{T}} \bs{\mathcal{L}}_{p} \right) =
+                                           \text{E}\left[ - \frac{\partial^{2}}{\partial \bs\eta \partial \bs\eta^{T}} (1-\gamma) \bs{\mathcal{L}} + \frac{\partial^{2}}{\partial \bs\eta \partial \bs\eta^{T}} \gamma \mathbf{J}(\thetab) \right] =
+                                           \text{E}\left[ - (1-\gamma)\bs{\mathcal{H}} + \frac{\partial^{2}}{\partial \bs\eta \partial \bs\eta^{T}} \gamma \mathbf{J}(\thetab) \right]  $,\\
+                                           and $\bs{\mathcal{H}}$ is the hessian matrix of $\bs{\mathcal{L}}$, the unpenalised likelihood function defined in (\ref{eq:logLikvector}),
+\item[$\triangleright$] $\mathbf{Q}(\bs\eta)=\text{E}\left[ - \frac{\partial}{\partial \bs\eta} \bs{\mathcal{L}}^{T}_{p}\left(\frac{\partial}{\partial \bs\eta} \bs{\mathcal{L}}^{T}_{p} \right)^{T}  \right]$, where $\bs{\mathcal{L}}_{p}= (1-\gamma) \bs{\mathcal{L}} - \frac{\gamma \mathbf{J}(\thetab)}{{\color{blue} n}}{\color{blue} \mathbf{1}_{n}}$.
+\end{my_itemize}
+As, for small $\frac{\gamma}{1-\gamma}$ (i.e. $\frac{\gamma}{1-\gamma}< o(\sqrt{n}) = \frac{\sqrt{n}}{10}$, for example), $\widehat{\bs\eta}$ is a consistent estimate of $\bs\eta$, we have that 
+$\sqrt{n}(\widehat{\bs\eta}-\bs\eta) \sim \text{MVN}\left[\mathbf{0}_{p+m},\mathbf{V}(\bs\eta)\right]$,
+where $\text{MVN}()$ denotes the multivariate normal distribution.\\
+\par \noindent The estimated asymptotic covariance matrix of $\widehat{\bs\eta}=(\widehat{\betab}^{T},\widehat{\thetab}^{T})^{T}$, $\widehat{\mathbf{V}}(\widehat{\bs\eta})$, is then obtained by pluggin-in $\widehat{\bs\eta}$ for $\bs\eta$ in (\ref{eq:MQM:th}) and using the empirical versions of $\mathbf{M}(\bs\eta)$ and $\mathbf{Q}(\bs\eta)$. We then have
+\begin{align}
+\mathbf{\widehat{V}}(\widehat{\bs\eta}) = \mathbf{\widehat{M}}(\widehat{\bs\eta})^{-1}\mathbf{\widehat{Q}}(\widehat{\bs\eta})\mathbf{\widehat{M}}(\widehat{\bs\eta})^{-1},\label{eq:MQM:empirical}
+\end{align}
+where $\mathbf{\widehat{M}}(\widehat{\bs\eta})$ and $\mathbf{\widehat{Q}}(\widehat{\bs\eta})$ are ($m$ x $m$) matrices defined as follows for quadratic penalty functions of form $\mathbf{J}(\thetab)=\thetab^{T}\mathbf{R}\thetab$ [Note that we propose two ways to define the $\mathbf{M}$ matrix, respectively requiring first and second derivatives of the objective function and denoted by $\mathbf{M}_{1}$ and $\mathbf{M}_{2}$]:
+\begin{align}
+%%%
+%%%
+\mathbf{\widehat{M}_{1}}(\widehat{\bs\eta})
+&= -\frac{1}{n} 
+\begin{bmatrix}
+\frac{\partial}{\partial \betab} \bs{\mathcal{L}}^{\star T}_{p}   \\   
+\frac{\partial}{\partial \thetab} \bs{\mathcal{L}}^{\star T}_{p}  \\
+   \end{bmatrix}  \Bigg\vert_{\widehat{\betab},\widehat{\thetab}}
+\begin{bmatrix}
+\frac{\partial}{\partial \betab} \bs{\mathcal{L}}^{\star T}   \\   
+\frac{\partial}{\partial \thetab} \bs{\mathcal{L}}^{\star T}  \\
+   \end{bmatrix}  \Bigg\vert_{\widehat{\betab},\widehat{\thetab}}^{T}
+= -\frac{1}{n} \begin{bmatrix}
+\frac{\partial}{\partial \betab} \bs{\mathcal{L}}^{\star T}_{p}   \\   
+\frac{\partial}{\partial \thetab} \bs{\mathcal{L}}^{\star T}_{p}  \\
+   \end{bmatrix}  \Bigg\vert_{\widehat{\betab},\widehat{\thetab}}
+\begin{bmatrix}
+\frac{\partial}{\partial \betab^{T}} \bs{\mathcal{L}}^{\star}    \\   
+\frac{\partial}{\partial \thetab^{T}} \bs{\mathcal{L}}^{\star}  \\
+   \end{bmatrix}  \Bigg\vert_{\widehat{\betab},\widehat{\thetab}},   \\
+%%%
+%%%
+\mathbf{\widehat{M}_{2}}(\widehat{\bs\eta})&= -\frac{1}{n} 
+\begin{bmatrix}
+\frac{\partial^{2}}{\partial \betab \partial \betab^{T}} \bs{\mathcal{L}}^{\star}_{p}  &   
+\frac{\partial^{2}}{\partial \betab \partial \thetab^{T}} \bs{\mathcal{L}}^{\star}_{p}   \\%[0.3em]
+\frac{\partial^{2}}{\partial \thetab \partial \betab^{T}} \bs{\mathcal{L}}^{\star}_{p}  &  
+\frac{\partial^{2}}{\partial \thetab \partial \thetab^{T}} \bs{\mathcal{L}}^{\star}_{p}  \\%[0.3em]
+       \end{bmatrix}  \Bigg\vert_{\widehat{\betab},\widehat{\thetab}},   \\       
+%%%
+%%%
+\mathbf{\widehat{Q}}(\widehat{\bs\eta})
+&= -\frac{1}{n} 
+\begin{bmatrix}
+\frac{\partial}{\partial \betab} \bs{\mathcal{L}}^{\star T}_{p}   \\   
+\frac{\partial}{\partial \thetab} \bs{\mathcal{L}}^{\star T}_{p}  \\
+   \end{bmatrix}  \Bigg\vert_{\widehat{\betab},\widehat{\thetab}}
+\begin{bmatrix}
+\frac{\partial}{\partial \betab} \bs{\mathcal{L}}^{\star T}_{p}     \\   
+\frac{\partial}{\partial \thetab} \bs{\mathcal{L}}^{\star T}_{p}  \\
+   \end{bmatrix}  \Bigg\vert_{\widehat{\betab},\widehat{\thetab}}^{T}
+= -\frac{1}{n} \begin{bmatrix}
+\frac{\partial}{\partial \betab} \bs{\mathcal{L}}^{\star T}_{p}   \\   
+\frac{\partial}{\partial \thetab} \bs{\mathcal{L}}^{\star T}_{p}  \\
+   \end{bmatrix}  \Bigg\vert_{\widehat{\betab},\widehat{\thetab}}
+\begin{bmatrix}
+\frac{\partial}{\partial \betab^{T}} \bs{\mathcal{L}}^{\star}_{p}     \\   
+\frac{\partial}{\partial \thetab^{T}} \bs{\mathcal{L}}^{\star}_{p}  \\
+   \end{bmatrix}  \Bigg\vert_{\widehat{\betab},\widehat{\thetab}}.
+ \end{align}
+ 
+%%%
+\noindent Using the results of appendix Sections \ref{app:A1} to \ref{app:A5} and noting that  
+\begin{align}
+\begin{bmatrix}
+\frac{\partial}{\partial \betab} \bs{\mathcal{L}}^{\star T}_{p}   \\   
+\frac{\partial}{\partial \thetab} \bs{\mathcal{L}}^{\star T}_{p}  \\
+   \end{bmatrix}  \Bigg\vert_{\widehat{\betab},\widehat{\thetab}}
+&= \begin{bmatrix}
+(1-\gamma) \frac{\partial}{\partial \betab}  \bs{\mathcal{L}}^{T}   \\   
+(1-\gamma) \frac{\partial}{\partial \thetab}   \bs{\mathcal{L}}^{T} - \frac{\gamma}{n} \frac{\partial}{\partial \thetab} \mathbf{J}(\thetab) \mathbf{1}^{T}_{n}   \\
+   \end{bmatrix} \Bigg\vert_{\widehat{\betab},\widehat{\thetab}} \\
+&= \begin{bmatrix}
+\small{(1-\gamma)\tensor*[_{\mathbb{M}}]{\bigg\{}{^p_{j=1}} \  \left[ \xi_{i}- \bs{\Psi}(t_{i})^{T}\widehat{\thetab} e^{\mathbf{x}_{i}^{T}\widehat{\betab}} \right] \mathbf{x}_{i}  \tensor*[^n_{i=1}]{\bigg\}}{} } \\   
+\small{(1-\gamma)\tensor*[_{\mathbb{M}}]{\bigg\{}{^m_{u=1}} \ \frac{ \xi_{i}}{\bs{\psi}(t_{i})^{T}\widehat{\thetab}} \bs{\psi}(t_{i}) - e^{\mathbf{x}_{i}^{T}\widehat{\betab}} \bs{\Psi}(t_{i}) \tensor*[^n_{i=1}]{\bigg\}}{} - \frac{2\gamma}{n}\mathbf{1}_{n}\otimes (\mathbf{R}\widehat{\thetab})^{T}} \\
+   \end{bmatrix}\\
+&= \begin{bmatrix}
+(1-\gamma)  \left\{  \left[ \mathbf{1}^{T}_{p} \otimes \left( \bs\xi-\bs\Psi(\mathbf{t})\widehat{\thetab}\circ e^{\mathbf{X}\widehat{\betab}} \right) \right] \circ \mathbf{X} \right\}^{T} \\   
+(1-\gamma) \left[\left(\mathbf{1}^{T}_{m}\otimes \frac{\bs\xi}{\bs\psi(\mathbf{t})\thetab}\right)\circ \bs\psi(\mathbf{t}) - \left(\mathbf{1}^{T}_{p}\otimes e^{\mathbf{X}\widehat{\betab}}\right)\circ \bs\Psi(\mathbf{t}) \right]^{T}
+ - \frac{2\gamma}{n}\left(\mathbf{1}^{T}_{n}\otimes \mathbf{R}\widehat{\thetab}\right) ^{T} \\
+   \end{bmatrix},\\
+%%%
+\begin{bmatrix}
+\frac{\partial}{\partial \betab} \bs{\mathcal{L}}^{\star T}   \\   
+\frac{\partial}{\partial \thetab} \bs{\mathcal{L}}^{\star T}  \\
+   \end{bmatrix}  \Bigg\vert_{\widehat{\betab},\widehat{\thetab}}
+%&= %\begin{bmatrix}
+%(1-\gamma) \frac{\partial}{\partial \betab}  \bs{\mathcal{L}}^{T}   \\   
+%(1-\gamma) \frac{\partial}{\partial \thetab}   \bs{\mathcal{L}}^{T}  \\
+ %  \end{bmatrix} \Bigg\vert_{\widehat{\betab},\widehat{\thetab}} \\   
+&= \begin{bmatrix}
+(1-\gamma) \left\{  \left[ \mathbf{1}^{T}_{p} \otimes \left( \bs\xi-\bs\Psi(\mathbf{t})\widehat{\thetab}\circ e^{\mathbf{X}\widehat{\betab}} \right) \right] \circ \mathbf{X} \right\}^{T} \\   
+(1-\gamma) \left[\left(\mathbf{1}^{T}_{m}\otimes \frac{\bs\xi}{\bs\psi(\mathbf{t})\thetab}\right)\circ \bs\psi(\mathbf{t}) - \left(\mathbf{1}^{T}_{p}\otimes e^{\mathbf{X}\widehat{\betab}}\right)\circ \bs\Psi(\mathbf{t}) \right]^{T}
+  \end{bmatrix},   
+\end{align}
+%%%
+%%%
+we obtain the following expressions for $\mathbf{\widehat{M}}_{1}(\widehat{\bs\eta})$, $\mathbf{\widehat{M}}_{2}(\widehat{\bs\eta})$ 
+\begin{align}
+%%%
+%%%
+\mathbf{\widehat{M}_{1}}(\widehat{\bs\eta})
+&= -\frac{1}{n} 
+\begin{bmatrix}
+(1-\gamma)  \left\{  \left[ \mathbf{1}^{T}_{p} \otimes \left( \bs\xi-\bs\Psi(\mathbf{t})\widehat{\thetab}\circ e^{\mathbf{X}\widehat{\betab}} \right) \right] \circ \mathbf{X} \right\}^{T} \\   
+(1-\gamma) \left[\left(\mathbf{1}^{T}_{m}\otimes \frac{\bs\xi}{\bs\psi(\mathbf{t})\thetab}\right)\circ \bs\psi(\mathbf{t}) - \left(\mathbf{1}^{T}_{p}\otimes e^{\mathbf{X}\widehat{\betab}}\right)\circ \bs\Psi(\mathbf{t}) \right]^{T}
+ - \frac{2\gamma}{n}\left(\mathbf{1}^{T}_{n}\otimes \mathbf{R}\widehat{\thetab}\right) ^{T} \\
+   \end{bmatrix}\\%%%
+&\times \phantom{-\frac{1}{n} }\begin{bmatrix}
+(1-\gamma)  \left\{  \left[ \mathbf{1}^{T}_{p} \otimes \left( \bs\xi-\bs\Psi(\mathbf{t})\widehat{\thetab}\circ e^{\mathbf{X}\widehat{\betab}} \right) \right] \circ \mathbf{X} \right\}^{T} \\   
+(1-\gamma) \left[\left(\mathbf{1}^{T}_{m}\otimes \frac{\bs\xi}{\bs\psi(\mathbf{t})\thetab}\right)\circ \bs\psi(\mathbf{t}) - \left(\mathbf{1}^{T}_{p}\otimes e^{\mathbf{X}\widehat{\betab}}\right)\circ \bs\Psi(\mathbf{t}) \right]^{T} \\
+   \end{bmatrix}^T\\   
+%%%
+\mathbf{\widehat{M}_{2}}(\widehat{\bs\eta})%&= -\frac{1}{n} 
+%\begin{bmatrix}
+%\frac{\partial^{2}}{\partial \betab \partial \betab^{T}} \bs{\mathcal{L}}^{\star}_{p}  &   
+%\frac{\partial^{2}}{\partial \betab \partial \thetab^{T}} \bs{\mathcal{L}}^{\star}_{p}   \\%[0.3em]
+%\frac{\partial^{2}}{\partial \thetab \partial \betab^{T}} \bs{\mathcal{L}}^{\star}_{p}  &  
+%\frac{\partial^{2}}{\partial \thetab \partial \thetab^{T}} \bs{\mathcal{L}}^{\star}_{p}  \\%[0.3em]
+%       \end{bmatrix}  \Bigg\vert_{\widehat{\betab},\widehat{\thetab}} \\
+       %
+%&= -\frac{1}{n} 
+%\small{\begin{bmatrix}
+%(\gamma-1) \mathbf{X}^{T} \left\langle \bs{\Psi}(t)\widehat{\thetab} \circ e^{\mathbf{X}\widehat{\betab}} \right\rangle \mathbf{X}   &   
+%(\gamma -1) \mathbf{X}^{T}  \big\langle e^{\mathbf{X}\widehat{\betab}}  \big\rangle\  \bs{\Psi}(\mathbf{t})   \\%[0.3em]
+%(\gamma-1) \bs{\Psi}(\mathbf{t})^{T} \big\langle e^{\mathbf{X}\widehat{\betab}} \big\rangle \ \mathbf{X} &  
+% (\gamma-1)  \bs{\psi}(\mathbf{t})^{T}\left\langle \bs\xi/ [\bs\psi(\mathbf{t})\widehat{\thetab}]^{2} \right\rangle\, \bs\psi(\mathbf{t}) -  2 \gamma\mathbf{R} \\%[0.3em]
+%       \end{bmatrix}}    \\
+%
+&= \phantom{-}\frac{1}{n} 
+\begin{bmatrix}
+(1-\gamma) \mathbf{X}^{T} \left\langle \bs{\Psi}(t)\widehat{\thetab} \circ e^{\mathbf{X}\widehat{\betab}} \right\rangle \mathbf{X}   &   
+(1-\gamma) \mathbf{X}^{T}  \big\langle e^{\mathbf{X}\widehat{\betab}}  \big\rangle\  \bs{\Psi}(\mathbf{t})   \\%[0.3em]
+(1-\gamma) \bs{\Psi}(\mathbf{t})^{T} \big\langle e^{\mathbf{X}\widehat{\betab}} \big\rangle \ \mathbf{X} &  
+(1-\gamma)  \bs{\psi}(\mathbf{t})^{T}\left\langle \bs\xi/ [\bs\psi(\mathbf{t})\widehat{\thetab}]^{2} \right\rangle\, \bs\psi(\mathbf{t}) +  2 \gamma\mathbf{R} \\%[0.3em]
+       \end{bmatrix} ,   
+ \end{align}
+and $\mathbf{\widehat{Q}}(\widehat{\bs\eta})$       
+%%%
+%%%
+ \begin{align}
+\mathbf{\widehat{Q}}(\widehat{\bs\eta})
+&= -\frac{1}{n} 
+\begin{bmatrix}
+(1-\gamma)  \left\{  \left[ \mathbf{1}^{T}_{p} \otimes \left( \bs\xi-\bs\Psi(\mathbf{t})\widehat{\thetab}\circ e^{\mathbf{X}\widehat{\betab}} \right) \right] \circ \mathbf{X} \right\}^{T} \\   
+(1-\gamma) \left[\left(\mathbf{1}^{T}_{m}\otimes \frac{\bs\xi}{\bs\psi(\mathbf{t})\thetab}\right)\circ \bs\psi(\mathbf{t}) - \left(\mathbf{1}^{T}_{p}\otimes e^{\mathbf{X}\widehat{\betab}}\right)\circ \bs\Psi(\mathbf{t}) \right]^{T}
+ - \frac{2\gamma}{n}\left(\mathbf{1}^{T}_{n}\otimes \mathbf{R}\widehat{\thetab}\right) ^{T} \\
+   \end{bmatrix}\\%%%
+&\times \phantom{-\frac{1}{n} }\begin{bmatrix}
+(1-\gamma)  \left\{  \left[ \mathbf{1}^{T}_{p} \otimes \left( \bs\xi-\bs\Psi(\mathbf{t})\widehat{\thetab}\circ e^{\mathbf{X}\widehat{\betab}} \right) \right] \circ \mathbf{X} \right\}^{T} \\   
+(1-\gamma) \left[\left(\mathbf{1}^{T}_{m}\otimes \frac{\bs\xi}{\bs\psi(\mathbf{t})\thetab}\right)\circ \bs\psi(\mathbf{t}) - \left(\mathbf{1}^{T}_{p}\otimes e^{\mathbf{X}\widehat{\betab}}\right)\circ \bs\Psi(\mathbf{t}) \right]^{T} 
+ - \frac{2\gamma}{n}\left(\mathbf{1}^{T}_{n}\otimes \mathbf{R}\widehat{\thetab}\right) ^{T} \\
+   \end{bmatrix}^T.
+ \end{align}
+Note the similarities between $\mathbf{\widehat{M}_{1}}(\widehat{\bs\eta})$ and $\mathbf{\widehat{Q}}(\widehat{\bs\eta})$, as well as between $\mathbf{\widehat{M}_{2}}(\widehat{\bs\eta})$ and $\mathbf{\widehat{H}}(\widehat{\bs\eta})$. \\
+
+\par\noindent The estimated standard deviation vector of $\widehat{\bs\eta}$, $\widehat{\bs\sigma}_{\widehat{\bs\eta}}$, is then given by
+\begin{align}
+\widehat{\bs\sigma}_{\widehat{\bs\eta}} = \left\{\frac{1}{n} \text{diag}\left[ \mathbf{\widehat{V}}(\widehat{\bs\eta})\right]\right\}^{\frac{1}{2}}. 
+\end{align}
+
+
+
+%\begin{center}
+%\includegraphics[width=24cm, height=17cm,angle=90]{../plot/sim/1/beta_bias}
+%\end{center}
+
+%\begin{center}
+%\includegraphics[width=24cm, height=17cm,angle=90]{../plot/sim/1/beta_sd}
+%\end{center}
+
+%\begin{center}
+%\includegraphics[width=24cm, height=17cm,angle=90]{../plot/sim/1/beta_scaledvar}
+%\end{center}
+
+%\begin{center}
+%\includegraphics[width=24cm, height=17cm,angle=90]{../plot/sim/1/beta_scaledmse}
+%\end{center}
+
+%\begin{center}
+%\includegraphics[width=24cm, height=17cm,angle=90]{../plot/sim/1/beta_scaledmse_noextrm}
+%\end{center}
+
+\pagebreak
+\appendix
+%\section{Appendix} \label{sec:appendix}
+
+%%
+%%
+\section{$1^{st}$ and $2^{nd}$ order partial derivatives of the penalised log-likelihood} \label{app}
+%%
+%%
+\subsection{$\frac{\partial}{\partial \betab} \mathcal{L}^{\star}_{p} =\frac{\partial}{\partial \betab} \mathcal{L}^{\star} =\bs{\mathcal{r}}_{\betab}$}\label{app:A1}
+\begin{align}
+\frac{\partial}{\partial \betab} \mathcal{L}^{\star}_{p} &= (1-\gamma) \frac{\partial}{\partial \betab} \mathcal{L} - \gamma \frac{\partial}{\partial \betab} \thetab^{T}\mathbf{R}\thetab \\
+&= (1-\gamma) \frac{\partial}{\partial \betab}\mathcal{L}. 
+\end{align}
+As 
+\begin{align}
+\frac{\partial}{\partial \betab} \mathcal{L}_{i} &= \frac{\partial}{\partial \betab} \bigg\{ \xi_{i} \log\left[\bs{\psi}(t_{i})^{T}\thetab e^{\mathbf{x}_{i}^{T}\betab} \right]  - \bs{\Psi}(t_{i})^{T}\thetab e^{\mathbf{x}_{i}^{T}\betab} \bigg\}\\
+&=  \xi_{i}\frac{\bs{\psi}(t_{i})^{T}\thetab}{\bs{\psi}(t_{i})^{T}\thetab e^{\mathbf{x}_{i}^{T}\betab}} \left( \frac{\partial}{\partial \betab}  e^{\mathbf{x}_{i}^{T}\betab} \right) - 
+       \bs{\Psi}(t_{i})^{T}\thetab  \left( \frac{\partial}{\partial \betab}  e^{\mathbf{x}_{i}^{T}\betab}  \right)  \\
+&=  \xi_{i}\frac{\bs{\psi}(t_{i})^{T}\thetab e^{\mathbf{x}_{i}^{T}\betab} }{\bs{\psi}(t_{i})^{T}\thetab e^{\mathbf{x}_{i}^{T}\betab}} \mathbf{x}_{i}- 
+       \bs{\Psi}(t_{i})^{T}\thetab e^{\mathbf{x}_{i}^{T}\betab}  \mathbf{x}_{i}  \\
+&=   \left[ \xi_{i}- \bs{\Psi}(t_{i})^{T}\thetab e^{\mathbf{x}_{i}^{T}\betab} \right] \mathbf{x}_{i},       
+\end{align}
+where $e^{\mathbf{x}_{i}^{T}\betab}$, $\bs{\psi}(t_{i})^{T}\thetab=h_{0}(t_{i})$ and $\bs{\Psi}(t_{i})^{T}\thetab=H_{0}(t_{i})$ are scalars, we have that
+\begin{align}
+\frac{\partial}{\partial \betab} \mathcal{L}^{\star}_{p} = \mathcal{r}_{\betab} &= (1-\gamma) \mathbf{X}^{T}\left[\xi-\bs{\Psi}(t)\thetab \circ e^{\mathbf{X}\betab}\right]. 
+\end{align}
+
+%%
+\subsection{$\frac{\partial^{2}}{\partial \betab \partial \betab^{T}} \mathcal{L}^{\star}_{p}=
+\frac{\partial^{2}}{\partial \betab \partial \betab^{T}} \mathcal{L}^{\star}= \bs{\mathcal{H}}_{\betab}$}
+\begin{align}
+\frac{\partial^{2}}{\partial \betab \partial \betab^{T}} \mathcal{L}^{\star}_{p}=  \frac{\partial}{\partial \betab^{T}}  \left( \frac{\partial}{\partial \betab} \mathcal{L}^{\star}_{p} \right) =
+(1-\gamma) \frac{\partial}{\partial \betab^{T}}  \left( \frac{\partial}{\partial \betab} \mathcal{L} \right). 
+\end{align}
+As
+\begin{align}
+\frac{\partial}{\partial \betab^{T}}  \left( \frac{\partial}{\partial \betab} \mathcal{L}_{i} \right) &= \frac{\partial}{\partial \betab^{T}} \left( \xi_{i}- \bs{\Psi}(t_{i})^{T}\thetab e^{\mathbf{x}_{i}^{T}\betab} \right) \mathbf{x}_{i}\\  
+&=  - \bs{\Psi}(t_{i})^{T}\thetab \left( \frac{\partial}{\partial \betab^{T}}  e^{\mathbf{x}_{i}^{T}\betab}  \right) \mathbf{x}_{i}\\   
+&=  - \bs{\Psi}(t_{i})^{T}\thetab e^{\mathbf{x}_{i}^{T}\betab}  \mathbf{x}_{i}^{T} \mathbf{x}_{i},
+\end{align}
+where $e^{\mathbf{x}_{i}^{T}\betab}$ and $\bs{\Psi}^{T}(t_{i})\thetab$ are constant scalars, we have that
+\begin{align}
+\frac{\partial^{2}}{\partial \betab \partial \betab^{T}} \mathcal{L}^{\star}_{p} = \bs{\mathcal{H}}_{\betab} &= - (1-\gamma) \mathbf{X}^{T} \left\langle \bs{\Psi}(t)\thetab \circ e^{\mathbf{X}\betab} \right\rangle \mathbf{X}\\
+&= (\gamma-1) \mathbf{X}^{T} \left\langle \bs{\Psi}(t)\thetab \circ e^{\mathbf{X}\betab} \right\rangle \mathbf{X} . 
+\end{align}
+
+%%
+\pagebreak
+\subsection{$\frac{\partial}{\partial \thetab} \mathcal{L}^{\star}_{p}=\bs{\mathcal{r}}_{\thetab}$}\label{app:A3}
+\begin{align}
+\frac{\partial}{\partial \thetab} \mathcal{L}^{\star}_{p} &= (1-\gamma) \frac{\partial}{\partial \thetab} \mathcal{L} - \gamma \frac{\partial}{\partial \thetab} \thetab^{T}\mathbf{R}\thetab\\
+&= (1-\gamma) \frac{\partial}{\partial \thetab} \mathcal{L} - 2 \gamma \mathbf{R}\thetab.
+\end{align}
+As 
+\begin{align}
+\frac{\partial}{\partial \thetab} \mathcal{L}_{i} &= \frac{\partial}{\partial \thetab} \bigg\{ \xi_{i} \log\left[\bs{\psi}(t_{i})^{T}\thetab e^{\mathbf{x}_{i}^{T}\betab} \right]  - \bs{\Psi}(t_{i})^{T}\thetab e^{\mathbf{x}_{i}^{T}\betab} \bigg\}\\
+&=  \xi_{i}  \frac{\partial}{\partial \thetab} \bigg\{\log\left[\bs{\psi}(t_{i})^{T}\thetab e^{\mathbf{x}_{i}^{T}\betab} \right] \bigg\} -  e^{\mathbf{x}_{i}^{T}\betab} \frac{\partial}{\partial \thetab} \left[ \bs{\Psi}(t_{i})^{T}\thetab  \right]\\ 
+&=  \xi_{i} \frac{e^{\mathbf{x}_{i}^{T}\betab}}{\bs{\psi}(t_{i})^{T}\thetab e^{\mathbf{x}_{i}^{T}\betab}} \frac{\partial}{\partial \thetab} \left[ \bs\psi(t_{i})^{T}\thetab \right] -  e^{\mathbf{x}_{i}^{T}\betab} \frac{\partial}{\partial \thetab} \left[ \bs{\Psi}(t_{i})^{T}\thetab  \right]\\ 
+&=\frac{\xi_{i}}{\bs{\psi}(t_{i})^{T}\thetab} \bs{\psi}(t_{i}) - e^{\mathbf{x}_{i}^{T}\betab} \bs{\Psi}(t_{i}) ,
+\end{align}
+where $e^{\mathbf{x}_{i}^{T}\betab}$, $\bs{\psi}(t_{i})^{T}\thetab=h_{0}(t_{i})$ and $\bs{\Psi}(t_{i})^{T}\thetab=H_{0}(t_{i})$ are scalars, we obtain 
+\begin{align}
+\frac{\partial}{\partial \thetab} \mathcal{L}&= \bs{\psi}(\mathbf{t})^{T}\left[\bs\xi / \bs{\psi}(t)\thetab \right] - \bs{\Psi}(\mathbf{t})^{T} e^{\mathbf{X}\betab}, \\
+\frac{\partial}{\partial \thetab} \bs{\mathcal{L}}^{\star}_{p}= \mathcal{r}_{\thetab}&= (1-\gamma)\left\{ \bs{\psi}(\mathbf{t})^{T}\left[\bs\xi / \bs{\psi}(t)\thetab \right] - \bs{\Psi}(\mathbf{t})^{T} e^{\mathbf{X}\betab} \right\} - 2 \gamma \mathbf{R}\thetab.
+\end{align}
+
+
+%%
+\subsection{$\frac{\partial^{2}}{\partial \thetab \partial \thetab^{T}} \mathcal{L}^{\star}_{p}$}
+\begin{align}
+\frac{\partial^{2}}{\partial \thetab \partial \thetab^{T}} \mathcal{L}^{\star}_{p} &=  \frac{\partial}{\partial \thetab^{T}}  \left( \frac{\partial}{\partial \thetab} \mathcal{L}^{\star}_{p} \right)       = (1-\gamma) \frac{\partial}{\partial \thetab^{T}}  \left( \frac{\partial}{\partial \thetab} \mathcal{L} \right) -  \frac{\partial}{\partial \thetab} 2 \gamma \mathbf{R}\thetab \\ 
+&= (1-\gamma) \frac{\partial}{\partial \thetab^{T}}  \left\{ \frac{\partial}{\partial \thetab} \bs{\psi}(\mathbf{t})^{T}\left[\bs\xi / \bs{\psi}(t)\thetab \right]  \right\} -  2 \gamma \mathbf{R} \\ 
+&= (1-\gamma) \frac{\partial}{\partial \thetab^{T}}  \left\{  \bs{\psi}(\mathbf{t})^{T}\left[\bs\xi / \bs{\psi}(t)\thetab \right]  \right\} -  2 \gamma\mathbf{R} \\
+&= (1-\gamma)  \bs{\psi}(\mathbf{t})^{T} \frac{\partial}{\partial \thetab^{T}}  \left[\bs\xi \circ \frac{1}{\bs{\psi}(t)\thetab} \right]  -  2 \gamma\mathbf{R} \\
+&= (1-\gamma)  \bs{\psi}(\mathbf{t})^{T}\  \bs\xi \circ \frac{\partial}{\partial \thetab^{T}}  \left[ \frac{1}{\bs{\psi}(t)\thetab} \right]  -  2 \gamma\mathbf{R} \\
+&= (\gamma-1)  \bs{\psi}(\mathbf{t})^{T}\left\langle \bs\xi/ [\bs\psi(\mathbf{t})\thetab]^{2} \right\rangle\, \bs\psi(\mathbf{t}) -  2 \gamma\mathbf{R}. 
+\end{align}
+
+
+%%
+\subsection{$\frac{\partial^{2}}{\partial \thetab \partial \betab^{T}} \mathcal{L}^{\star}_{p} = 
+\frac{\partial^{2}}{\partial \thetab \partial \betab^{T}} \mathcal{L}^{\star}$ 
+and 
+$\frac{\partial^{2}}{\partial \betab \partial \thetab^{T}} \mathcal{L}^{\star}_{p}=
+\frac{\partial^{2}}{\partial \betab \partial \thetab^{T}} \mathcal{L}^{\star}$}\label{app:A5}
+\begin{align}
+\frac{\partial^{2}}{\partial \thetab \partial \betab^{T}} \mathcal{L}^{\star}_{p} &=  \frac{\partial}{\partial \betab^{T}}  \left( \frac{\partial}{\partial \thetab} \mathcal{L}^{\star}_{p} \right)       = (1-\gamma) \frac{\partial}{\partial \betab^{T}}  \left( \frac{\partial}{\partial \thetab} \mathcal{L} \right) \\ 
+&= (1-\gamma) \frac{\partial}{\partial \betab^{T}} \left[- \bs{\Psi}(\mathbf{t})^{T} e^{\mathbf{X}\betab}\right] \\
+&= (\gamma-1) \bs{\Psi}(\mathbf{t})^{T} \frac{\partial}{\partial \betab^{T}} e^{\mathbf{X}\betab} \\
+&= (\gamma-1) \bs{\Psi}(\mathbf{t})^{T} \big\langle e^{\mathbf{X}\betab} \big\rangle \ \mathbf{X}, \\
+\frac{\partial^{2}}{\partial \betab \partial \thetab^{T}} \mathcal{L}^{\star}_{p} &= \left(\frac{\partial^{2}}{\partial \thetab \partial \betab^{T}} \mathcal{L}^{\star}_{p} \right) = (\gamma -1) \mathbf{X}^{T}  \big\langle e^{\mathbf{X}\betab}  \big\rangle\  \bs{\Psi}(\mathbf{t}).
+ \end{align}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document} 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

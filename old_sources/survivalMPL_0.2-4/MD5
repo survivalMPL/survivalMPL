@@ -1,0 +1,16 @@
+395ea3bc7f3eff29e49190237acd8483 *DESCRIPTION
+2663228440519717ed27dc1de4f3358f *NAMESPACE
+df8a05ef2deb591689fdd42dce87883b *NEWS
+25cfd5ae1ed7dd8ba231d7347413bcd3 *R/coxph.r
+d4190ec83308bd3d303979949a349af5 *R/methods.R
+8bdfa8507080ba9b183c84e2990b816a *data/bcos2.rda
+b25209581b8d3b317adb4d4257cc237f *man/bcos2.Rd
+81f32b164fd77b6bf4059ceb0d65a14b *man/coef.coxph_mpl.Rd
+7f91f4b0bfe8e53f8f6347ed64286619 *man/coxph_mpl.Rd
+d593d0b3c76b68ac3e4d00a56bf1517e *man/coxph_mpl.control.Rd
+c8f23164e3ee30eac87ad90f576bc25a *man/coxph_mpl.object.Rd
+ce620d455675829e1ae70756eb223218 *man/plot.coxph_mpl.Rd
+5d9a60dff9e85428666d4bf097f014b7 *man/predict.coxph_mpl.Rd
+7245193ed25fc1e474ca7a5f64709188 *man/residuals.coxph_mpl.Rd
+6933d739522ccd1fa66ba377c51feaab *man/summary.coxph_mpl.Rd
+c40e3c08ec9a27e2225702f8d5701aa5 *man/survivalMPL-package.Rd

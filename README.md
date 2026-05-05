@@ -15,7 +15,6 @@ Penalised maximum likelihood fits for Cox proportional hazards models with right
 
 ## Installation
 ```r
-# CRAN (when available)
 install.packages("survivalMPL")
 ```
 

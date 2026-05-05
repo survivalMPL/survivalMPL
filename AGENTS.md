@@ -24,6 +24,15 @@ devtools::check()       # full CRAN check
 
 ---
 
+## Experiments
+
+Use `experiments/` for exploratory scripts, temporary investigation folders, and
+prototype outputs that should not be part of the R package build. The folder is
+excluded via `.Rbuildignore`; move anything production-ready into the appropriate
+package location before documenting or testing it.
+
+---
+
 ## Topic guides
 
 | Topic | File |

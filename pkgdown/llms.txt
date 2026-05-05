@@ -15,7 +15,6 @@ non-negativity enforced during optimisation.
 
 ## Installation
 
-    # CRAN (when available)
     install.packages("survivalMPL")
 
 ## Quick start

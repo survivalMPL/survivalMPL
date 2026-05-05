@@ -19,6 +19,7 @@
 ^_pkgdown\.yml$
 ^pkgdown$
 ^old_sources$
+^experiments$
 ^learning$
 ^doc$
 ^Meta$
