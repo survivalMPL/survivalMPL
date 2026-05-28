@@ -54,7 +54,7 @@
       round(coef(fit, "Beta"), 6)
     Output
       treatmentRadChem 
-              0.949495 
+              0.949494 
 
 ---
 

@@ -55,7 +55,7 @@ intervals are obtained via the delta method.
 
 ``` r
 if (FALSE) { # \dontrun{
-data(lung)
+data(lung, package = "survival")
 fit_mpl <- coxph_mpl(Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss,
                      data = lung)
 par(mfrow = c(2, 2))

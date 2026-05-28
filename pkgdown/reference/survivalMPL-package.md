@@ -45,6 +45,9 @@ Useful links:
 
 Authors:
 
+- Dominique-Laurent Couturier <dominique.couturier@mrc-bsu.cam.ac.uk>
+  ([ORCID](https://orcid.org/0000-0001-5774-5036))
+
 - Jun Ma
 
 - Stephane Heritier

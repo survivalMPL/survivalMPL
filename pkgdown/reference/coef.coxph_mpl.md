@@ -40,3 +40,16 @@ baseline hazard estimates exceeding `min.theta` are reported.
 ## See also
 
 \[coxph_mpl()\], \[summary.coxph_mpl()\]
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+data(lung, package = "survival")
+fit_mpl <- coxph_mpl(Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss,
+                     data = lung)
+coef(fit_mpl)
+coef(fit_mpl, parameters = "Theta")
+coef(summary(fit_mpl))
+} # }
+```

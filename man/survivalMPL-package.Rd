@@ -46,6 +46,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Dominique-Laurent Couturier \email{dominique.couturier@mrc-bsu.cam.ac.uk} (\href{https://orcid.org/0000-0001-5774-5036}{ORCID})
   \item Jun Ma
   \item Stephane Heritier
   \item Maurizio Manuguerra

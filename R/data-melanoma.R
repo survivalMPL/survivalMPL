@@ -1,0 +1,56 @@
+#' Pseudo-Melanoma Survival Data
+#'
+#' Simulated interval-censored survival data based on the design in Moore
+#' (2016, Examples 2.6--2.7).  The true baseline hazard is Weibull with
+#' shape 0.5: \eqn{h_0(t) = t^{-1/2}}, \eqn{H_0(t) = 2\sqrt{t}}.
+#'
+#' Observations are classified as exact events (\code{t_L == t_R}), left-
+#' censored (\code{t_L == 0}), right-censored (\code{t_R == Inf}), or
+#' interval-censored otherwise.  Pass to \code{coxph_mpl} via
+#' \code{Surv(t_L, t_R, type = "interval2")}.
+#'
+#' @format A data frame with 300 observations on 10 variables:
+#' \describe{
+#'   \item{t_L}{Numeric lower bound of the observed interval (0 for
+#'   left-censored observations).}
+#'   \item{t_R}{Numeric upper bound of the observed interval (\code{Inf} for
+#'   right-censored observations).}
+#'   \item{Arm}{Indicator: tumour located on the arm (reference: head/neck).}
+#'   \item{Leg}{Indicator: tumour located on the leg.}
+#'   \item{Trunk}{Indicator: tumour located on the trunk.}
+#'   \item{mm1to2}{Indicator: tumour thickness 1--2 mm (reference: < 1 mm).}
+#'   \item{mm2to4}{Indicator: tumour thickness 2--4 mm.}
+#'   \item{mm4plus}{Indicator: tumour thickness > 4 mm.}
+#'   \item{Female}{Indicator: patient is female.}
+#'   \item{Age_centred}{Age in decades, centred at the sample mean.}
+#' }
+#' @details
+#' True regression coefficients (\code{beta_true}) used in the simulation:
+#' \tabular{lr}{
+#'   \code{Arm}         \tab -0.56 \cr
+#'   \code{Leg}         \tab  0.01 \cr
+#'   \code{Trunk}       \tab -0.22 \cr
+#'   \code{mm1to2}      \tab  0.22 \cr
+#'   \code{mm2to4}      \tab  0.87 \cr
+#'   \code{mm4plus}     \tab  1.13 \cr
+#'   \code{Female}      \tab -0.17 \cr
+#'   \code{Age_centred} \tab  0.14 \cr
+#' }
+#' Generated with \code{set.seed(1)}; see
+#' \code{dev/data-raw/melanoma.R} to reproduce.
+#' @source
+#' Moore, D.K. (2016). \emph{Applied Survival Analysis Using R}. Springer.
+#' @examples
+#' data(melanoma)
+#' \dontrun{
+#' fit <- coxph_mpl(
+#'   Surv(t_L, t_R, type = "interval2") ~
+#'     Arm + Leg + Trunk + mm1to2 + mm2to4 + mm4plus + Female + Age_centred,
+#'   data = melanoma, basis = "m"
+#' )
+#' summary(fit)
+#' }
+#' @docType data
+#' @name melanoma
+#' @keywords dataset
+NULL

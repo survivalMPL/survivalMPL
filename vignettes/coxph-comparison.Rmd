@@ -1,0 +1,239 @@
+---
+title: "Comparing coxph and coxph_mpl"
+output:
+  rmarkdown::html_document:
+    toc: true
+    toc_float: true
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Comparing coxph and coxph_mpl}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Overview
+
+`survival::coxph()` maximises the *partial likelihood* - a function of
+regression coefficients $\boldsymbol{\beta}$ only, with the baseline hazard
+$h_0(t)$ profiled out.  `survivalMPL::coxph_mpl()` maximises the *penalised
+full likelihood*, estimating $\boldsymbol{\beta}$ and $h_0(t)$ jointly via a
+smooth basis expansion.
+
+For right-censored data with non-informative censoring the two approaches
+produce essentially the same $\hat{\boldsymbol{\beta}}$ and standard errors
+[@Ma2014], while `coxph_mpl` additionally delivers a smooth, closed-form
+$\hat{h}_0(t)$ that can be plotted and predicted without additional
+post-processing.
+
+This tutorial uses the `lung` dataset (`survival` package) - 228 patients with
+advanced lung cancer, right-censored overall survival to compare:
+
+1. Regression coefficient estimates and standard errors.
+2. 95 % confidence intervals (forest plot).
+3. Estimated baseline survival: Kaplan–Meier, Breslow (from `coxph`), and
+   M-spline (from `coxph_mpl`).
+
+---
+
+## Data and model fits
+
+```{r fits}
+library(survivalMPL)
+library(survival)
+
+lung <- na.omit(lung[, c("time", "status", "age", "sex", "ph.karno", "wt.loss")])
+f    <- Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss
+
+# --- partial likelihood (coxph) ---
+fit_pl <- coxph(f, data = lung, x = TRUE)
+
+# --- penalised full likelihood, M-splines (coxph_mpl) ---
+fit_mpl <- coxph_mpl(f, data = lung,
+  control = coxph_mpl.control(
+    basis    = "msplines",
+    n.obs    = sum(lung$status == 2),
+    max.iter = c(150, 7.5e4, 1e6)
+  )
+)
+```
+
+---
+
+## Regression coefficients and standard errors
+
+```{r coef-table}
+beta_pl  <- coef(fit_pl)
+se_pl    <- sqrt(diag(vcov(fit_pl)))
+
+beta_mpl <- coef(fit_mpl)
+se_mpl   <- fit_mpl$se$Beta$M2HM2
+
+row_labels <- c(
+  age      = "Age (per year)^a^",
+  sex      = "Sex",
+  ph.karno = "Karnofsky score (per point)^a^",
+  wt.loss  = "Weight loss (kg)"
+)
+
+tab <- data.frame(
+  Covariate   = row_labels[names(beta_pl)],
+  `PL β`      = round(beta_pl,  4),
+  `PL SE`     = round(se_pl,    4),
+  `MPL β`     = round(beta_mpl, 4),
+  `MPL SE`    = round(se_mpl,   4),
+  `Δβ`        = round(beta_mpl - beta_pl, 4),
+  check.names = FALSE,
+  row.names   = NULL
+)
+knitr::kable(tab, align = "lrrrrr",
+             caption = "^a^ The forest plot rescales these covariates to per-10-unit changes.")
+```
+
+The estimates agree closely: the full-likelihood approach recovers the same
+regression signal as partial likelihood, with near-identical standard errors.
+The `MPL SE` reported here uses the sandwich variance estimator for a fixed
+smoothing parameter derived in @Ma2014 (equation 29), accessed via
+`se = "M2HM2"` in the package.
+
+---
+
+## Forest plot
+
+```{r forest-plot, echo=FALSE, fig.height=5, fig.width=10, out.width="100%"}
+# Scale age and ph.karno to per-10-unit changes for comparable magnitudes
+scale  <- c(age = 10, sex = 1, ph.karno = 10, wt.loss = 1)
+labels <- c(age = "Age (per 10 yrs)", sex = "Sex (F vs M)",
+            ph.karno = "Karnofsky score\n(per 10 pts)", wt.loss = "Weight loss (kg)")
+
+b_pl  <- beta_pl  * scale
+b_mpl <- beta_mpl * scale
+s_pl  <- se_pl    * scale
+s_mpl <- se_mpl   * scale
+
+z      <- qnorm(0.975)
+lo_pl  <- b_pl  - z * s_pl;  hi_pl  <- b_pl  + z * s_pl
+lo_mpl <- b_mpl - z * s_mpl; hi_mpl <- b_mpl + z * s_mpl
+
+p     <- length(b_pl)
+y_pl  <- seq(p, 1) + 0.18
+y_mpl <- seq(p, 1) - 0.18
+
+# right-side annotation text: "β [lo, hi]"
+fmt <- function(b, lo, hi)
+  sprintf("%.3f  [%.3f, %.3f]", b, lo, hi)
+ann_pl  <- mapply(fmt, b_pl,  lo_pl,  hi_pl)
+ann_mpl <- mapply(fmt, b_mpl, lo_mpl, hi_mpl)
+
+cols <- c(pl = "steelblue", mpl = "tomato")
+
+# layout: narrow left margin, wide right margin for annotations
+par(mar = c(4, 9, 4, 1))
+x_lim <- range(c(lo_pl, hi_pl, lo_mpl, hi_mpl))
+x_lim <- x_lim + c(-1, 1) * diff(x_lim) * 0.05
+
+plot(NA,
+     xlim = x_lim, ylim = c(0.3, p + 0.7),
+     xlab = "Coefficient (log-HR, scaled)", ylab = "",
+     yaxt = "n", main = "Regression coefficients ± 1.96 SE")
+
+abline(v = 0, col = "grey50", lty = 2)
+abline(h = seq_len(p), col = "grey92", lty = 1)   # row guides
+
+axis(2, at = seq(p, 1), labels = rev(labels), las = 1, cex.axis = 0.88)
+
+# PL
+segments(lo_pl, y_pl, hi_pl, y_pl, col = cols["pl"], lwd = 2)
+points(b_pl, y_pl, pch = 16, col = cols["pl"], cex = 1.2)
+
+# MPL
+segments(lo_mpl, y_mpl, hi_mpl, y_mpl, col = cols["mpl"], lwd = 2)
+points(b_mpl, y_mpl, pch = 17, col = cols["mpl"], cex = 1.2)
+
+# header for annotations
+mtext("β  [95% CI]", side = 3, adj = 1, cex = 0.75, col = "grey30", line = 0.3)
+
+# right-side numeric annotations (outside the plot via xpd)
+x_ann <- par("usr")[2] + diff(par("usr")[1:2]) * 0.02
+for (i in seq_len(p)) {
+  ri <- p + 1 - i   # reverse: top row = last covariate
+  mtext(ann_pl[i],  side = 4, at = y_pl[ri],  las = 1,
+        col = cols["pl"],  cex = 0.65, line = 0.3)
+  mtext(ann_mpl[i], side = 4, at = y_mpl[ri], las = 1,
+        col = cols["mpl"], cex = 0.65, line = 0.3)
+}
+
+legend("bottomleft",
+       legend = c("coxph (PL)", "coxph_mpl (MPL, M2HM2)"),
+       col = cols, pch = c(16, 17), lty = 1, lwd = 2,
+       bty = "n", cex = 0.85)
+```
+
+---
+
+## Baseline survival comparison
+
+Three survival estimators are overlaid:
+
+- **Kaplan–Meier** - nonparametric marginal estimate, no covariate adjustment.
+  Serves as a visual reference for the raw data.
+- **Breslow** - step-function baseline from `coxph` evaluated at mean
+  covariates via `survfit()`.  This is the standard Cox output for
+  $\hat{S}(t \mid \bar{\mathbf{x}})$.
+- **M-splines (MPL)** - smooth closed-form estimate from `coxph_mpl`,
+  also evaluated at mean covariates.
+
+Breslow and M-splines estimate the same quantity 
+$\hat{S}(t \mid \bar{\mathbf{x}})$ and should track each other closely.
+Kaplan–Meier sits apart because it does not adjust for covariates.
+
+```{r baseline-surv, echo=FALSE, fig.height=5, out.width="90%"}
+# Kaplan-Meier (marginal, unadjusted)
+km <- survfit(Surv(time, status == 2) ~ 1, data = lung)
+
+# Breslow baseline at mean covariates
+mean_nd <- as.data.frame(lapply(lung[, c("age","sex","ph.karno","wt.loss")], mean))
+sf_pl   <- survfit(fit_pl, newdata = mean_nd)
+
+# MPL M-splines at mean covariates (i = NULL defaults to column means of X)
+t_seq    <- seq(min(lung$time), max(lung$time), length.out = 400)
+pred_mpl <- predict(fit_mpl, type = "survival", time = t_seq)
+
+par(mar = c(4, 4, 3, 1))
+plot(km,
+     col = "grey60", lwd = 1.5, conf.int = FALSE,
+     xlab = "Time (days)", ylab = expression(hat(S)(t)),
+     main = "Survival: KM (marginal) vs Breslow vs M-splines (mean covariates)",
+     xlim = c(0, max(lung$time)), ylim = c(0, 1))
+
+lines(sf_pl$time, sf_pl$surv, col = "steelblue", lwd = 2)
+lines(pred_mpl$time, pred_mpl$survival, col = "tomato", lwd = 2)
+
+legend("topright",
+       legend = c("Kaplan-Meier (marginal, unadjusted)",
+                  "Breslow / coxph (mean covariates)",
+                  "M-splines / coxph_mpl (mean covariates)"),
+       col    = c("grey60", "steelblue", "tomato"),
+       lwd    = c(1.5, 2, 2),
+       bty    = "n", cex = 0.85)
+```
+
+The Breslow estimate is a step function that jumps only at observed event times.
+The M-spline estimate is smooth by construction and closely tracks the Breslow
+curve, while avoiding the staircase artefacts that arise from tied or sparse
+event times.  The Kaplan–Meier curve sits above both because it is not adjusted
+for covariates - in particular it does not account for the protective effect of
+female sex and higher Karnofsky score at the mean covariate profile.
+
+---
+
+## References

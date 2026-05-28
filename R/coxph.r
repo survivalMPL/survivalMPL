@@ -33,10 +33,9 @@
 #' @examples
 #' \dontrun{
 #' ## Right-censored example: survival::lung
-#' data(lung)
+#' data(lung, package = "survival")
 #' fit_mpl <- coxph_mpl(Surv(time, status == 2) ~ age + sex + ph.karno +
-#'  wt.loss,
-#'                      data = lung)
+#'  wt.loss, data = lung)
 #' summary(fit_mpl)
 #'
 #' ## Interval-censored example: bcos2

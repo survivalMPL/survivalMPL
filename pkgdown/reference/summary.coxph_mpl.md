@@ -61,15 +61,14 @@ An object of class `"summary.coxph_mpl"` with components:
 
 ## See also
 
-\[summary.coxph_mpl()\], \[coxph_mpl()\], \[coxph_mpl.control()\]
-
-\[coxph_mpl()\], \[coxph_mpl.control()\], \[plot.coxph_mpl()\]
+\[coxph_mpl()\], \[coxph_mpl.control()\], \[plot.coxph_mpl()\],
+\[coef.coxph_mpl()\]
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-data(lung)
+data(lung, package = "survival")
 fit_mpl <- coxph_mpl(Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss,
                      data = lung)
 summary(fit_mpl, full = TRUE)

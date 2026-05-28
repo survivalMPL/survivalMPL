@@ -25,6 +25,10 @@ navbar:
           href: articles/getting-started.html
         - text: Interval Censoring
           href: articles/interval-censoring.html
+        - text: Basis Function Comparison
+          href: articles/basis-comparison.html
+        - text: coxph vs coxph_mpl
+          href: articles/coxph-comparison.html
     news:
       text: News
       href: news/index.html
@@ -34,3 +38,5 @@ articles:
     contents:
       - getting-started
       - interval-censoring
+      - basis-comparison
+      - coxph-comparison

@@ -8,7 +8,6 @@
 #' @param ... Additional arguments passed to [base::print()].
 #'
 #' @return Invisibly returns \code{x}.
-#' @seealso [summary.coxph_mpl()], [coxph_mpl()], [coxph_mpl.control()]
 #' @export
 #' @method print summary.coxph_mpl
 print.summary.coxph_mpl=function(x,se="M2QM2",...) {
@@ -50,6 +49,7 @@ print.summary.coxph_mpl=function(x,se="M2QM2",...) {
     printCoefmat(x$Theta, P.values=TRUE, has.Pvalue=TRUE,...)    
   }else{print(x$Theta,...)}
   cat("\n-----\n\n")
+  invisible(x)
 }
 
 
@@ -74,11 +74,12 @@ print.summary.coxph_mpl=function(x,se="M2QM2",...) {
 #'   of estimates with standard errors, z-statistics, and p-values).}
 #'   \item{inf}{List with convergence details, penalised likelihood value, and
 #'   control settings.}
-#' @seealso [coxph_mpl()], [coxph_mpl.control()], [plot.coxph_mpl()]
+#' @seealso [coxph_mpl()], [coxph_mpl.control()], [plot.coxph_mpl()],
+#'   [coef.coxph_mpl()]
 #' @importFrom stats printCoefmat
 #' @examples
 #' \dontrun{
-#' data(lung)
+#' data(lung, package = "survival")
 #' fit_mpl <- coxph_mpl(Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss,
 #'                      data = lung)
 #' summary(fit_mpl, full = TRUE)

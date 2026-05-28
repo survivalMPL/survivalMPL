@@ -13,6 +13,15 @@
 #' @return A vector of coefficients or a matrix with estimates, standard errors,
 #'   z-statistics, and p-values.
 #' @seealso [coxph_mpl()], [summary.coxph_mpl()]
+#' @examples
+#' \dontrun{
+#' data(lung, package = "survival")
+#' fit_mpl <- coxph_mpl(Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss,
+#'                      data = lung)
+#' coef(fit_mpl)
+#' coef(fit_mpl, parameters = "Theta")
+#' coef(summary(fit_mpl))
+#' }
 #' @export
 #' @rdname coef.coxph_mpl
 #' @method coef summary.coxph_mpl

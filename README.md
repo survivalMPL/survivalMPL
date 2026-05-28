@@ -37,7 +37,6 @@ fit_lung <- coxph_mpl(
   )
 )
 
-
 summary(fit_lung)
 plot(predict(fit_lung, type = "survival"))
 ```

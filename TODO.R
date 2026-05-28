@@ -16,15 +16,15 @@
 # 2. Add left-censoring examples once Jun and Lo provide their examples.
 #    - Decide whether these belong in getting-started.Rmd or a dedicated
 #      left-censoring vignette.
-# 3. Add a website tutorial comparing the supported basis functions.
-#    - Use formulas from old_sources/GKS-equations.tex.
-#    - Add the article to vignettes/ and _pkgdown.yml tutorials dropdown.
-# 4. Add a tutorial comparing survival::coxph() and coxph_mpl().
-#    - Compare beta coefficients, standard errors, +/- 1.96 SE intervals, and
-#      other relevant fitted quantities in a table.
-#    - Consider an additional comparison with Kaplan-Meier / Nelson-Aalen style
-#      non-parametric hazard or cumulative hazard estimates, if statistically
-#      coherent for the chosen example.
+# //3. Add a website tutorial comparing the supported basis functions.
+# //   - Use formulas from old_sources/GKS-equations.tex.
+# //  - Add the article to vignettes/ and _pkgdown.yml tutorials dropdown.
+# //4. Add a tutorial comparing survival::coxph() and coxph_mpl().
+# //  - Compare beta coefficients, standard errors, +/- 1.96 SE intervals, and
+# //    other relevant fitted quantities in a table.
+# //   - Consider an additional comparison with Kaplan-Meier / Nelson-Aalen style
+# //     non-parametric hazard or cumulative hazard estimates, if statistically
+# //     coherent for the chosen example.
 # 5. Create a draft package logo.
 #    - Keep source assets editable and avoid committing generated experiments
 #      unless they are selected for the package.
@@ -36,6 +36,12 @@
 #    - Understand the code structure and algorithmic assumptions.
 #    - Produce an incorporation plan only; defer package implementation until
 #      the design is agreed.
+# 8. Add Observer pattern for iteration callbacks in coxph_mpl().
+#    - Add a `callbacks = NULL` parameter to coxph_mpl() — fully backward-compatible.
+#    - Define a callback contract: on_iter(iter, ploglik, delta) called after each
+#      inner iteration; on_converge(iter, ploglik) called on exit.
+#    - Implementation lives inside coxph.r; no changes to other files.
+#    - Enables: progress bars, custom stopping criteria, convergence logging.
 
 
 

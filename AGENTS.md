@@ -24,10 +24,34 @@ devtools::check()       # full CRAN check
 
 ---
 
+## Testing protocol — change → test → change
+
+**Run smoke tests before and after every change. Only commit if they pass.**
+
+```r
+# Fast check (~5 s) — run before starting work and after each change
+devtools::test(filter = "smoke")
+
+# Full suite — must pass before any commit
+devtools::test()
+```
+
+Smoke tests cover (`tests/testthat/test-smoke.R`):
+- Right-censored numerical stability: `lung` × msplines + uniform (Beta, ploglik)
+- S3 method structure: correct class and column names for `predict`, `residuals`, `coef`, `summary`
+- Print and plot run without error and return invisibly
+- Interval-censored run-without-error: `melanoma` × msplines
+
+Snapshots in `tests/testthat/_snaps/` are the numerical baseline anchored to
+installed v0.2-4. Use `testthat::snapshot_accept()` only for confirmed
+platform-level floating-point noise — not to paper over a real value shift.
+
+---
+
 ## Experiments
 
-Use `experiments/` for exploratory scripts, temporary investigation folders, and
-prototype outputs that should not be part of the R package build. The folder is
+Use `dev/experiments/` for exploratory scripts, temporary investigation folders, and
+prototype outputs that should not be part of the R package build. The entire `dev/` tree is
 excluded via `.Rbuildignore`; move anything production-ready into the appropriate
 package location before documenting or testing it.
 
@@ -42,5 +66,4 @@ package location before documenting or testing it.
 | Vignette guidelines | [dev/vignettes.md](dev/vignettes.md) |
 | pkgdown site configuration | [dev/pkgdown.md](dev/pkgdown.md) |
 | Known bugs & quirks | [dev/known-issues.md](dev/known-issues.md) |
-| Recent changelog | [old_sources/DEVLOG.md](old_sources/DEVLOG.md) |
-| Refactoring plan (phases 0–5) | [old_sources/REFACTORING_PLAN.md](old_sources/REFACTORING_PLAN.md) |
+| Recent changelog | [dev/DEVLOG.md](dev/DEVLOG.md) |

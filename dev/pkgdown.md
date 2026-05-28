@@ -24,7 +24,7 @@ Development docs go in `dev/`, historical docs in `old_sources/`.
 
 ## Navbar
 
-Tutorials dropdown contains: Getting Started, Interval Censoring.
+Tutorials dropdown contains: Getting Started, Interval Censoring, Basis Functions, coxph vs coxph_mpl.
 Defined in `_pkgdown.yml` under `navbar.components.tutorials`.
 
 ## Build commands
@@ -33,4 +33,21 @@ Defined in `_pkgdown.yml` under `navbar.components.tutorials`.
 pkgdown::build_home()      # homepage only
 pkgdown::build_articles()  # vignettes only
 pkgdown::build_site()      # full rebuild
+```
+
+## Blank-lines issue — RESOLVED
+
+Each `build_site()` run was accumulating blank lines in code blocks in `pkgdown/index.html`.
+
+**Root causes (both fixed):**
+1. `pkgdown/index.html` was committed at an older pkgdown HTML format; each new build produced
+   a different structure that accumulated empty `<span></span>` tags.
+2. `README.md` had a double blank line (`\r\n\r\n\r\n`) inside the Quick Start code block,
+   between the closing `)` and `summary(fit_lung)`. Fixed by direct binary patch (the Edit tool
+   could not match CRLF sequences line-by-line).
+
+**Standard workflow going forward:**
+```r
+pkgdown::clean_site()   # flush stale output — run at least once after any pkgdown version change
+pkgdown::build_site()
 ```

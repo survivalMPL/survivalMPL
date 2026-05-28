@@ -23,6 +23,9 @@
   [`print(`*`<coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)
   : Fit Cox Proportional Hazards Regression Model Via MPL
 
+- [`list_bases()`](https://CRAN.R-project.org/package=survivalMPL/reference/list_bases.md)
+  : List All Registered Bases
+
 - [`plot(`*`<coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/plot.coxph_mpl.md)
   :
 

@@ -1,6 +1,6 @@
 # Example 2.6
 # The book prints the midpoint assignment split across two lines:
-# BOOK (broken — R would parse this as two statements, syntax error):
+# BOOK (broken, R would parse this as two statements, syntax error):
 #* midpoint[which(is.infinite(midpoint))]
 #* <- t_L[which(is.infinite(midpoint))]
 

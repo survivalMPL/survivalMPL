@@ -97,6 +97,9 @@ plot(predict(fit_bcos, type = "survival", i = 1))
   [`print(`*`<coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)
   : Fit Cox Proportional Hazards Regression Model Via MPL
 
+- [`list_bases()`](https://CRAN.R-project.org/package=survivalMPL/reference/list_bases.md)
+  : List All Registered Bases
+
 - [`plot(`*`<coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/plot.coxph_mpl.md)
   :
 
@@ -128,3 +131,7 @@ plot(predict(fit_bcos, type = "survival", i = 1))
   survivalMPL](https://CRAN.R-project.org/package=survivalMPL/articles/getting-started.md):
 - [Interval Censoring with
   survivalMPL](https://CRAN.R-project.org/package=survivalMPL/articles/interval-censoring.md):
+- [Basis Functions for the Baseline
+  Hazard](https://CRAN.R-project.org/package=survivalMPL/articles/basis-comparison.md):
+- [Comparing coxph and
+  coxph_mpl](https://CRAN.R-project.org/package=survivalMPL/articles/coxph-comparison.md):

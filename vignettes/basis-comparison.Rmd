@@ -1,0 +1,318 @@
+---
+title: "Basis Functions for the Baseline Hazard"
+output:
+  rmarkdown::html_document:
+    toc: true
+    toc_float: true
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Basis Functions for the Baseline Hazard}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 4
+)
+if (requireNamespace("pkgload", quietly = TRUE)) {
+  pkgload::load_all(quiet = TRUE)
+}
+```
+
+## The MPL baseline hazard expansion
+
+The Cox proportional hazards model specifies the hazard for subject $i$ as
+
+$$h(t_i) = h_0(t_i)\,e^{\mathbf{x}_i^T \boldsymbol{\beta}},$$
+
+where $\boldsymbol{\beta}$ collects the regression coefficients and $h_0(\cdot)$ is
+an unspecified baseline hazard.  Maximum penalised likelihood (MPL) estimation
+approximates $h_0$ by a finite mixture of non-negative *basis functions*
+$\psi_1, \ldots, \psi_m$:
+
+$$h_0(t) = \sum_{u=1}^{m} \theta_u\,\psi_u(t), \qquad
+H_0(t) = \int_{t_{(1)}}^{t} h_0(v)\,dv = \sum_{u=1}^{m} \theta_u\,\Psi_u(t),$$
+
+where $\Psi_u(t) = \int_{t_{(1)}}^{t}\psi_u(v)\,dv$ is the cumulative basis
+and $\boldsymbol{\theta} = (\theta_1,\ldots,\theta_m)^T \geq \mathbf{0}$ are
+coefficients estimated alongside $\boldsymbol{\beta}$ [@Ma2014;@MaWebbHudson2024].
+
+`survivalMPL` provides four production basis types, selectable via the `basis`
+argument of `coxph_mpl.control()`:
+
+| `basis` string | Description |
+|---|---|
+| `"uniform"` (or `"u"`) | Piecewise-constant (step function) |
+| `"gaussian"` (or `"g"`) | Truncated Gaussian kernels |
+| `"msplines"` (or `"m"`) | M-splines of order $o$ |
+| `"epanechikov"` (or `"e"`, `"epanechnikov"`) | Epanechnikov kernels |
+
+The rest of this article presents the mathematical definition of each basis,
+visualises the shapes, and compares fits on the bundled `melanoma` dataset.
+
+---
+
+## Uniform (step-function) basis
+
+The time range $[t_{(1)}, t_{(n)}]$ is partitioned into $m$ adjacent intervals
+$[\alpha_u, \alpha_{u+1})$.  The density and cumulative bases are
+
+$$\psi_u(t) = \mathbf{1}(\alpha_u \leq t < \alpha_{u+1}),$$
+
+$$\Psi_u(t) = \mathbf{1}(\alpha_u \leq t)
+  \Bigl[t^{\mathbf{1}(t < \alpha_{u+1})}\,\alpha_{u+1}^{\mathbf{1}(\alpha_{u+1} \leq t)}
+        - \alpha_u\Bigr].$$
+
+Each $\theta_u$ is then interpreted directly as the constant hazard rate on
+$[\alpha_u, \alpha_{u+1})$.
+
+---
+
+## Gaussian basis
+
+Basis function $u$ is a truncated Gaussian density centred at knot $\alpha_u$
+with scale $\sigma_u$:
+
+$$\psi_u(t) = \frac{1}{\sigma_u\,\delta_u}\,
+  \phi\!\left(\frac{t - \alpha_u}{\sigma_u}\right), \qquad
+\Psi_u(t) = \frac{1}{\delta_u}
+  \left[\Phi\!\left(\frac{t - \alpha_u}{\sigma_u}\right)
+       -\Phi\!\left(\frac{t_{(1)} - \alpha_u}{\sigma_u}\right)\right],$$
+
+where $\phi$ and $\Phi$ are the standard normal density and CDF, and
+$\delta_u = \Phi\!\left(\tfrac{t_{(n)}-\alpha_u}{\sigma_u}\right)
+           -\Phi\!\left(\tfrac{t_{(1)}-\alpha_u}{\sigma_u}\right)$
+ensures each truncated basis integrates to 1 on $[t_{(1)}, t_{(n)}]$.
+
+---
+
+## M-spline basis
+
+M-splines of order $o$ are built recursively from augmented knots
+$\boldsymbol{\alpha}^\star = \bigl[\alpha_1 \mathbf{1}_{o-1}^T,\,\boldsymbol{\alpha}^T,\,\alpha_{n_\alpha}\mathbf{1}_{o-1}^T\bigr]^T$:
+
+$$\psi^o_u(t) =
+\begin{cases}
+\dfrac{\mathbf{1}(\alpha^\star_u \leq t < \alpha^\star_{u+1})}
+      {\alpha^\star_{u+1} - \alpha^\star_u} & o = 1,\\[8pt]
+\dfrac{o}{o-1}
+\dfrac{\mathbf{1}(\alpha^\star_u \leq t < \alpha^\star_{u+o})}
+      {\alpha^\star_{u+o} - \alpha^\star_u}
+\Bigl[(t-\alpha^\star_u)\,\psi^{o-1}_u(t)
+     +(\alpha^\star_{u+o}-t)\,\psi^{o-1}_{u+1}(t)\Bigr] & \text{otherwise.}
+\end{cases}$$
+
+The cumulative $\Psi^o_u(t)$ is an I-spline (integrated M-spline); each
+$\psi^o_u$ integrates to 1 over its support $[\alpha^\star_u, \alpha^\star_{u+o}]$.
+`survivalMPL` defaults to $o = 3$ (cubic M-splines), for which the second-order
+roughness penalty has a closed form.
+
+---
+
+## Epanechnikov basis
+
+Epanechnikov basis functions have compact parabolic support.  For the interior
+functions ($1 < u < m$):
+
+$$\psi_u(t) = \frac{6\,\mathbf{1}(\alpha^\star_u \leq t < \alpha^\star_{u+o})
+  (t - \alpha^\star_u)(t - \alpha^\star_{u+o})}{(\alpha^\star_u - \alpha^\star_{u+o})^3}.$$
+
+The endpoint functions ($u = 1$ and $u = m$) use asymmetric variants to ensure a
+proper probability density on their support.  Like M-splines, these use the
+augmented knot sequence $\boldsymbol{\alpha}^\star$.
+
+---
+
+## Visual comparison
+
+The code below uses the package's internal basis machinery to evaluate
+$\psi_u(t)$ on a fine grid and plot each set of basis functions.
+
+```{r basis-vis, fig.height=9, out.width="100%", echo=FALSE, message=FALSE}
+library(survivalMPL)
+library(survival)
+
+# ---- event times from the melanoma dataset for knot placement ----
+data(melanoma)
+events <- sort(c(melanoma$t_L[melanoma$t_L > 0],
+                 melanoma$t_R[is.finite(melanoma$t_R)]))
+t_grid <- seq(min(events), max(events), length.out = 400)
+
+n_obs <- sum(melanoma$t_L == melanoma$t_R & is.finite(melanoma$t_R))
+ctrl_u <- coxph_mpl.control(basis = "uniform",     n.obs = n_obs)
+ctrl_g <- coxph_mpl.control(basis = "gaussian",    n.obs = n_obs)
+ctrl_m <- coxph_mpl.control(basis = "msplines",    n.obs = n_obs)
+ctrl_e <- coxph_mpl.control(basis = "epanechikov", n.obs = n_obs)
+
+knots_u <- survivalMPL:::compute_knots(ctrl_u, events)
+knots_g <- survivalMPL:::compute_knots(ctrl_g, events)
+knots_m <- survivalMPL:::compute_knots(ctrl_m, events)
+knots_e <- survivalMPL:::compute_knots(ctrl_e, events)
+
+# Crop x to the 95th-percentile of event times — most basis support lies here.
+# The melanoma data is right-skewed (90% of events fall below ~0.9 years).
+t_vis_max <- quantile(events, 1)
+t_vis     <- seq(min(events[events > 0]), t_vis_max, length.out = 400)
+
+psi_u <- survivalMPL:::compute_basis_matrix(t_vis, knots_u, "uniform",     ctrl_u$order, which = 1)
+psi_g <- survivalMPL:::compute_basis_matrix(t_vis, knots_g, "gaussian",    ctrl_g$order, which = 1)
+psi_m <- survivalMPL:::compute_basis_matrix(t_vis, knots_m, "msplines",    ctrl_m$order, which = 1)
+psi_e <- survivalMPL:::compute_basis_matrix(t_vis, knots_e, "epanechikov", ctrl_e$order, which = 1)
+
+# ---- plot ----
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+
+plot_basis <- function(mat, t, title, knots_alpha) {
+  m     <- ncol(mat)
+  cols  <- seq_len(m)
+  y_cap <- quantile(mat[mat > 0 & is.finite(mat)], 0.99, na.rm = TRUE)
+  matplot(t, mat, type = "l", lty = 1, col = cols,
+          xlab = "t (years)", ylab = expression(psi[u](t)),
+          main = title, ylim = c(0, y_cap))
+  abline(v = knots_alpha[knots_alpha <= max(t)], col = "grey70", lty = 2)
+  legend("topright",
+         legend = paste0("ψ", seq_len(m)),
+         col = cols, lty = 1, lwd = 1.5,
+         bty = "n", cex = 0.7, ncol = ceiling(m / 5))
+}
+
+plot_basis(psi_u, t_vis, "Uniform",      knots_u$Alpha)
+plot_basis(psi_g, t_vis, "Gaussian",     knots_g$Alpha)
+plot_basis(psi_m, t_vis, "M-Splines",    knots_m$Alpha)
+plot_basis(psi_e, t_vis, "Epanechnikov", knots_e$Alpha)
+```
+
+Dashed vertical lines mark the internal knots $\boldsymbol{\alpha}$.
+
+---
+
+## Fitting comparison on `melanoma`
+
+The choice of basis affects the smoothness and shape of the estimated baseline
+hazard but rarely changes regression coefficient estimates substantially.
+Here we fit the same interval-censored model with all four bases using the
+bundled pseudo-melanoma data (time to first local recurrence, $n = 300$, true
+baseline $h_0(t) = t^{-1/2}$).
+
+```{r mel-prep}
+data(melanoma)
+formula_mel <- Surv(t_L, t_R, type = "interval2") ~
+  Arm + Leg + Trunk + mm1to2 + mm2to4 + mm4plus + Female + Age_centred
+n_obs <- sum(melanoma$t_L == melanoma$t_R & is.finite(melanoma$t_R))
+base_ctrl <- list(n.obs = n_obs,
+                  smooth = 0,
+                  max.iter = c(40, 2e4, 5e4))
+```
+
+```{r mel-fit-all}
+fit_u <- coxph_mpl(formula_mel, data = melanoma,
+  control = do.call(coxph_mpl.control,
+    c(base_ctrl, list(basis = "uniform"))))
+
+fit_g <- coxph_mpl(formula_mel, data = melanoma,
+  control = do.call(coxph_mpl.control,
+    c(base_ctrl, list(basis = "gaussian"))))
+
+fit_m <- coxph_mpl(formula_mel, data = melanoma,
+  control = do.call(coxph_mpl.control,
+    c(base_ctrl, list(basis = "msplines"))))
+
+fit_e <- coxph_mpl(formula_mel, data = melanoma,
+  control = do.call(coxph_mpl.control,
+    c(base_ctrl, list(basis = "epanechikov"))))
+```
+
+### Regression coefficients
+
+```{r coef-table}
+coef_mat <- cbind(
+  Uniform      = coef(fit_u),
+  Gaussian     = coef(fit_g),
+  `M-Splines`  = coef(fit_m),
+  Epanechnikov = coef(fit_e)
+)
+round(coef_mat, 3)
+```
+
+### Estimated baseline hazards
+
+```{r baseline-plot, fig.height=4.5, out.width="100%", echo=FALSE}
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+
+fits   <- list(fit_u, fit_g, fit_m, fit_e)
+labels <- c("Uniform", "Gaussian", "M-Splines", "Epanechnikov")
+cols   <- c("steelblue", "tomato", "forestgreen", "darkorchid")
+
+t_min <- quantile(events, 0.02)
+t_seq <- seq(t_min, max(events), length.out = 300)
+
+# instantaneous risk at mean covariates
+# ylim based on estimated curves only — true h0 = t^{-1/2} diverges near 0
+risks <- sapply(fits, function(f) predict(f, type = "risk", time = t_seq)$risk)
+y_max <- max(t_min^(-0.5), quantile(risks, 0.995)) * 1.1
+plot(NA, xlim = range(t_seq), ylim = c(0, y_max),
+     xlab = "Time (years)", ylab = expression(hat(h)(t)),
+     main = "Instantaneous risk (mean covariates)", cex.main = 0.9)
+for (i in seq_along(fits))
+  lines(t_seq, risks[, i], col = cols[i], lwd = 1.5)
+lines(t_seq, t_seq^(-0.5), lty = 2, lwd = 1.5, col = "black")
+legend("topright",
+       legend = c(labels, "True h₀"),
+       col = c(cols, "black"), lty = c(1, 1, 1, 1, 2),
+       lwd = 1.5, bty = "n", cex = 0.75)
+
+# survival at mean covariates
+plot(NA, xlim = range(t_seq), ylim = c(0, 1),
+     xlab = "Time (years)", ylab = expression(hat(S)(t)),
+     main = "Survival (mean covariates)", cex.main = 0.9)
+for (i in seq_along(fits)) {
+  p <- predict(fits[[i]], type = "survival", time = t_seq)
+  lines(p$time, p$survival, col = cols[i], lwd = 1.5)
+}
+lines(t_seq, exp(-2 * sqrt(t_seq)), lty = 2, lwd = 1.5, col = "black")
+legend("topright",
+       legend = c(labels, "True S₀"),
+       col = c(cols, "black"), lty = c(1, 1, 1, 1, 2),
+       lwd = 1.5, bty = "n", cex = 0.75)
+```
+
+All four bases recover the broad shape of the true Weibull baseline
+$h_0(t) = t^{-1/2}$ (dashed). The smooth bases (Gaussian, M-Splines,
+Epanechnikov) produce continuous estimates; the uniform basis introduces
+visible step artefacts that diminish with more knots.
+
+---
+
+## Practical guidance
+
+- **`"msplines"` (default for interval-censored data)** - M-splines offer
+  a good balance of smoothness and computational efficiency.  The second-order
+  roughness penalty has an exact closed form.
+
+- **`"uniform"`** - fast and simple; useful as a baseline comparison.  Use more
+  knots (`n.knots`) if the hazard is not close to piecewise-constant.
+
+- **`"gaussian"`** - smooth, kernel-based; both first- and second-order
+  roughness penalties are available.  Can be slow with many knots.
+
+- **`"epanechnikov"`** - compact support like M-splines but with parabolic
+  rather than polynomial shape; only the second-order penalty is supported.
+
+---
+
+## Extensibility
+
+The basis registry (`R/basis.R`) allows new basis types to be added without
+modifying existing code.  The file `R/basis-bsplines.R` includes a skeleton 
+showing how to implement the three required functions (`knots_fn`, `matrix_fn`, 
+`penalty_fn`) and how to call `register_basis()`.  
+See `?list_bases` for the full list of registered bases.
+
+---
+
+## References
