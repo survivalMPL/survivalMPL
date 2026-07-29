@@ -24,10 +24,21 @@
 #' @param control Optional list returned by [coxph_mpl.control()] specifying
 #'   basis choice, smoothing value, iteration limits, and related options. When
 #'   missing, defaults are built from \code{...}.
+#' @param entry Optional numeric vector (or a column reference evaluated in
+#'   \code{data}) giving each subject's left-truncation (delayed entry) time.
+#'   Every value must be strictly less than that subject's event/interval
+#'   lower bound; violations raise an error. Left-truncated and
+#'   non-left-truncated subjects may be mixed in the same call. Defaults to
+#'   \code{NULL} (no truncation), which reproduces prior behaviour exactly.
 #' @param ... Additional arguments passed to [coxph_mpl.control()].
 #'
 #' @return An object of class \code{"coxph_mpl"}; see [coxph_mpl.object] for
 #'   components.
+#'
+#' @section Limitations: [residuals.coxph_mpl()] and [predict.coxph_mpl()] do
+#'   not yet account for \code{entry} — they compute cumulative hazard and
+#'   survival from time 0 rather than from each subject's entry time. This is
+#'   a known follow-up, not yet implemented.
 #' @seealso [coxph_mpl.object()], [coxph_mpl.control()], [summary.coxph_mpl()],
 #'   [plot.coxph_mpl()], [predict.coxph_mpl()]
 #' @examples
@@ -48,10 +59,13 @@
 #' @importFrom MASS ginv
 #' @importFrom stats contrasts dnorm model.extract model.matrix pnorm quantile runif terms
 #' @export
-coxph_mpl <- function(formula, data, subset, na.action, control, ...) {
+coxph_mpl <- function(formula, data, subset, na.action, control, entry, ...) {
   # --- build model frame and response (Surv) ---
   mc <- match.call(expand.dots = FALSE)
-  m <- match(c("formula", "data", "subset", "na.action"), names(mc), 0)
+  # `entry` is resolved from `data` via the same generic mechanism
+  # model.frame.default() uses for `weights`/`offset` in stats::lm(): any extra
+  # named argument not among its own formals is evaluated against `data`.
+  m <- match(c("formula", "data", "subset", "na.action", "entry"), names(mc), 0)
   mc <- mc[c(1, m)]
   if (m[1] == 0) stop("A formula argument is required")
   data.name <- if (m[2] != 0) {
@@ -99,6 +113,17 @@ coxph_mpl <- function(formula, data, subset, na.action, control, ...) {
   ctypeTF <- n.ctype > 0
   observed <- y[, 3L] == 1L
   n.obs <- sum(y[, 3L] != 0)
+  # `entry` was already filtered by subset/na.action together with everything
+  # else inside model.frame(), so no separate row-alignment is needed here.
+  # model.frame() stores extras under a parenthesized name (same convention as
+  # "(weights)" in stats::lm()), not the bare name.
+  entry <- mf[["(entry)"]]
+  if (!is.null(entry)) {
+    entry <- as.numeric(entry)
+    if (any(entry >= t_i1)) {
+      stop("entry time must precede the observed interval/event time")
+    }
+  }
   # --- control arguments and tie handling ---
   extraArgs <- list(...)
   if (length(extraArgs)) {
@@ -151,7 +176,10 @@ coxph_mpl <- function(formula, data, subset, na.action, control, ...) {
       t_i1[ctype[, "e"]] - 1e-3,
       t_i1[ctype[, "e"]] + 1e-3,
       t_i1[ctype[, "r"]],
-      t_i1[ctype[, "l"]]
+      t_i1[ctype[, "l"]],
+      # extend knot support down to min(entry): otherwise Psi(entry) can fall
+      # outside basis support and truncation silently becomes a no-op.
+      if (!is.null(entry)) entry
     )
   )
 
@@ -173,11 +201,20 @@ coxph_mpl <- function(formula, data, subset, na.action, control, ...) {
     control$order,
     which = 1
   )[ctype[, 2], , drop = FALSE]
+  # density matrix (which=1): never differenced against entry — truncation
+  # changes the cumulative hazard, not the hazard density h0(t).
   M_tpsi_nom <- t(M_psi_nom)
   M_Psi_nom <- compute_basis_matrix(t_i1, knots, control$basis,
     control$order,
     which = 2
   )[ctype[, 2], , drop = FALSE]
+  if (!is.null(entry)) {
+    # H*(t) = H(t) - H(entry) = (Psi(t) - Psi(entry)) %*% theta
+    M_Psi_nom <- M_Psi_nom - compute_basis_matrix(entry, knots, control$basis,
+      control$order,
+      which = 2
+    )[ctype[, 2], , drop = FALSE]
+  }
   M_tPsi_nom <- t(M_Psi_nom)
   M_X_nrp <- XC[ctype[, 1], , drop = FALSE]
   # M_tX_nrp    = t(M_X_nrp)  # OLD:  replaced with crossprod()
@@ -185,6 +222,12 @@ coxph_mpl <- function(formula, data, subset, na.action, control, ...) {
     control$order,
     which = 2
   )[ctype[, 1], , drop = FALSE]
+  if (!is.null(entry)) {
+    M_Psi_nrm <- M_Psi_nrm - compute_basis_matrix(entry, knots, control$basis,
+      control$order,
+      which = 2
+    )[ctype[, 1], , drop = FALSE]
+  }
   M_tPsi_nrm <- t(M_Psi_nrm)
   M_X_nlp <- XC[ctype[, 3], , drop = FALSE]
   # M_tX_nlp    = t(M_X_nlp)  # OLD:  replaced with crossprod()
@@ -192,6 +235,12 @@ coxph_mpl <- function(formula, data, subset, na.action, control, ...) {
     control$order,
     which = 2
   )[ctype[, 3], , drop = FALSE]
+  if (!is.null(entry)) {
+    M_Psi_nlm <- M_Psi_nlm - compute_basis_matrix(entry, knots, control$basis,
+      control$order,
+      which = 2
+    )[ctype[, 3], , drop = FALSE]
+  }
   M_tPsi_nlm <- t(M_Psi_nlm)
   M_X_nip <- XC[ctype[, 4], , drop = FALSE]
   # M_tX_nip    = t(M_X_nip)  # OLD:  replaced with crossprod()
@@ -203,6 +252,15 @@ coxph_mpl <- function(formula, data, subset, na.action, control, ...) {
     control$order,
     which = 2
   )[ctype[, 4], , drop = FALSE]
+  if (!is.null(entry)) {
+    # same entry-time basis reused for both interval bounds
+    M_Psi_entry_nim <- compute_basis_matrix(entry, knots, control$basis,
+      control$order,
+      which = 2
+    )[ctype[, 4], , drop = FALSE]
+    M_Psi1_nim <- M_Psi1_nim - M_Psi_entry_nim
+    M_Psi2_nim <- M_Psi2_nim - M_Psi_entry_nim
+  }
   M_tPsi1_nim <- t(M_Psi1_nim)
   M_tPsi2_nim <- t(M_Psi2_nim)
 
@@ -677,7 +735,7 @@ coxph_mpl <- function(formula, data, subset, na.action, control, ...) {
   fit$control <- control
   fit$call <- match.call()
   fit$dim <- list(n = n, n.obs = sum(observed), n.ties = sum(ties), p = p, m = knots$m)
-  fit$data <- list(time = y, censoring = y[, 3L], X = X, name = data.name) # list(name = data.name)#
+  fit$data <- list(time = y, censoring = y[, 3L], X = X, name = data.name, entry = entry) # list(name = data.name)#
   fit$df <- s_df
   fit$ploglik <- s_lik
   fit$loglik <- s_lik + s_lambda * thetaRtheta

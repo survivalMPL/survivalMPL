@@ -20,8 +20,8 @@ print(w_ni)
 
 
 #FIX
-w_ni_guarded <- ifelse(is.finite(w_ni), w_ni, 0)
-print(w_ni_guarded)
+# w_ni_guarded <- ifelse(is.finite(w_ni), w_ni, 0)
+# print(w_ni_guarded)
 
 
 ###############################################################################
@@ -55,8 +55,8 @@ s_lik_OLD <- 1.232505e+231
 
 ## comparison with NaN returns NA (not TRUE/FALSE).
 (s_lik < s_lik_OLD)
-#FIX
-is.finite(s_lik) && is.finite(s_lik_OLD) && (s_lik < s_lik_OLD)
+# #FIX
+# is.finite(s_lik) && is.finite(s_lik_OLD) && (s_lik < s_lik_OLD)
 
 
 

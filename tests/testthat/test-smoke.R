@@ -113,3 +113,41 @@ test_that("melanoma msplines interval-censored: runs without error", {
     summary(fit)
   })
 })
+
+# ---------------------------------------------------------------------------
+# 4. Left truncation (entry=) smoke test
+# ---------------------------------------------------------------------------
+
+test_that("entry= (left truncation) runs end-to-end and stays finite", {
+  set.seed(42)
+  n <- 200
+  df <- data.frame(
+    x1 = rbinom(n, 1, 0.5),
+    x2 = rnorm(n),
+    l  = runif(n, 0, 0.5)
+  )
+  df$t_event <- df$l + rexp(n, rate = exp(0.5 * df$x1 - 0.3 * df$x2))
+  df$status  <- rbinom(n, 1, 0.8)
+  df$y       <- ifelse(df$status == 1, df$t_event, df$l + runif(n, 0, 1))
+
+  fit <- NULL
+  expect_no_error({
+    fit <- coxph_mpl(
+      Surv(y, status) ~ x1 + x2,
+      data   = df,
+      entry  = l,
+      basis  = "msplines",
+      smooth = 0
+    )
+  })
+  expect_true(all(is.finite(coef(fit, "Beta"))))
+  expect_true(is.finite(fit$ploglik[1]))
+
+  # entry >= event time must be rejected
+  df_bad <- df
+  df_bad$l <- df_bad$y + 1
+  expect_error(
+    coxph_mpl(Surv(y, status) ~ x1 + x2, data = df_bad, entry = l, smooth = 0),
+    "entry time must precede"
+  )
+})

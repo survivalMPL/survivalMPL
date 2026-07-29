@@ -31,11 +31,17 @@
 # 6. Prepare examples for Jun that demonstrate numerical issues.
 #    - Record failing seeds, minimal reproduction code, observed failure, and
 #      the corresponding line numbers in old_sources/survivalMPL_0.2-4.
-# 7. Review old_sources/LTRC_codes from the left-truncation paper / Lifetime
-#    Data Analysis paper.
-#    - Understand the code structure and algorithmic assumptions.
-#    - Produce an incorporation plan only; defer package implementation until
-#      the design is agreed.
+# 7. [DONE] Left truncation (entry=) added to coxph_mpl() in R/coxph.r, based
+#    on review of old_sources/LTRC_codes (left-truncation paper). Implements
+#    H*(t) = H(t) - H(entry) by differencing the which=2 basis matrices;
+#    density matrix (which=1) untouched; knot range extended to cover entry
+#    times. Verified against dev/experiments/old_sources/LTRC_codes/ reference
+#    implementation in tests/testthat/test-ltrc.R (loose tolerance — the two
+#    estimators use different knot/bin placement schemes); smoke-tested in
+#    tests/testthat/test-smoke.R.
+#    - Follow-up (not yet done): residuals.coxph_mpl() and predict.coxph_mpl()
+#      do not account for entry (they compute from time 0, not from each
+#      subject's entry time).
 # 8. Add Observer pattern for iteration callbacks in coxph_mpl().
 #    - Add a `callbacks = NULL` parameter to coxph_mpl() — fully backward-compatible.
 #    - Define a callback contract: on_iter(iter, ploglik, delta) called after each

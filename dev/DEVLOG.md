@@ -226,7 +226,8 @@ Sourced from `TODO.R`. Tick off here and in `TODO.R` when done.
 
 **Collaboration**
 - [ ] Prepare minimal numerical-issue examples for Jun: failing seeds, minimal reproduction code, observed error, line numbers in `R/coxph.r`
-- [ ] Review `old_sources/LTRC_codes/` (left-truncation paper); produce incorporation plan only — defer implementation until design is agreed
+- [x] Review `old_sources/LTRC_codes/` (left-truncation paper) and implement left truncation via `entry=` in `coxph_mpl()` *(done 2026-07-15)*
+- [ ] Extend `residuals.coxph_mpl()`/`predict.coxph_mpl()` to account for `entry` (currently compute from time 0, ignoring truncation)
 
 ---
 
@@ -235,8 +236,8 @@ Sourced from `TODO.R`. Tick off here and in `TODO.R` when done.
 > [!question] Non-finite Hessian fix: stopgap vs root cause
 > The proposed `ifelse(is.finite(w_ni), w_ni, 0)` guard suppresses the error but silently drops the contribution of interval-censored observations with extreme cumulative hazards. Should the fix address root cause (clamp cumulative hazard before computing weights, or regularise the penalty) rather than zeroing post-hoc?
 
-> [!question] LTRC (left-truncation + right-censoring) incorporation
-> `old_sources/LTRC_codes/` from the Lifetime Data Analysis paper exist but are not reviewed. What is the algorithmic relationship to the current fitting engine, and can the registry pattern absorb LTRC as a censoring type rather than a separate code path?
+> [!question] ~~LTRC (left-truncation + right-censoring) incorporation~~ *(resolved 2026-07-15)*
+> Not a new censoring type: `entry=` differences the existing which=2 basis matrices (`Psi(t) -> Psi(t) - Psi(entry)`) via the same `compute_basis_matrix()` entry point already used for `t_i1`/`t_i2` — no registry changes needed. See `R/coxph.r` and `tests/testthat/test-ltrc.R`. `residuals.coxph_mpl()`/`predict.coxph_mpl()` are a documented follow-up, not yet implemented.
 
 > [!question] ~~Pseudo-melanoma dataset as package data~~ *(resolved 2026-05-21)*
 > Script placed in `dev/data-raw/melanoma.R`; `data/melanoma.rda` committed.

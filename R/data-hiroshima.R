@@ -1,0 +1,76 @@
+#' Atomic Bomb Survivor Mortality Data (Life Span Study Report 14)
+#'
+#' A left-truncation example derived from the Radiation Effects Research
+#' Foundation's (RERF) Life Span Study (LSS) Report 14 cancer and noncancer
+#' disease mortality data, 1950-2003 (Ozasa et al. 2012). The source file is a
+#' grouped person-time table stratified by city, sex, ground distance, Adult
+#' Health Study participation, age at exposure, attained age, calendar time,
+#' and colon dose - it does not give individual subject records. Each stratum
+#' row is treated here as a single pseudo-subject: \code{entry} and
+#' \code{time} are the person-year weighted mean age at exposure and mean
+#' attained age within that stratum, and \code{status}/\code{status_colon}
+#' indicate whether any death (any cause / colon cancer specifically)
+#' occurred in it. This discards the original person-years/subject-count
+#' weighting and is a simplification for demonstrating left truncation, not a
+#' substitute for a proper grouped-data reanalysis of LSS Report 14.
+#'
+#' @format A data frame with 53,782 observations on 8 variables:
+#' \describe{
+#'   \item{city}{Factor: \code{"Hiroshima"} or \code{"Nagasaki"}.}
+#'   \item{sex}{Factor: \code{"Male"} or \code{"Female"}.}
+#'   \item{gd3}{Factor: ground distance, \code{"<3km"} or \code{"3-10km"}.}
+#'   \item{entry}{Numeric left-truncation (delayed entry) time: person-year
+#'   weighted mean age at exposure, in years.}
+#'   \item{time}{Numeric event/censoring time: person-year weighted mean
+#'   attained age, in years. Strictly greater than \code{entry} for every row.}
+#'   \item{status}{Integer event indicator: 1 if any death (any cause)
+#'   occurred within the stratum, 0 otherwise.}
+#'   \item{status_colon}{Integer event indicator: 1 if any colon-cancer death
+#'   occurred within the stratum, 0 otherwise (584 of the 53,782 rows).}
+#'   \item{dose}{Numeric DS02-weighted colon dose (gamma + 10*neutron, mGy).}
+#' }
+#' @details See \code{dev/data-raw/hiroshima.R} to reproduce, and
+#'   \code{dev/experiments/hiroshima_dataset/} for the original grouped table
+#'   and its documentation.
+#' @source
+#' Radiation Effects Research Foundation (RERF) Life Span Study Report 14:
+#' Ozasa K, Shimizu Y, Suyama A, Kasagi F, Soda M, Grant EJ, Sakata R,
+#' Sugiyama H, Kodama K. Studies of the mortality of atomic bomb survivors,
+#' Report 14, 1950-2003: An overview of cancer and noncancer diseases.
+#' \emph{Radiat Res} 2012 [March]; 177(3):229-43.
+#'
+#' This report makes use of data obtained from the Radiation Effects Research
+#' Foundation (RERF), Hiroshima and Nagasaki, Japan. RERF is a private,
+#' non-profit foundation funded by the Japanese Ministry of Health, Labour and
+#' Welfare (MHLW) and the U.S. Department of Energy (DOE), the latter in part
+#' through DOE Award DE-HS0000031 to the National Academy of Sciences. The
+#' conclusions in this report are those of the authors and do not necessarily
+#' reflect the scientific judgment of RERF or its funding agencies.
+#' @examples
+#' data(hiroshima)
+#' \dontrun{
+#' fit <- coxph_mpl(
+#'   Surv(time, status) ~ dose + sex + city,
+#'   data   = hiroshima,
+#'   entry  = entry,
+#'   basis  = "msplines",
+#'   smooth = 0
+#' )
+#' summary(fit)
+#'
+#' # Colon-cancer-specific outcome, cross-checked against survival::coxph()
+#' fit_colon <- coxph_mpl(
+#'   Surv(time, status_colon) ~ dose + city + gd3,
+#'   data   = hiroshima,
+#'   entry  = entry,
+#'   basis  = "msplines",
+#'   smooth = 0
+#' )
+#' summary(coxph(Surv(entry, time, status_colon) ~ dose + city + gd3,
+#'   data = hiroshima
+#' ))
+#' }
+#' @docType data
+#' @name hiroshima
+#' @keywords dataset
+NULL

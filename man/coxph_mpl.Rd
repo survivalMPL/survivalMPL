@@ -5,7 +5,7 @@
 \alias{print.coxph_mpl}
 \title{Fit Cox Proportional Hazards Regression Model Via MPL}
 \usage{
-coxph_mpl(formula, data, subset, na.action, control, ...)
+coxph_mpl(formula, data, subset, na.action, control, entry, ...)
 
 \method{print}{coxph_mpl}(x, ...)
 }
@@ -25,6 +25,13 @@ frame; defaults to \code{options()\$na.action}.}
 \item{control}{Optional list returned by [coxph_mpl.control()] specifying
 basis choice, smoothing value, iteration limits, and related options. When
 missing, defaults are built from \code{...}.}
+
+\item{entry}{Optional numeric vector (or a column reference evaluated in
+\code{data}) giving each subject's left-truncation (delayed entry) time.
+Every value must be strictly less than that subject's event/interval
+lower bound; violations raise an error. Left-truncated and
+non-left-truncated subjects may be mixed in the same call. Defaults to
+\code{NULL} (no truncation), which reproduces prior behaviour exactly.}
 
 \item{...}{Additional arguments passed to [coxph_mpl.control()].}
 
@@ -51,13 +58,19 @@ Ma, Couturier, Heritier and Marschner (2021)). The covariate matrix is
 centred during optimisation; baseline estimates and covariance matrices are
 corrected afterwards using a delta-method adjustment.
 }
+\section{Limitations}{
+ [residuals.coxph_mpl()] and [predict.coxph_mpl()] do
+  not yet account for \code{entry} — they compute cumulative hazard and
+  survival from time 0 rather than from each subject's entry time. This is
+  a known follow-up, not yet implemented.
+}
+
 \examples{
 \dontrun{
 ## Right-censored example: survival::lung
 data(lung, package = "survival")
 fit_mpl <- coxph_mpl(Surv(time, status == 2) ~ age + sex + ph.karno +
- wt.loss,
-                     data = lung)
+ wt.loss, data = lung)
 summary(fit_mpl)
 
 ## Interval-censored example: bcos2
