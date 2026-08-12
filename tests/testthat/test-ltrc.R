@@ -5,8 +5,8 @@ library(survivalMPL)
 # differencing reproduces the old piecewise-hazard profile-likelihood estimator
 # under a matched configuration (basis="uniform", smooth=0, matched knots).
 
-source(testthat::test_path("../../dev/experiments/old_sources/LTRC_codes/dataGenLeftTruncation.R"))
-source(testthat::test_path("../../dev/experiments/old_sources/LTRC_codes/LT_RC_optimization_updated.R"))
+# datagen_LT_RC() and Cox_LT_RC() are defined in helper-ltrc-reference.R,
+# auto-sourced by testthat before tests run.
 
 test_that("entry= reproduces the reference LTRC piecewise estimator", {
   set.seed(1)
