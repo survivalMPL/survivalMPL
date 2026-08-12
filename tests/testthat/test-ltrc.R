@@ -68,3 +68,21 @@ test_that("entry= reproduces the reference LTRC piecewise estimator", {
   dist_ignoring_entry <- sum((unname(coef(fit_ignoring_entry, "Beta")) - as.vector(ref$bVal))^2)
   expect_lt(dist_with_entry, dist_ignoring_entry)
 })
+
+test_that("entry= is rejected for any basis other than uniform", {
+  df <- data.frame(y = c(2, 3, 4, 5, 6, 7), l = c(1, 1, 2, 2, 3, 3),
+                   event = c(1, 0, 1, 1, 0, 1), x = c(0, 1, 0, 1, 0, 1))
+
+  for (b in c("msplines", "bsplines", "gaussian", "epanechnikov")) {
+    expect_error(
+      coxph_mpl(Surv(y, event) ~ x, data = df, entry = l, basis = b),
+      "requires basis"
+    )
+  }
+  # the check must also fire when the basis arrives via control=
+  expect_error(
+    coxph_mpl(Surv(y, event) ~ x, data = df, entry = l,
+              control = coxph_mpl.control(n.obs = 4, basis = "msplines")),
+    "requires basis"
+  )
+})

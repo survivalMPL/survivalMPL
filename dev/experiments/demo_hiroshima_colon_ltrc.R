@@ -9,10 +9,15 @@
 # mpleltrc(), plus a naive (no entry=) fit to show the effect of ignoring
 # truncation on this real, colon-cancer-specific outcome.
 #
-# Column mapping vs the colleague's script: agex -> entry, age -> time,
-# colon -> status_colon, colon10 -> dose (both raw and standardized versions
-# shown), city/gd3 retained as covariates (sex dropped, as the colleague
-# found it non-significant and removed it from their final model).
+# Column mapping vs the colleague's script: agex -> entry (note: `entry` is the
+# attained age at the 1950-10-01 start of follow-up, which is the correct
+# risk-set entry age; the dataset's `agex` column is the age at exposure in
+# 1945, i.e. entry - 5.15), age -> time, colon -> status_colon, colon10 ->
+# dose (stored in Gy here, not mGy; a standardized version is also shown).
+# city/gd3 retained as covariates, sex dropped as the colleague found it
+# non-significant and removed it from their final model.
+#
+# entry= is only correct for basis = "uniform", so that is used throughout.
 
 devtools::load_all()
 library(survival)
@@ -20,37 +25,30 @@ library(survival)
 data(hiroshima)
 hiroshima$dose_stan <- as.numeric(scale(hiroshima$dose))
 
-
-# coxph_mpl WITH entry= (correct handling of left truncation).
-
-tic()
-fit_trunc <- coxph_mpl(
-  Surv(time, status_colon) ~ city + gd3 + dose_stan,
-  data   = hiroshima,
-  entry  = entry,
-  # basis  = "msplines",
-  # smooth = 0,
+# WITH entry= (correct handling of left truncation)
+t0 <- proc.time()[3]
+fit_trunc <- coxph_mpl(Surv(time, status_colon) ~ city + gd3 + dose_stan,
+  data = hiroshima, entry = entry,
+  basis = "uniform", smooth = 0
 )
-toc()
+cat(sprintf("entry= : %.1fs\n", proc.time()[3] - t0))
 
-tic()
-fit_trunc_0 <- coxph_mpl(
-  Surv(time, status_colon) ~ city + gd3 + dose_stan,
-  data   = hiroshima,
-  entry  = entry,
-  basis  = "msplines",
-  smooth = 5,
-)
-toc()
-
-# coxph_mpl WITHOUT entry= (naive, ignores truncation).
-fit_naive <- coxph_mpl(
-  Surv(time, status_colon) ~ city + gd3 + dose_stan,
-  data   = hiroshima,
-  # basis  = "msplines",
-  # smooth = 0,
+# WITHOUT entry= (naive, ignores truncation)
+fit_naive <- coxph_mpl(Surv(time, status_colon) ~ city + gd3 + dose_stan,
+  data = hiroshima, basis = "uniform", smooth = 0
 )
 
-coef(fit_trunc_0)
-coef(fit_trunc)
-coef(fit_naive)
+print(round(rbind(
+  `MPL entry=` = coef(fit_trunc, "Beta"),
+  `coxph LTRC` = coef(coxph(
+    Surv(entry, time, status_colon) ~ city + gd3 + dose_stan,
+    data = hiroshima
+  )),
+  `MPL naive` = coef(fit_naive, "Beta"),
+  `coxph naive` = coef(coxph(
+    Surv(time, status_colon) ~ city + gd3 + dose_stan,
+    data = hiroshima
+  ))
+), 4))
+
+summary(fit_trunc)

@@ -28,17 +28,19 @@
 #'   \code{data}) giving each subject's left-truncation (delayed entry) time.
 #'   Every value must be strictly less than that subject's event/interval
 #'   lower bound; violations raise an error. Left-truncated and
-#'   non-left-truncated subjects may be mixed in the same call. Defaults to
+#'   non-left-truncated subjects may be mixed in the same call. Requires
+#'   \code{basis = "uniform"}; any other basis raises an error. Defaults to
 #'   \code{NULL} (no truncation), which reproduces prior behaviour exactly.
 #' @param ... Additional arguments passed to [coxph_mpl.control()].
 #'
 #' @return An object of class \code{"coxph_mpl"}; see [coxph_mpl.object] for
 #'   components.
 #'
-#' @section Limitations: [residuals.coxph_mpl()] and [predict.coxph_mpl()] do
-#'   not yet account for \code{entry} — they compute cumulative hazard and
-#'   survival from time 0 rather than from each subject's entry time. This is
-#'   a known follow-up, not yet implemented.
+#' @section Limitations: \code{entry} is only supported for
+#'   \code{basis = "uniform"}. Also, [residuals.coxph_mpl()] and
+#'   [predict.coxph_mpl()] do not yet account for \code{entry} — they compute
+#'   cumulative hazard and survival from time 0 rather than from each subject's
+#'   entry time. Both are known follow-ups, not yet implemented.
 #' @seealso [coxph_mpl.object()], [coxph_mpl.control()], [summary.coxph_mpl()],
 #'   [plot.coxph_mpl()], [predict.coxph_mpl()]
 #' @examples
@@ -136,6 +138,16 @@ coxph_mpl <- function(formula, data, subset, na.action, control, entry, ...) {
     }
   }
   if (missing(control)) control <- coxph_mpl.control(n.obs, ...)
+
+  # Left truncation is implemented by differencing the cumulative basis,
+  # H(t) - H(entry), and is only supported for the piecewise-constant "uniform"
+  # basis. Fail loudly rather than returning a silently wrong fit.
+  if (!is.null(entry) && control$basis != "uniform") {
+    stop(gettextf(
+      'entry= (left truncation) requires basis = "uniform", not "%s"',
+      control$basis
+    ), domain = NA, call. = FALSE)
+  }
 
   # ties
   t_i1.obs <- t_i1[observed]

@@ -136,7 +136,7 @@ test_that("entry= (left truncation) runs end-to-end and stays finite", {
       Surv(y, status) ~ x1 + x2,
       data   = df,
       entry  = l,
-      basis  = "msplines",
+      basis  = "uniform",
       smooth = 0
     )
   })

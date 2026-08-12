@@ -1,3 +1,35 @@
+# survivalMPL 0.2-4.9003 (development)
+- **`hiroshima` dataset rebuilt, breaking change.** It is now one row per
+  subject (86,611 subjects), reconstructed from the RERF LSS14 grouped
+  person-time table, rather than one pseudo-subject per grouped-table cell
+  (53,782 rows). The pseudo-subject version was not usable for analysis: it
+  produced a *negative* colon-dose coefficient for all-cause mortality, an
+  artefact of high-dose cells having more person-years and hence a longer mean
+  attained age. Changes for existing code:
+  - `entry` is now the attained age at the 1950-10-01 start of follow-up, the
+    age at which a subject actually enters the risk set, rather than a cell
+    mean age at exposure. Age at exposure is available as the new `agex`
+    column (exactly `entry - 5.15`, so the two are collinear).
+  - `dose` is now in **Gy**, not mGy.
+  - `status` is a per-subject death indicator (50,620 deaths), not a
+    "any death in this cell" indicator.
+  - reproduces the source table's subjects, deaths and colon-cancer deaths
+    exactly, and its person-years to within 0.33%.
+- **`entry=` now requires `basis = "uniform"`.** Left truncation is implemented
+  by differencing the cumulative basis, `H(t) - H(entry)`, which is only
+  correct for the piecewise-constant basis. Any other basis combined with
+  `entry=` previously returned a silently wrong fit and now raises an error.
+- New vignettes **Right Censoring** and **Left Censoring**; left censoring was
+  previously undocumented. `Getting Started` is now general information only —
+  installation, the `coxph_mpl()` interface, response encodings, control
+  arguments and methods — with its worked examples moved into those two
+  articles. The pkgdown site groups the tutorials into "Censoring schemes" and
+  "Modelling choices".
+- The pkgdown site is now built into `docs/` rather than `pkgdown/`. The old
+  destination collided with pkgdown's own source lookup: a generated
+  `pkgdown/index.md` outranked the real `index.md` and the home page rendered
+  its own previous output.
+
 # survivalMPL 0.2-4 (2025-03-23)
 - changed maintainer email address
 - added contributor
