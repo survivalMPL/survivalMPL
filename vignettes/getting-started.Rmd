@@ -1,6 +1,8 @@
 ---
 title: "Getting Started with survivalMPL"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    toc: true
 vignette: >
   %\VignetteIndexEntry{Getting Started with survivalMPL}
   %\VignetteEngine{knitr::rmarkdown}
@@ -8,7 +10,13 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  fig.align  = "center",
+  fig.width  = 7,
+  fig.height = 4.5
+)
 ```
 
 ## Overview
@@ -115,10 +123,10 @@ A fitted `coxph_mpl` object supports the usual generics:
 
 ## Where to go next
 
-The tutorials work through one censoring scheme at a time — **right censoring**,
-**left censoring**, and **interval censoring** — each with a complete worked
-example.  Two further articles cover the modelling choices: **basis functions
-for the baseline hazard**, and a side-by-side comparison of **`coxph` and
-`coxph_mpl`** on the same data.
+The tutorials work through one censoring scheme at a time (**Right Censoring**,
+**Left Censoring**, **Interval Censoring**), each with a complete worked
+example.  Two further articles cover the modelling choices: **Basis Functions
+for the Baseline Hazard**, and **Comparing `coxph()` and `coxph_mpl()`** on the
+same data.
 
 See `?coxph_mpl` and `?coxph_mpl.control` for the full argument lists.

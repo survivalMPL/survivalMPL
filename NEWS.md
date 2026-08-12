@@ -1,3 +1,30 @@
+# survivalMPL 0.2-4.9004 (development)
+- **`plot()` legends now describe only what is drawn.** `plot.coxph_mpl()`
+  listed "Observed", "Censored" and a quantile reference line in its legends,
+  none of which the code draws: the points were never plotted and the quantile
+  line and shaded region are commented out. The legends now show the knots and
+  the line type marking $\hat\theta_u = 0$, and, for the baseline function
+  panels, the estimate and its confidence band. Panels gained vertical headroom
+  and the legends an opaque background so they no longer sit on the curves.
+  `plot.residuals.coxph_mpl()` gained the same treatment.
+- **`plot.coxph_mpl()` gains an `xlim` argument** for narrowing the displayed
+  time range, which the baseline function panels need for right-skewed data
+  where the full knot range compresses everything into the left edge. Only the
+  display changes; the fit and the knots do not. `upper.quantile` is documented
+  as having no effect, which has been true since the quantile line was disabled.
+- New vignette **Left Truncation**, following the profile-likelihood treatment
+  of Bhaskaran, Liquet and Ma. It shows on the `hiroshima` data that ignoring
+  delayed entry biases the dose and city coefficients upwards by 1.3 and 2.1
+  standard errors, and explains why `entry=` is restricted to the uniform basis.
+- The tutorials are regrouped into "Censoring and truncation" and "Modelling
+  choices". The home page now carries installation and one right-censored
+  example, pointing at Getting Started for the rest. All seven articles share
+  one output format (`html_vignette` with a table of contents) and one set of
+  knitr defaults, use `Example: ...` headings, and end with a Next steps
+  section.
+- Documentation regenerated: `man/coxph_mpl.Rd` had not been rebuilt after the
+  `entry=` basis restriction was documented.
+
 # survivalMPL 0.2-4.9003 (development)
 - **`hiroshima` dataset rebuilt, breaking change.** It is now one row per
   subject (86,611 subjects), reconstructed from the RERF LSS14 grouped
@@ -20,11 +47,10 @@
   correct for the piecewise-constant basis. Any other basis combined with
   `entry=` previously returned a silently wrong fit and now raises an error.
 - New vignettes **Right Censoring** and **Left Censoring**; left censoring was
-  previously undocumented. `Getting Started` is now general information only —
+  previously undocumented. `Getting Started` is now general information only:
   installation, the `coxph_mpl()` interface, response encodings, control
-  arguments and methods — with its worked examples moved into those two
-  articles. The pkgdown site groups the tutorials into "Censoring schemes" and
-  "Modelling choices".
+  arguments and methods, with its worked examples moved into those two articles.
+  The pkgdown site groups the tutorials into sections.
 - The pkgdown site is now built into `docs/` rather than `pkgdown/`. The old
   destination collided with pkgdown's own source lookup: a generated
   `pkgdown/index.md` outranked the real `index.md` and the home page rendered

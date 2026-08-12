@@ -1,6 +1,8 @@
 ---
 title: "Left Censoring with survivalMPL"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    toc: true
 vignette: >
   %\VignetteIndexEntry{Left Censoring with survivalMPL}
   %\VignetteEngine{knitr::rmarkdown}
@@ -8,8 +10,13 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.align = "center",
-                      fig.width = 7, fig.height = 4.5)
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  fig.align  = "center",
+  fig.width  = 7,
+  fig.height = 4.5
+)
 set.seed(1)
 ```
 
@@ -19,7 +26,7 @@ A survival time is *left censored* when the event is known to have happened
 already by the time the subject is first examined, but not when.  All that is
 recorded is an upper bound $t_R$: the event occurred somewhere in $(0, t_R]$.
 This arises whenever the outcome is detected by inspection rather than observed
-as it happens — a tumour already present at the first scan, seroconversion
+as it happens: a tumour already present at the first scan, seroconversion
 already complete at enrolment, a milestone already reached at the first
 assessment.
 
@@ -62,7 +69,7 @@ dropped by `na.action`.
 
 ---
 
-## Example — pseudo-melanoma data
+## Example: pseudo-melanoma data
 
 The bundled `melanoma` data (time to first local recurrence, $n = 300$,
 simulated) is partly interval censored and contains all four observation types.
@@ -80,7 +87,7 @@ with(melanoma, c(
 ))
 ```
 
-So 132 of the 300 subjects — 44% — are left censored.
+So 132 of the 300 subjects (44%) are left censored.
 
 ### Two equivalent encodings
 
@@ -131,7 +138,7 @@ round(cbind(`interval (0, t_R]` = coef(fit_interval),
 
 The two columns agree to about 0.02.  They are not bit-identical because the knot
 positions are quantiles of the observed endpoint times, and the two encodings
-present slightly different sets of endpoints — not because the likelihoods
+present slightly different sets of endpoints, not because the likelihoods
 differ.
 
 ### Inspecting the fit
@@ -140,13 +147,25 @@ differ.
 summary(fit_left)
 ```
 
-```{r plot-left, fig.height=4}
-plot(fit_left)
+The recurrence times are strongly right-skewed: 95% of the observed endpoints
+fall below 1.1 years, but a few reach 4.  Over the full range every feature of
+the fit is squeezed into the left-hand tenth of the panel, so we narrow the
+displayed range with `xlim`.  This affects only what is drawn; the fit itself,
+and the knots, are unchanged.
+
+```{r plot-left, fig.width=8, fig.height=7}
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+plot(fit_left, ask = FALSE, cex.main = 0.8, xlim = c(0, 1.2))
 ```
+
+The M-spline basis places most of its knots where the events are, so the first
+panel is dense near zero.  The wide confidence band on $S_0(t)$ reflects how
+little information the left-censored observations carry individually: each one
+says only that the event happened at some point before $t_R$.
 
 ---
 
-## Example — `bcos2`
+## Example: `bcos2`
 
 The breast cosmesis data are mostly interval censored, but include a handful of
 genuinely left-censored subjects, already coded with `NA`:
@@ -174,6 +193,21 @@ fit_bcos <- coxph_mpl(
 
 summary(fit_bcos)
 ```
+
+The same `plot()` method applies.  Here we show the basis functions and the
+estimated baseline survival:
+
+```{r bcos2-plot, fig.width=8, fig.height=3.8}
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+plot(fit_bcos, ask = FALSE, which = c(1, 4), cex.main = 0.85)
+```
+
+The hazard and cumulative hazard panels (`which = 2:3`) are omitted for this fit
+rather than shown: with no exact event times and very little information in the
+last knot interval, the delta-method standard error of the final
+$\hat\theta_u$ is enormous, and the resulting confidence band dominates the
+vertical scale to the point where the estimate itself is invisible.  The
+survival panel is unaffected because it is bounded in $[0, 1]$.
 
 ---
 

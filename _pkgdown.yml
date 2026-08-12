@@ -35,18 +35,20 @@ navbar:
         - text: Getting Started
           href: articles/getting-started.html
         - text: -------
-        - text: Censoring schemes
+        - text: Censoring and truncation
         - text: Right Censoring
           href: articles/right-censoring.html
         - text: Left Censoring
           href: articles/left-censoring.html
         - text: Interval Censoring
           href: articles/interval-censoring.html
+        - text: Left Truncation
+          href: articles/left-truncation.html
         - text: -------
         - text: Modelling choices
         - text: Basis Functions for the Baseline Hazard
           href: articles/basis-comparison.html
-        - text: coxph vs coxph_mpl
+        - text: Comparing coxph() and coxph_mpl()
           href: articles/coxph-comparison.html
     news:
       text: News
@@ -56,13 +58,14 @@ articles:
   - title: Getting started
     contents:
       - getting-started
-  - title: Censoring schemes
+  - title: Censoring and truncation
     desc: >
-      One article per censoring scheme, each with a complete worked example.
+      One article per observation scheme, each with a complete worked example.
     contents:
       - right-censoring
       - left-censoring
       - interval-censoring
+      - left-truncation
   - title: Modelling choices
     desc: >
       How the baseline hazard is represented, and how MPL compares with the

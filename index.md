@@ -9,13 +9,15 @@ Penalised maximum likelihood fits for Cox proportional hazards models with right
 - Inference for coefficients, baseline hazard/survival, predictions, and residuals
 
 ## Installation
-```
+
+```r
 install.packages("survivalMPL")
 ```
 
 ## Quick start
 
-### Right-censored example (`survival::lung`)
+A right-censored fit on `survival::lung`:
+
 ```r
 library(survivalMPL)
 library(survival)
@@ -36,25 +38,13 @@ summary(fit_lung)
 plot(predict(fit_lung, type = "survival"))
 ```
 
-### Interval-censored example (`bcos2`)
-```r
-data(bcos2)
+Because `coxph_mpl()` estimates the baseline hazard rather than profiling it out,
+`predict()` returns absolute survival and hazard estimates with standard errors.
 
-fit_bcos <- coxph_mpl(
-  Surv(left, right, type = "interval2") ~ treatment,
-  data = bcos2,
-  control = coxph_mpl.control(
-    basis = "msplines",
-    n.obs = nrow(bcos2),
-    max.iter = c(40, 2000, 4000),
-    smooth = 0
-  )
-)
-
-summary(fit_bcos)
-plot(predict(fit_bcos, type = "survival", i = 1))
-```
+See the [Getting Started](articles/getting-started.html) article for
+installation notes, the `coxph_mpl()` interface, how each censoring scheme is
+encoded, and the control arguments. The remaining articles work through one
+censoring scheme at a time and compare the modelling choices.
 
 ## Resources
-- Vignette: `vignettes/getting-started.Rmd`
 - Reference documentation: `?coxph_mpl`, `?coxph_mpl.control`, `?predict.coxph_mpl`, `?residuals.coxph_mpl`

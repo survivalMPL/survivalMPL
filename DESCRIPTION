@@ -1,6 +1,6 @@
 Package: survivalMPL
 Title: Penalised Maximum Likelihood for Survival Analysis Models
-Version: 0.2-4.9003
+Version: 0.2-4.9004
 Date: 2025-03-23
 Authors@R: c(
   person("Dominique-Laurent", "Couturier",

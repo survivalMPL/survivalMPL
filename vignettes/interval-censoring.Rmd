@@ -1,6 +1,8 @@
 ---
 title: "Interval Censoring with survivalMPL"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    toc: true
 bibliography: references.bib
 vignette: >
   %\VignetteIndexEntry{Interval Censoring with survivalMPL}
@@ -9,7 +11,13 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.align = "center")
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  fig.align  = "center",
+  fig.width  = 7,
+  fig.height = 4.5
+)
 ```
 
 ## Overview
@@ -18,7 +26,7 @@ Survival times are *interval-censored* when the event is known to have occurred 
 interval $(t_L, t_R]$ rather than at an exact time. This is common in clinical studies
 where patients are examined only periodically (e.g. follow-up visits).
 
-`survivalMPL` handles partly interval-censored data — datasets that may contain a mix
+`survivalMPL` handles partly interval-censored data: datasets that may contain a mix
 of exact event times and left-, right-, and interval-censored observations. The censoring
 type is communicated through `survival::Surv(..., type = "interval2")`.
 
@@ -26,7 +34,7 @@ This tutorial presents two examples from @MaWebbHudson2024.
 
 ---
 
-## Example - Simulation study
+## Example: simulation study
 
 We compare the MPL M-spline method against partial likelihood (PL) with midpoint
 imputation. The true model is a Cox model with Weibull baseline hazard
@@ -118,7 +126,7 @@ for(s in 1:100){
 
 ---
 
-## Example - Pseudo melanoma study
+## Example: pseudo-melanoma data
 
 We fit the MPL Cox model to a pseudo melanoma dataset: time to first local recurrence
 for $n = 300$ patients. Recurrence times are typically interval-censored, occurring
@@ -197,7 +205,20 @@ summary(mela_fit)
 ```
 
 ```{r melanoma-plot, fig.width=9, fig.height=7, out.width="100%"}
-plot(mela_fit, which = 2:4)
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+plot(mela_fit, ask = FALSE, which = 2:4, cex.main = 0.8)
 ```
+
+---
+
+## Next steps
+
+- **Left Censoring** covers the boundary case of interval censoring, where the
+  lower endpoint is unknown, and shows that recording an observation as
+  $(0, t_R]$ and as left censored at $t_R$ give the same fit.
+- **Right Censoring** covers the standard scheme and the `Surv(time, status)`
+  response.
+- **Basis Functions for the Baseline Hazard** explains the four choices for
+  $\psi_u$, including the `"msplines"` basis used above.
 
 ## References

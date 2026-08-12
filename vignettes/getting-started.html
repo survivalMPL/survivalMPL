@@ -340,6 +340,21 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore">Getting Started with survivalMPL</h1>
 
 
+<div id="TOC">
+<ul>
+<li><a href="#overview" id="toc-overview">Overview</a></li>
+<li><a href="#installation" id="toc-installation">Installation</a></li>
+<li><a href="#the-main-function" id="toc-the-main-function">The main
+function</a>
+<ul>
+<li><a href="#tuning-the-fit" id="toc-tuning-the-fit">Tuning the
+fit</a></li>
+<li><a href="#methods" id="toc-methods">Methods</a></li>
+</ul></li>
+<li><a href="#where-to-go-next" id="toc-where-to-go-next">Where to go
+next</a></li>
+</ul>
+</div>
 
 <div id="overview" class="section level2">
 <h2>Overview</h2>
@@ -372,7 +387,9 @@ partial likelihood cannot handle.</p>
 <p>Then attach it alongside <code>survival</code>, which provides the
 <code>Surv()</code> response constructor:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(survivalMPL)</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">library</span>(survival)</span></code></pre></div>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; Loading required package: survival</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt; Loading required package: MASS</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="fu">library</span>(survival)</span></code></pre></div>
 </div>
 <div id="the-main-function" class="section level2">
 <h2>The main function</h2>
@@ -534,13 +551,13 @@ S(t)\)</span></td>
 </div>
 <div id="where-to-go-next" class="section level2">
 <h2>Where to go next</h2>
-<p>The tutorials work through one censoring scheme at a time —
-<strong>right censoring</strong>, <strong>left censoring</strong>, and
-<strong>interval censoring</strong> — each with a complete worked
-example. Two further articles cover the modelling choices: <strong>basis
-functions for the baseline hazard</strong>, and a side-by-side
-comparison of <strong><code>coxph</code> and
-<code>coxph_mpl</code></strong> on the same data.</p>
+<p>The tutorials work through one censoring scheme at a time
+(<strong>Right Censoring</strong>, <strong>Left Censoring</strong>,
+<strong>Interval Censoring</strong>), each with a complete worked
+example. Two further articles cover the modelling choices: <strong>Basis
+Functions for the Baseline Hazard</strong>, and <strong>Comparing
+<code>coxph()</code> and <code>coxph_mpl()</code></strong> on the same
+data.</p>
 <p>See <code>?coxph_mpl</code> and <code>?coxph_mpl.control</code> for
 the full argument lists.</p>
 </div>

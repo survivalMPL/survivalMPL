@@ -14,7 +14,7 @@ fit_entry <- coxph_mpl(
   Surv(time, status) ~ dose + sex + city,
   data   = hiroshima,
   entry  = entry,
-  basis  = "mspline"
+  basis  = "uniform"
 )
 
 fit_naive <- coxph_mpl(

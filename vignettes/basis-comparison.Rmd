@@ -1,9 +1,8 @@
 ---
 title: "Basis Functions for the Baseline Hazard"
 output:
-  rmarkdown::html_document:
+  rmarkdown::html_vignette:
     toc: true
-    toc_float: true
 bibliography: references.bib
 vignette: >
   %\VignetteIndexEntry{Basis Functions for the Baseline Hazard}
@@ -13,11 +12,11 @@ vignette: >
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  collapse  = TRUE,
-  comment   = "#>",
-  fig.align = "center",
-  fig.width = 7,
-  fig.height = 4
+  collapse   = TRUE,
+  comment    = "#>",
+  fig.align  = "center",
+  fig.width  = 7,
+  fig.height = 4.5
 )
 if (requireNamespace("pkgload", quietly = TRUE)) {
   pkgload::load_all(quiet = TRUE)
@@ -154,7 +153,7 @@ knots_g <- survivalMPL:::compute_knots(ctrl_g, events)
 knots_m <- survivalMPL:::compute_knots(ctrl_m, events)
 knots_e <- survivalMPL:::compute_knots(ctrl_e, events)
 
-# Crop x to the 95th-percentile of event times — most basis support lies here.
+# x spans the full range of event times; most basis support lies at the left.
 # The melanoma data is right-skewed (90% of events fall below ~0.9 years).
 t_vis_max <- quantile(events, 1)
 t_vis     <- seq(min(events[events > 0]), t_vis_max, length.out = 400)
@@ -286,8 +285,8 @@ legend("topright",
        lwd = 1.5, bty = "n", cex = 0.75)
 ```
 
-All four bases agree on the broad shape — a hazard that is high early and decays
-over time — and on the implied survival curve.  The smooth bases (Gaussian,
+All four bases agree on the broad shape (a hazard that is high early and decays
+over time) and on the implied survival curve.  The smooth bases (Gaussian,
 M-Splines, Epanechnikov) produce continuous estimates; the uniform basis
 introduces visible step artefacts that diminish with more knots.
 

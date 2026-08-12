@@ -1,6 +1,8 @@
 ---
 title: "Right Censoring with survivalMPL"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    toc: true
 vignette: >
   %\VignetteIndexEntry{Right Censoring with survivalMPL}
   %\VignetteEngine{knitr::rmarkdown}
@@ -8,8 +10,13 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.align = "center",
-                      fig.width = 7, fig.height = 4.5)
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  fig.align  = "center",
+  fig.width  = 7,
+  fig.height = 4.5
+)
 set.seed(1)
 ```
 
@@ -26,6 +33,8 @@ out.  The practical consequence is that a fit gives absolute hazard and survival
 estimates directly, with standard errors, rather than requiring a separate
 Breslow-type step afterwards.
 
+## Encoding right-censored observations
+
 Right-censored data use the ordinary two-argument response, exactly as in
 `coxph()`:
 
@@ -34,11 +43,12 @@ Surv(time, status)
 ```
 
 where `status` is `1`/`TRUE` for an observed event and `0`/`FALSE` for a censored
-observation.
+observation.  This is the one scheme that does not need
+`type = "interval2"`; internally `coxph_mpl()` converts it to that form anyway.
 
 ---
 
-## Example — `survival::lung`
+## Example: `survival::lung`
 
 The `lung` data from the **survival** package records survival in patients with
 advanced lung cancer.  `status` is coded `2` for death and `1` for censored, so
@@ -76,7 +86,7 @@ summary(fit_lung)
 ```
 
 The coefficient table is read as in any Cox fit: `sex` is strongly protective
-(coded 1 = male, 2 = female), and higher `ph.karno` — better performance status —
+(coded 1 = male, 2 = female), and higher `ph.karno` (better performance status)
 is associated with lower hazard.  The summary also reports the estimated
 baseline hazard coefficients $\boldsymbol{\theta}$, which have no counterpart in
 a partial likelihood fit.
@@ -84,11 +94,22 @@ a partial likelihood fit.
 ### Baseline hazard and survival
 
 Because $h_0$ is part of the model, it can be plotted with confidence bands
-straight from the fitted object:
+straight from the fitted object.  `plot()` produces four panels: the basis
+functions, then the estimated baseline hazard, cumulative hazard and survival.
 
-```{r plot-baseline, fig.height=4}
-plot(fit_lung)
+```{r plot-baseline, fig.width=8, fig.height=7}
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+plot(fit_lung, ask = FALSE, cex.main = 0.8)
 ```
+
+In the first panel each of the $m$ basis functions is drawn in its own colour,
+running through `terrain.colors()` from the earliest to the latest, so the
+colour simply indexes $u$ in $\psi_u$ and carries no other meaning.  With the
+default uniform basis each $\psi_u$ is an indicator on one knot interval, so
+the panel reads as a row of adjacent boxes of height 1, one colour per
+interval; the pale grey verticals are the knots $\boldsymbol{\alpha}$.  A basis
+drawn dashed would indicate $\hat\theta_u$ driven to zero, meaning that
+interval contributes nothing to the fitted hazard.
 
 ### Predicted survival
 
@@ -101,7 +122,7 @@ pred_lung <- predict(fit_lung, type = "survival")
 head(pred_lung)
 ```
 
-A single subject is selected with `i` (one row index at a time — only the first
+A single subject is selected with `i` (one row index at a time; only the first
 element is used):
 
 ```{r predict-i}
@@ -119,28 +140,14 @@ plot(residuals(fit_lung))
 
 ---
 
-## Left truncation (delayed entry)
-
-Right-censored data are often also *left truncated*: subjects enter the risk set
-only at some entry time, and anyone who fails before that time is never
-observed.  Pass those times through `entry`:
-
-```r
-coxph_mpl(Surv(time, status) ~ x, data = df, entry = df$start,
-          control = coxph_mpl.control(basis = "uniform", n.obs = sum(df$status)))
-```
-
-Entry times must strictly precede the observed event or censoring time, and left
-truncation currently requires `basis = "uniform"`.  Truncated and untruncated
-subjects may be mixed in the same call.  See `?coxph_mpl` for details.
-
----
-
 ## Next steps
 
+- **Left Truncation** covers delayed entry, where subjects join the risk set
+  only at some entry time.  Right-censored data are often also left truncated,
+  and `coxph_mpl()` handles it through the `entry` argument.
 - **Left Censoring** and **Interval Censoring** cover the other censoring
   schemes, which use the `type = "interval2"` response.
 - **Basis Functions for the Baseline Hazard** explains the four choices for
   $\psi_u$ and how the knots are placed.
-- **Comparing `coxph` and `coxph_mpl`** fits both to the same right-censored
-  data and contrasts the results.
+- **Comparing `coxph()` and `coxph_mpl()`** fits both to the same
+  right-censored data and contrasts the results.
