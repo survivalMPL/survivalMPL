@@ -132,7 +132,22 @@ augmented knot sequence $\boldsymbol{\alpha}^\star$.
 The code below uses the package's internal basis machinery to evaluate
 $\psi_u(t)$ on a fine grid and plot each set of basis functions.
 
-```{r basis-vis, fig.height=9, out.width="100%", echo=FALSE, message=FALSE}
+`n.knots = c(k_1, k_2)` places $k_1 + 1$ quantile-based knots over the lower
+`range.quant[2]` (90% by default) of the event times, plus $k_2 + 1$ equally
+spaced knots above that quantile — $k_1 + k_2 + 2$ knots in total.  The
+defaults are `c(8, 2)` for `"uniform"` and `"msplines"` (12 knots, $m = 11$ and
+$13$) and `c(0, 20)` for `"gaussian"` and `"epanechikov"` (22 knots, $m = 22$
+and $23$).
+
+The figure below deliberately uses far fewer: `n.knots = c(0, 6)`, i.e. 8 widely
+spaced knots and $m = 7$–$9$ basis functions per panel.  At the default
+resolution the curves overlap into a dense, unreadable thicket, and on this
+right-skewed dataset the quantile knots crowd so tightly near $t = 0$ that the
+first basis function spikes and flattens all the others.  Fewer knots do not
+change the shape of an individual basis function — only how many there are and
+how wide each one is.
+
+```{r basis-vis, fig.height=8, out.width="100%", echo=FALSE, message=FALSE}
 library(survivalMPL)
 library(survival)
 
@@ -140,23 +155,22 @@ library(survival)
 data(melanoma)
 events <- sort(c(melanoma$t_L[melanoma$t_L > 0],
                  melanoma$t_R[is.finite(melanoma$t_R)]))
-t_grid <- seq(min(events), max(events), length.out = 400)
+
+# Few, equally spaced knots purely for legibility (see note above).
+n_knots_vis <- c(0, 6)
 
 n_obs <- sum(melanoma$t_L == melanoma$t_R & is.finite(melanoma$t_R))
-ctrl_u <- coxph_mpl.control(basis = "uniform",     n.obs = n_obs)
-ctrl_g <- coxph_mpl.control(basis = "gaussian",    n.obs = n_obs)
-ctrl_m <- coxph_mpl.control(basis = "msplines",    n.obs = n_obs)
-ctrl_e <- coxph_mpl.control(basis = "epanechikov", n.obs = n_obs)
+ctrl_u <- coxph_mpl.control(basis = "uniform",     n.obs = n_obs, n.knots = n_knots_vis)
+ctrl_g <- coxph_mpl.control(basis = "gaussian",    n.obs = n_obs, n.knots = n_knots_vis)
+ctrl_m <- coxph_mpl.control(basis = "msplines",    n.obs = n_obs, n.knots = n_knots_vis)
+ctrl_e <- coxph_mpl.control(basis = "epanechikov", n.obs = n_obs, n.knots = n_knots_vis)
 
 knots_u <- survivalMPL:::compute_knots(ctrl_u, events)
 knots_g <- survivalMPL:::compute_knots(ctrl_g, events)
 knots_m <- survivalMPL:::compute_knots(ctrl_m, events)
 knots_e <- survivalMPL:::compute_knots(ctrl_e, events)
 
-# x spans the full range of event times; most basis support lies at the left.
-# The melanoma data is right-skewed (90% of events fall below ~0.9 years).
-t_vis_max <- quantile(events, 1)
-t_vis     <- seq(min(events[events > 0]), t_vis_max, length.out = 400)
+t_vis <- seq(min(events[events > 0]), max(events), length.out = 600)
 
 psi_u <- survivalMPL:::compute_basis_matrix(t_vis, knots_u, "uniform",     ctrl_u$order, which = 1)
 psi_g <- survivalMPL:::compute_basis_matrix(t_vis, knots_g, "gaussian",    ctrl_g$order, which = 1)
@@ -164,28 +178,23 @@ psi_m <- survivalMPL:::compute_basis_matrix(t_vis, knots_m, "msplines",    ctrl_
 psi_e <- survivalMPL:::compute_basis_matrix(t_vis, knots_e, "epanechikov", ctrl_e$order, which = 1)
 
 # ---- plot ----
-par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+par(mfrow = c(2, 2), mar = c(4.2, 4.2, 3, 1))
 
-# The bases produce 11-23 functions from the default knots, which is far too
-# many to read in one panel.  Draw an evenly spaced subset of `n_show` of them
-# instead: enough to see the shape and the overlap, still spanning the whole
-# time range.  The legend gives the indices actually plotted.
-plot_basis <- function(mat, t, title, knots_alpha, n_show = 6) {
-  idx   <- unique(round(seq(1, ncol(mat), length.out = min(n_show, ncol(mat)))))
-  mat   <- mat[, idx, drop = FALSE]
-  cols  <- seq_along(idx)
-  # With only a handful of columns the old 0.99 cap is set by the boundary
-  # functions, which are several times taller than the rest; 0.95 keeps the
-  # interior bumps filling the panel.
-  y_cap <- quantile(mat[mat > 0 & is.finite(mat)], 0.95, na.rm = TRUE) * 1.1
-  matplot(t, mat, type = "l", lty = 1, col = cols, lwd = 1.6,
+plot_basis <- function(mat, t, title, knots_alpha) {
+  m    <- ncol(mat)
+  # basis index is ordered in time -> sequential ramp, early = blue, late = red
+  cols <- hcl.colors(m, "Zissou 1")
+  ymax <- max(mat[is.finite(mat)])
+  matplot(t, mat, type = "l", lty = 1, lwd = 2.2, col = cols,
           xlab = "t (years)", ylab = expression(psi[u](t)),
-          main = title, ylim = c(0, y_cap))
-  abline(v = knots_alpha[knots_alpha <= max(t)], col = "grey70", lty = 2)
+          main = paste0(title, "  (m = ", m, ")"),
+          ylim = c(0, ymax * 1.2), las = 1)
+  a <- knots_alpha[knots_alpha >= min(t) & knots_alpha <= max(t)]
+  abline(v = a, col = "grey80", lty = 3)
   legend("topright",
-         legend = paste0("ψ", idx),
-         col = cols, lty = 1, lwd = 1.6,
-         bty = "n", cex = 0.75)
+         legend = c(expression(psi[1]), expression(psi[m])),
+         col = c(cols[1], cols[m]), lty = 1, lwd = 2.2,
+         bty = "n", cex = 0.85)
 }
 
 plot_basis(psi_u, t_vis, "Uniform",      knots_u$Alpha)
@@ -194,7 +203,9 @@ plot_basis(psi_m, t_vis, "M-Splines",    knots_m$Alpha)
 plot_basis(psi_e, t_vis, "Epanechnikov", knots_e$Alpha)
 ```
 
-Dashed vertical lines mark the internal knots $\boldsymbol{\alpha}$.
+Colour runs with the basis index — $\psi_1$ (blue) is left-most in time,
+$\psi_m$ (red) right-most.  Dotted vertical lines mark the knots
+$\boldsymbol{\alpha}$.
 
 ---
 
@@ -206,6 +217,11 @@ Here we fit the same interval-censored model with all four bases using the
 bundled pseudo-melanoma data (time to first local recurrence, $n = 300$, true
 baseline $h_0(t) = t^{-1/2}$).
 
+All four fits share the same knot specification, `n.knots = c(8, 2)`, so that
+the comparison is between *basis shapes* and not between different numbers of
+parameters.  (The defaults differ by basis: `"uniform"` and `"msplines"` use
+`c(8, 2)`, while `"gaussian"` and `"epanechikov"` use `c(0, 20)`.)
+
 ```{r mel-prep}
 data(melanoma)
 formula_mel <- Surv(t_L, t_R, type = "interval2") ~
@@ -213,6 +229,7 @@ formula_mel <- Surv(t_L, t_R, type = "interval2") ~
 n_obs <- sum(melanoma$t_L == melanoma$t_R & is.finite(melanoma$t_R))
 base_ctrl <- list(n.obs = n_obs,
                   smooth = 0,
+                  n.knots = c(8, 2),
                   max.iter = c(40, 2e4, 5e4))
 ```
 
@@ -249,46 +266,60 @@ round(coef_mat, 3)
 ### Estimated baseline hazards
 
 ```{r baseline-plot, fig.height=4.5, out.width="100%", echo=FALSE}
-par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+par(mfrow = c(1, 2), mar = c(4.2, 4.4, 3, 1))
 
 fits   <- list(fit_u, fit_g, fit_m, fit_e)
 labels <- c("Uniform", "Gaussian", "M-Splines", "Epanechnikov")
-cols   <- c("steelblue", "tomato", "forestgreen", "darkorchid")
+cols   <- c("#2E6FA7", "#D1495B", "#2E8B57", "#8250B4")
 
-t_min <- quantile(events, 0.02)
-t_seq <- seq(t_min, max(events), length.out = 300)
+# Restrict to the 5th-95th percentile of event times: the melanoma times are
+# strongly right-skewed, and beyond the 95th percentile there is almost no data
+# left to estimate from, so the tails there are noise rather than signal.
+t_lo  <- quantile(events, 0.05)
+t_hi  <- quantile(events, 0.95)
+t_seq <- seq(t_lo, t_hi, length.out = 300)
 
 # instantaneous risk at mean covariates
+# log y-scale: the true h0 = t^{-1/2} spans an order of magnitude over this
+# range, which on a linear scale flattens every curve against the axis
 risks <- sapply(fits, function(f) predict(f, type = "risk", time = t_seq)$risk)
-y_max <- quantile(risks, 0.995) * 1.1
-plot(NA, xlim = range(t_seq), ylim = c(0, y_max),
+plot(NA, xlim = range(t_seq), ylim = range(c(risks, t_seq^(-0.5))), log = "y",
      xlab = "Time (years)", ylab = expression(hat(h)(t)),
-     main = "Instantaneous risk (mean covariates)", cex.main = 0.9)
+     main = "Instantaneous risk (log scale)", cex.main = 0.95, las = 1)
+grid(col = "grey92", lty = 1)
+lines(t_seq, t_seq^(-0.5), lty = 2, lwd = 3, col = "grey30")
 for (i in seq_along(fits))
-  lines(t_seq, risks[, i], col = cols[i], lwd = 1.5)
+  lines(t_seq, risks[, i], col = cols[i], lwd = 2.4)
 legend("topright",
-       legend = labels,
-       col = cols, lty = 1,
-       lwd = 1.5, bty = "n", cex = 0.75)
+       legend = as.expression(c(as.list(labels), list(bquote("True" ~ h[0])))),
+       col = c(cols, "grey30"), lty = c(1, 1, 1, 1, 2),
+       lwd = 2.4, bty = "n", cex = 0.85)
 
 # survival at mean covariates
 plot(NA, xlim = range(t_seq), ylim = c(0, 1),
      xlab = "Time (years)", ylab = expression(hat(S)(t)),
-     main = "Survival (mean covariates)", cex.main = 0.9)
+     main = "Survival (mean covariates)", cex.main = 0.95, las = 1)
+grid(col = "grey92", lty = 1)
+lines(t_seq, exp(-2 * sqrt(t_seq)), lty = 2, lwd = 3, col = "grey30")
 for (i in seq_along(fits)) {
   p <- predict(fits[[i]], type = "survival", time = t_seq)
-  lines(p$time, p$survival, col = cols[i], lwd = 1.5)
+  lines(p$time, p$survival, col = cols[i], lwd = 2.4)
 }
 legend("topright",
-       legend = labels,
-       col = cols, lty = 1,
-       lwd = 1.5, bty = "n", cex = 0.75)
+       legend = as.expression(c(as.list(labels), list(bquote("True" ~ S[0])))),
+       col = c(cols, "grey30"), lty = c(1, 1, 1, 1, 2),
+       lwd = 2.4, bty = "n", cex = 0.85)
 ```
 
-All four bases agree on the broad shape (a hazard that is high early and decays
-over time) and on the implied survival curve.  The smooth bases (Gaussian,
-M-Splines, Epanechnikov) produce continuous estimates; the uniform basis
-introduces visible step artefacts that diminish with more knots.
+All four bases recover the decreasing shape of the true Weibull baseline
+$h_0(t) = t^{-1/2}$ (dashed), and the four estimates are almost
+indistinguishable from one another — though all four sit above the true level
+over this range, so the fitted survival curves fall below the true $S_0$.
+The uniform basis shows the expected step artefacts; the
+smooth bases produce continuous estimates but, with `smooth = 0` (no roughness
+penalty), they oscillate around the truth — the log scale makes this visible.
+Penalised fits (`smooth > 0`, or `smooth.per = TRUE` for automatic selection)
+damp these oscillations.
 
 Note that these are predictions at the *mean* covariate vector, so each curve
 estimates $h_0(t)\exp(\bar{\mathbf{x}}^T\boldsymbol{\beta})$ rather than $h_0(t)$

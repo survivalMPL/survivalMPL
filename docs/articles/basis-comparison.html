@@ -253,8 +253,39 @@ support. Like M-splines, these use the augmented knot sequence
 evaluate
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ψ</mi><mi>u</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\psi_u(t)</annotation></semantics></math>
 on a fine grid and plot each set of basis functions.</p>
+<p><code>n.knots = c(k_1, k_2)</code> places
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mn>1</mn></msub><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">k_1 + 1</annotation></semantics></math>
+quantile-based knots over the lower <code>range.quant[2]</code> (90% by
+default) of the event times, plus
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mn>2</mn></msub><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">k_2 + 1</annotation></semantics></math>
+equally spaced knots above that quantile —
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mn>1</mn></msub><mo>+</mo><msub><mi>k</mi><mn>2</mn></msub><mo>+</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">k_1 + k_2 + 2</annotation></semantics></math>
+knots in total. The defaults are <code>c(8, 2)</code> for
+<code>"uniform"</code> and <code>"msplines"</code> (12 knots,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>=</mo><mn>11</mn></mrow><annotation encoding="application/x-tex">m = 11</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>13</mn><annotation encoding="application/x-tex">13</annotation></semantics></math>)
+and <code>c(0, 20)</code> for <code>"gaussian"</code> and
+<code>"epanechikov"</code> (22 knots,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>=</mo><mn>22</mn></mrow><annotation encoding="application/x-tex">m = 22</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>23</mn><annotation encoding="application/x-tex">23</annotation></semantics></math>).</p>
+<p>The figure below deliberately uses far fewer:
+<code>n.knots = c(0, 6)</code>, i.e. 8 widely spaced knots and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>=</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">m = 7</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>9</mn><annotation encoding="application/x-tex">9</annotation></semantics></math>
+basis functions per panel. At the default resolution the curves overlap
+into a dense, unreadable thicket, and on this right-skewed dataset the
+quantile knots crowd so tightly near
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">t = 0</annotation></semantics></math>
+that the first basis function spikes and flattens all the others. Fewer
+knots do not change the shape of an individual basis function — only how
+many there are and how wide each one is.</p>
 <p><img src="basis-comparison_files/figure-html/basis-vis-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
-<p>Dashed vertical lines mark the internal knots
+<p>Colour runs with the basis index —
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ψ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\psi_1</annotation></semantics></math>
+(blue) is left-most in time,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ψ</mi><mi>m</mi></msub><annotation encoding="application/x-tex">\psi_m</annotation></semantics></math>
+(red) right-most. Dotted vertical lines mark the knots
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝜶</mi><annotation encoding="application/x-tex">\boldsymbol{\alpha}</annotation></semantics></math>.</p>
 <hr>
 </div>
@@ -269,13 +300,21 @@ recurrence,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>300</mn></mrow><annotation encoding="application/x-tex">n = 300</annotation></semantics></math>,
 true baseline
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mi>t</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h_0(t) = t^{-1/2}</annotation></semantics></math>).</p>
+<p>All four fits share the same knot specification,
+<code>n.knots = c(8, 2)</code>, so that the comparison is between
+<em>basis shapes</em> and not between different numbers of parameters.
+(The defaults differ by basis: <code>"uniform"</code> and
+<code>"msplines"</code> use <code>c(8, 2)</code>, while
+<code>"gaussian"</code> and <code>"epanechikov"</code> use
+<code>c(0, 20)</code>.)</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">)</span></span>
-<span><span class="va">formula_mel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">t_L</span>, <span class="va">t_R</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span> <span class="op">~</span></span>
+<span><span class="va">formula_mel</span> <span class="op">&lt;-</span> <span class="fu">Surv</span><span class="op">(</span><span class="va">t_L</span>, <span class="va">t_R</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span> <span class="op">~</span></span>
 <span>  <span class="va">Arm</span> <span class="op">+</span> <span class="va">Leg</span> <span class="op">+</span> <span class="va">Trunk</span> <span class="op">+</span> <span class="va">mm1to2</span> <span class="op">+</span> <span class="va">mm2to4</span> <span class="op">+</span> <span class="va">mm4plus</span> <span class="op">+</span> <span class="va">Female</span> <span class="op">+</span> <span class="va">Age_centred</span></span>
 <span><span class="va">n_obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">$</span><span class="va">t_L</span> <span class="op">==</span> <span class="va">melanoma</span><span class="op">$</span><span class="va">t_R</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">$</span><span class="va">t_R</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">base_ctrl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>n.obs <span class="op">=</span> <span class="va">n_obs</span>,</span>
 <span>                  smooth <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>                  n.knots <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fl">2</span><span class="op">)</span>,</span>
 <span>                  max.iter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">2e4</span>, <span class="fl">5e4</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_u</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span><span class="va">formula_mel</span>, data <span class="op">=</span> <span class="va">melanoma</span>,</span>
@@ -305,24 +344,32 @@ true baseline
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">coef_mat</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;             Uniform Gaussian M-Splines Epanechnikov</span></span>
-<span><span class="co">#&gt; Arm          -0.596   -0.636    -0.562       -0.632</span></span>
-<span><span class="co">#&gt; Leg          -0.112   -0.118    -0.087       -0.097</span></span>
-<span><span class="co">#&gt; Trunk        -0.241   -0.266    -0.239       -0.278</span></span>
-<span><span class="co">#&gt; mm1to2        0.036    0.023     0.029        0.003</span></span>
-<span><span class="co">#&gt; mm2to4        0.614    0.734     0.625        0.795</span></span>
-<span><span class="co">#&gt; mm4plus       1.472    1.850     1.436        2.037</span></span>
-<span><span class="co">#&gt; Female       -0.090   -0.110    -0.089       -0.121</span></span>
-<span><span class="co">#&gt; Age_centred   0.117    0.132     0.111        0.138</span></span></code></pre></div>
+<span><span class="co">#&gt; Arm          -0.596   -0.583    -0.562       -0.620</span></span>
+<span><span class="co">#&gt; Leg          -0.112   -0.085    -0.087       -0.111</span></span>
+<span><span class="co">#&gt; Trunk        -0.241   -0.243    -0.239       -0.252</span></span>
+<span><span class="co">#&gt; mm1to2        0.036    0.053     0.029        0.056</span></span>
+<span><span class="co">#&gt; mm2to4        0.614    0.672     0.625        0.642</span></span>
+<span><span class="co">#&gt; mm4plus       1.472    1.468     1.436        1.454</span></span>
+<span><span class="co">#&gt; Female       -0.090   -0.077    -0.089       -0.088</span></span>
+<span><span class="co">#&gt; Age_centred   0.117    0.114     0.111        0.119</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="estimated-baseline-hazards">Estimated baseline hazards<a class="anchor" aria-label="anchor" href="#estimated-baseline-hazards"></a>
 </h3>
 <p><img src="basis-comparison_files/figure-html/baseline-plot-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
-<p>All four bases agree on the broad shape (a hazard that is high early
-and decays over time) and on the implied survival curve. The smooth
-bases (Gaussian, M-Splines, Epanechnikov) produce continuous estimates;
-the uniform basis introduces visible step artefacts that diminish with
-more knots.</p>
+<p>All four bases recover the decreasing shape of the true Weibull
+baseline
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mi>t</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h_0(t) = t^{-1/2}</annotation></semantics></math>
+(dashed), and the four estimates are almost indistinguishable from one
+another — though all four sit above the true level over this range, so
+the fitted survival curves fall below the true
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mn>0</mn></msub><annotation encoding="application/x-tex">S_0</annotation></semantics></math>.
+The uniform basis shows the expected step artefacts; the smooth bases
+produce continuous estimates but, with <code>smooth = 0</code> (no
+roughness penalty), they oscillate around the truth — the log scale
+makes this visible. Penalised fits (<code>smooth &gt; 0</code>, or
+<code>smooth.per = TRUE</code> for automatic selection) damp these
+oscillations.</p>
 <p>Note that these are predictions at the <em>mean</em> covariate
 vector, so each curve estimates
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msup><mover><mi mathvariant="bold-italic">𝒙</mi><mo accent="true">‾</mo></mover><mi>T</mi></msup><mi mathvariant="bold-italic">𝜷</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h_0(t)\exp(\bar{\mathbf{x}}^T\boldsymbol{\beta})</annotation></semantics></math>
