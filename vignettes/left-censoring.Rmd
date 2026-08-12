@@ -1,0 +1,221 @@
+---
+title: "Left Censoring with survivalMPL"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Left Censoring with survivalMPL}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  fig.align  = "center",
+  fig.width  = 7,
+  fig.height = 4.5
+)
+set.seed(1)
+```
+
+## Overview
+
+A survival time is *left censored* when the event is known to have happened
+already by the time the subject is first examined, but not when.  All that is
+recorded is an upper bound $t_R$: the event occurred somewhere in $(0, t_R]$.
+This arises whenever the outcome is detected by inspection rather than observed
+as it happens: a tumour already present at the first scan, seroconversion
+already complete at enrolment, a milestone already reached at the first
+assessment.
+
+The likelihood contribution is the distribution function rather than the survivor
+function,
+
+$$P(T \leq t_R) = 1 - S(t_R) = 1 - \exp\bigl\{-H_0(t_R)e^{\mathbf{x}^T\boldsymbol{\beta}}\bigr\},$$
+
+which the partial likelihood cannot accommodate.  Because `coxph_mpl()` estimates
+$H_0$ explicitly, left-censored observations are handled directly, and may be
+mixed freely with exact events and right- and interval-censored observations in
+the same fit.
+
+## Encoding left-censored observations
+
+Left censoring uses the `type = "interval2"` response, with `NA` in place of the
+unknown lower endpoint:
+
+```{r encoding}
+library(survivalMPL)
+library(survival)
+
+Surv(c(NA, 2, 3, 5), c(7, 4, NA, 5), type = "interval2")
+```
+
+The four observations above are, in order: left censored at 7 (`7-`), interval
+censored on $(2, 4]$, right censored at 3 (`3+`), and an exact event at 5.
+`Surv()` records the distinction in its status code, and `coxph_mpl()` dispatches
+on that code:
+
+```{r status-codes}
+s <- Surv(c(NA, 2, 3, 5), c(7, 4, NA, 5), type = "interval2")
+data.frame(status = s[, 3],
+           meaning = c("left censored", "interval censored",
+                       "right censored", "exact event"))
+```
+
+Note that `NA` here is *information*, not missingness: these rows are kept, not
+dropped by `na.action`.
+
+---
+
+## Example: pseudo-melanoma data
+
+The bundled `melanoma` data (time to first local recurrence, $n = 300$,
+simulated) is partly interval censored and contains all four observation types.
+Recurrences already present at the first assessment are recorded with a lower
+endpoint of zero:
+
+```{r melanoma-composition}
+data(melanoma)
+
+with(melanoma, c(
+  exact    = sum(t_L == t_R & is.finite(t_R)),
+  left     = sum(t_L == 0 & is.finite(t_R)),
+  interval = sum(t_L > 0 & t_L < t_R & is.finite(t_R)),
+  right    = sum(is.infinite(t_R))
+))
+```
+
+So 132 of the 300 subjects (44%) are left censored.
+
+### Two equivalent encodings
+
+Recording a left-censored observation as the interval $(0, t_R]$ and recording it
+as left censored at $t_R$ describe the same event, since $S(0) = 1$ makes
+$S(0) - S(t_R)$ and $1 - S(t_R)$ identical.  The data ship in the first form; the
+second is obtained by replacing the zero lower endpoints with `NA`:
+
+```{r reencode}
+mel <- melanoma
+mel$t_L2 <- ifelse(melanoma$t_L == 0, NA, melanoma$t_L)
+mel$t_R2 <- ifelse(is.finite(melanoma$t_R), melanoma$t_R, NA)
+
+rbind(
+  `as interval (0, t_R]` = table(factor(Surv(melanoma$t_L, melanoma$t_R,
+                                            type = "interval2")[, 3],
+                                        levels = 0:3)),
+  `as left censored`     = table(factor(Surv(mel$t_L2, mel$t_R2,
+                                            type = "interval2")[, 3],
+                                        levels = 0:3))
+)
+```
+
+The 132 observations move from status `3` (interval) to status `2` (left), and
+fitting either version gives the same answer:
+
+```{r fit-both}
+ctrl <- coxph_mpl.control(
+  basis    = "msplines",
+  n.obs    = sum(melanoma$t_L == melanoma$t_R & is.finite(melanoma$t_R)),
+  smooth   = 0,
+  max.iter = c(40, 2e4, 5e4)
+)
+
+fit_interval <- coxph_mpl(
+  Surv(t_L, t_R, type = "interval2") ~
+    Arm + Leg + Trunk + mm1to2 + mm2to4 + mm4plus + Female + Age_centred,
+  data = melanoma, control = ctrl)
+
+fit_left <- coxph_mpl(
+  Surv(t_L2, t_R2, type = "interval2") ~
+    Arm + Leg + Trunk + mm1to2 + mm2to4 + mm4plus + Female + Age_centred,
+  data = mel, control = ctrl)
+
+round(cbind(`interval (0, t_R]` = coef(fit_interval),
+            `left censored`     = coef(fit_left)), 3)
+```
+
+The two columns agree to about 0.02.  They are not bit-identical because the knot
+positions are quantiles of the observed endpoint times, and the two encodings
+present slightly different sets of endpoints, not because the likelihoods
+differ.
+
+### Inspecting the fit
+
+```{r summary-left}
+summary(fit_left)
+```
+
+The recurrence times are strongly right-skewed: 95% of the observed endpoints
+fall below 1.1 years, but a few reach 4.  Over the full range every feature of
+the fit is squeezed into the left-hand tenth of the panel, so we narrow the
+displayed range with `xlim`.  This affects only what is drawn; the fit itself,
+and the knots, are unchanged.
+
+```{r plot-left, fig.width=8, fig.height=7}
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+plot(fit_left, ask = FALSE, cex.main = 0.8, xlim = c(0, 1.2))
+```
+
+The M-spline basis places most of its knots where the events are, so the first
+panel is dense near zero.  The wide confidence band on $S_0(t)$ reflects how
+little information the left-censored observations carry individually: each one
+says only that the event happened at some point before $t_R$.
+
+---
+
+## Example: `bcos2`
+
+The breast cosmesis data are mostly interval censored, but include a handful of
+genuinely left-censored subjects, already coded with `NA`:
+
+```{r bcos2}
+data(bcos2)
+
+table(status = Surv(bcos2$left, bcos2$right, type = "interval2")[, 3])
+head(bcos2[is.na(bcos2$left), ])
+```
+
+Status `2` marks the left-censored rows; no special handling is needed:
+
+```{r bcos2-fit}
+fit_bcos <- coxph_mpl(
+  Surv(left, right, type = "interval2") ~ treatment,
+  data    = bcos2,
+  control = coxph_mpl.control(
+    basis    = "msplines",
+    n.obs    = nrow(bcos2),
+    max.iter = c(40, 2000, 4000),
+    smooth   = 0
+  )
+)
+
+summary(fit_bcos)
+```
+
+The same `plot()` method applies.  Here we show the basis functions and the
+estimated baseline survival:
+
+```{r bcos2-plot, fig.width=8, fig.height=3.8}
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+plot(fit_bcos, ask = FALSE, which = c(1, 4), cex.main = 0.85)
+```
+
+The hazard and cumulative hazard panels (`which = 2:3`) are omitted for this fit
+rather than shown: with no exact event times and very little information in the
+last knot interval, the delta-method standard error of the final
+$\hat\theta_u$ is enormous, and the resulting confidence band dominates the
+vertical scale to the point where the estimate itself is invisible.  The
+survival panel is unaffected because it is bounded in $[0, 1]$.
+
+---
+
+## Next steps
+
+- **Interval Censoring** covers the general partly interval-censored case, of
+  which left censoring is the boundary instance.
+- **Right Censoring** covers the standard scheme and left truncation.
+- **Basis Functions for the Baseline Hazard** explains the choice of $\psi_u$;
+  because $H_0(t_R)$ enters the left-censored likelihood directly, that choice
+  matters more here than for right-censored data alone.

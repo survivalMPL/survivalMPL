@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Left Truncation with survivalMPL</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">
+
+div.csl-bib-body { }
+div.csl-entry {
+clear: both;
+}
+.hanging div.csl-entry {
+margin-left:2em;
+text-indent:-2em;
+}
+div.csl-left-margin {
+min-width:2em;
+float:left;
+}
+div.csl-right-inline {
+margin-left:2em;
+padding-left:1em;
+}
+div.csl-indent {
+margin-left: 2em;
+}
+</style>
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Left Truncation with survivalMPL</h1>
+
+
+<div id="TOC">
+<ul>
+<li><a href="#overview" id="toc-overview">Overview</a></li>
+<li><a href="#encoding-left-truncated-observations" id="toc-encoding-left-truncated-observations">Encoding left-truncated
+observations</a></li>
+<li><a href="#example-atomic-bomb-survivors" id="toc-example-atomic-bomb-survivors">Example: atomic bomb
+survivors</a>
+<ul>
+<li><a href="#what-ignoring-the-truncation-costs" id="toc-what-ignoring-the-truncation-costs">What ignoring the truncation
+costs</a></li>
+</ul></li>
+<li><a href="#limitations" id="toc-limitations">Limitations</a></li>
+<li><a href="#references" id="toc-references">References</a></li>
+</ul>
+</div>
+
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p>A survival time is <em>left truncated</em> when any event occurring
+before some time <span class="math inline">\(a_i\)</span> could never
+have been observed at all. The truncation time is also called a
+<strong>delayed entry</strong> time, because it usually arises from a
+condition on entering the study: a subject who fails before meeting that
+condition never appears in the data.</p>
+<p>Truncation is not censoring, and the difference is fundamental.
+Censoring means a survival time is only <em>partially</em> observed: the
+subject is in the data, and contributes the information that the event
+had not yet happened. Truncation means an event time that could have
+been observed becomes <em>entirely</em> unobservable when it falls
+before <span class="math inline">\(a_i\)</span>: the subject is absent
+from the data altogether. Treating a truncation time as time zero for
+follow-up, and so ignoring the truncation, leads to biased parameter
+estimates <span class="citation">(Bhaskaran et al., n.d.)</span>.</p>
+<p>Each subject therefore contributes <span class="math inline">\((a_i,
+y_i, \delta_i, \mathbf{x}_i)\)</span>: the truncation time, the observed
+event or censoring time, the event indicator, and the covariates, with
+<span class="math inline">\(a_i\)</span> strictly less than <span class="math inline">\(y_i\)</span>.</p>
+</div>
+<div id="encoding-left-truncated-observations" class="section level2">
+<h2>Encoding left-truncated observations</h2>
+<p>Truncation times are not part of the <code>Surv()</code> response.
+Pass them through the <code>entry</code> argument instead:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">coxph_mpl</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> x, <span class="at">data =</span> df, <span class="at">entry =</span> start,</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>          <span class="at">control =</span> <span class="fu">coxph_mpl.control</span>(<span class="at">basis =</span> <span class="st">&quot;uniform&quot;</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>                                      <span class="at">n.obs =</span> <span class="fu">sum</span>(df<span class="sc">$</span>status)))</span></code></pre></div>
+<p>Three things to know:</p>
+<ul>
+<li><strong><code>entry</code> requires
+<code>basis = &quot;uniform&quot;</code>.</strong> Left truncation is implemented
+by differencing the cumulative basis, <span class="math inline">\(H_0(a_i, y_i) = H_0(y_i) - H_0(a_i)\)</span>,
+which the package supports for the piecewise-constant basis. This is not
+a limitation of the method so much as its natural setting: with
+indicator basis functions <span class="math inline">\(\psi_u(t) = I(t
+\in B_u)\)</span> over bins <span class="math inline">\(B_u = (w_u,
+w_{u+1}]\)</span>, each <span class="math inline">\(\hat\theta_u\)</span> has a closed form given
+<span class="math inline">\(\boldsymbol{\beta}\)</span>, which is what
+makes the profile likelihood of <span class="citation">Bhaskaran et al.
+(n.d.)</span> possible. Any other basis raises an error rather than
+returning a silently wrong fit.</li>
+<li><strong>Entry times must strictly precede the event or censoring
+time.</strong> A violation is an error, not a warning.</li>
+<li><strong>Truncated and untruncated subjects may be mixed</strong> in
+one call. Use an entry time of zero, or any value below the first event
+time, for subjects observed from the origin.</li>
+</ul>
+</div>
+<div id="example-atomic-bomb-survivors" class="section level2">
+<h2>Example: atomic bomb survivors</h2>
+<p>The bundled <code>hiroshima</code> data are left truncated by
+construction. Follow-up in the Life Span Study begins on 1 October 1950,
+several years after the 1945 exposure, so a subject enters the risk set
+at the age they had reached by that date, and anyone who died in between
+is absent from the cohort. <code>entry</code> is that attained age, and
+<code>time</code> is attained age at death or at end of follow-up.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(survivalMPL)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="co">#&gt; Loading required package: survival</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="co">#&gt; Loading required package: MASS</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="fu">library</span>(survival)</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="fu">data</span>(hiroshima)</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="fu">c</span>(<span class="at">subjects =</span> <span class="fu">nrow</span>(hiroshima), <span class="at">deaths =</span> <span class="fu">sum</span>(hiroshima<span class="sc">$</span>status))</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt; subjects   deaths </span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt;    86611    50620</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">range</span>(hiroshima<span class="sc">$</span>entry), <span class="dv">1</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt; [1]  5.2 93.8</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">range</span>(hiroshima<span class="sc">$</span>time), <span class="dv">1</span>)</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt; [1]   7.0 114.9</span></span></code></pre></div>
+<p>Entry ages run from 5 to 94 years, so the truncation is substantial
+rather than incidental: at any attained age, the subjects at risk are
+only those who had already reached that age by late 1950.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>fit_entry <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="fu">Surv</span>(time, status) <span class="sc">~</span> dose <span class="sc">+</span> sex <span class="sc">+</span> city,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">data    =</span> hiroshima,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">entry   =</span> entry,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">control =</span> <span class="fu">coxph_mpl.control</span>(</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>    <span class="at">basis =</span> <span class="st">&quot;uniform&quot;</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>    <span class="at">n.obs =</span> <span class="fu">sum</span>(hiroshima<span class="sc">$</span>status)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  )</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>)</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="fu">summary</span>(fit_entry)</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; coxph_mpl(formula = Surv(time, status) ~ dose + sex + city, data = hiroshima, </span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt;     control = coxph_mpl.control(basis = &quot;uniform&quot;, n.obs = sum(hiroshima$status)), </span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt;     entry = entry)</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; -----</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; Cox Proportional Hazards Model Fit Using MPL </span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; Penalized log-likelihood  :  -218085.3</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; Estimated smoothing value :  486.6378</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; Convergence               :  Yes (12 + 292 iter.) </span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt; Data             : hiroshima</span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt; Number of obs.   : 86611</span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt; Number of events : 50620 (58.44523%)</span></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt; Number of cens.  : 35991 (41.55477%)</span></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt; Regression parameters : Surv(time, status) ~ dose + sex + city</span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt;                Estimate Std. Error  z-value  Pr(&gt;|z|)    </span></span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt; dose          0.1635084  0.0151308  10.8063 &lt; 2.2e-16 ***</span></span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt; sexFemale    -0.5518858  0.0092909 -59.4005 &lt; 2.2e-16 ***</span></span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt; cityNagasaki  0.0515481  0.0098435   5.2368 1.634e-07 ***</span></span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt; Baseline hasard parameters approximated using Uniform :</span></span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt;  (11 equal events bins)</span></span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt;           1           2           3           4           5           6 </span></span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="co">#&gt; 0.001058039 0.002478473 0.004673498 0.009799451 0.019100936 0.033959813 </span></span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="co">#&gt;           7           8           9          10          11 </span></span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a><span class="co">#&gt; 0.062309691 0.111161804 0.214221247 0.340579097 0.348117394 </span></span>
+<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a><span class="co">#&gt; -----</span></span></code></pre></div>
+<div id="what-ignoring-the-truncation-costs" class="section level3">
+<h3>What ignoring the truncation costs</h3>
+<p>Dropping <code>entry</code> treats every subject as if followed from
+birth, which attributes to each one a stretch of person-time during
+which they were in fact not observable:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>fit_naive <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="fu">Surv</span>(time, status) <span class="sc">~</span> dose <span class="sc">+</span> sex <span class="sc">+</span> city,</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">data    =</span> hiroshima,</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">control =</span> <span class="fu">coxph_mpl.control</span>(</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>    <span class="at">basis =</span> <span class="st">&quot;uniform&quot;</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>    <span class="at">n.obs =</span> <span class="fu">sum</span>(hiroshima<span class="sc">$</span>status)</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  )</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>)</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>comparison <span class="ot">&lt;-</span> <span class="fu">cbind</span>(</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>  <span class="st">`</span><span class="at">with entry</span><span class="st">`</span>    <span class="ot">=</span> <span class="fu">coef</span>(fit_entry, <span class="st">&quot;Beta&quot;</span>),</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>  <span class="at">SE              =</span> fit_entry<span class="sc">$</span>se<span class="sc">$</span>Beta<span class="sc">$</span>M2QM2,</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>  <span class="st">`</span><span class="at">ignoring entry</span><span class="st">`</span><span class="ot">=</span> <span class="fu">coef</span>(fit_naive, <span class="st">&quot;Beta&quot;</span>),</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>  <span class="st">`</span><span class="at">shift, in SE</span><span class="st">`</span>  <span class="ot">=</span> (<span class="fu">coef</span>(fit_naive, <span class="st">&quot;Beta&quot;</span>) <span class="sc">-</span> <span class="fu">coef</span>(fit_entry, <span class="st">&quot;Beta&quot;</span>)) <span class="sc">/</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>                     fit_entry<span class="sc">$</span>se<span class="sc">$</span>Beta<span class="sc">$</span>M2QM2</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>)</span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="fu">round</span>(comparison, <span class="dv">4</span>)</span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt;              with entry     SE ignoring entry shift, in SE</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt; dose             0.1635 0.0151         0.1836       1.3282</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt; sexFemale       -0.5519 0.0093        -0.5456       0.6816</span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt; cityNagasaki     0.0515 0.0098         0.0726       2.1397</span></span></code></pre></div>
+<p>The shift is systematic rather than random. Both <code>dose</code>
+and <code>city</code> are biased upwards, by roughly 1.3 and 2.1
+standard errors, while <code>sex</code> moves very little. That pattern
+is what one would expect: entry age is unrelated to sex, so
+mis-specifying the time at risk does not distort that coefficient,
+whereas dose and city are both associated with the age distribution of
+the survivors who were still alive in 1950. A shift of two standard
+errors is more than enough to change how a coefficient is read.</p>
+</div>
+</div>
+<div id="limitations" class="section level2">
+<h2>Limitations</h2>
+<p><code>predict.coxph_mpl()</code> and
+<code>residuals.coxph_mpl()</code> do not yet account for
+<code>entry</code>: they compute cumulative hazard and survival from
+time zero rather than from each subject’s entry time. Coefficients,
+baseline hazard estimates and their standard errors are unaffected. See
+<code>?coxph_mpl</code> for the current status.</p>
+</div>
+<div id="references" class="section level2 unnumbered">
+<h2 class="unnumbered">References</h2>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-BhaskaranLiquetMa" class="csl-entry">
+Bhaskaran, Aishwarya, Benoit Liquet, and Jun Ma. n.d. <em>Maximum
+Profile Likelihood for <span>Cox</span> Models Under Left Truncation and
+Right Censoring</em>. Macquarie University.
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

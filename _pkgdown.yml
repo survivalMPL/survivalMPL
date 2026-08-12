@@ -1,0 +1,75 @@
+destination: docs
+url: https://CRAN.R-project.org/package=survivalMPL
+template:
+  bootstrap: 5
+  light-switch: true
+  includes:
+    in_header: |
+      <style>
+        /* Bootstrap caps navbar dropdowns at 280px / 50vh and adds a
+           scrollbar; the Tutorials menu is taller than that, so show it
+           in full instead. */
+        .navbar .dropdown-menu {
+          max-height: none;
+          overflow-y: visible;
+        }
+      </style>
+
+home:
+  sidebar:
+    structure: [links, license, citation, authors, dev-status]
+    components:
+      dev-status:
+        title: Dev status
+        text: |
+          [![CRAN status](https://www.r-pkg.org/badges/version/survivalMPL)](https://CRAN.R-project.org/package=survivalMPL)
+          [![Downloads](https://cranlogs.r-pkg.org/badges/survivalMPL)](https://cranlogs.r-pkg.org/badges/survivalMPL)
+
+navbar:
+  structure:
+    left: [home, reference, tutorials, news]
+  components:
+    tutorials:
+      text: Tutorials
+      menu:
+        - text: Getting Started
+          href: articles/getting-started.html
+        - text: -------
+        - text: Censoring and truncation
+        - text: Right Censoring
+          href: articles/right-censoring.html
+        - text: Left Censoring
+          href: articles/left-censoring.html
+        - text: Interval Censoring
+          href: articles/interval-censoring.html
+        - text: Left Truncation
+          href: articles/left-truncation.html
+        - text: -------
+        - text: Modelling choices
+        - text: Basis Functions for the Baseline Hazard
+          href: articles/basis-comparison.html
+        - text: Comparing coxph() and coxph_mpl()
+          href: articles/coxph-comparison.html
+    news:
+      text: News
+      href: news/index.html
+
+articles:
+  - title: Getting started
+    contents:
+      - getting-started
+  - title: Censoring and truncation
+    desc: >
+      One article per observation scheme, each with a complete worked example.
+    contents:
+      - right-censoring
+      - left-censoring
+      - interval-censoring
+      - left-truncation
+  - title: Modelling choices
+    desc: >
+      How the baseline hazard is represented, and how MPL compares with the
+      partial likelihood.
+    contents:
+      - basis-comparison
+      - coxph-comparison
