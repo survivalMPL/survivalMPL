@@ -41,3 +41,4 @@
 ^MD5$
 ^.*\.tar\.gz$
 ^.*\.Rcheck$
+^.*\.RData$

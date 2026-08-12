@@ -1,0 +1,8 @@
+# Regenerable simulation output, e.g. from
+# dev/experiments/old_sources/LTRC_codes/simStudy.R, which names its saves
+# <dist>_n<n>_nbins_<nbins>_cmax<c_max>_<bin_option>.RData
+*.RData
+
+# R session artifacts
+.Rhistory
+.Rproj.user/
