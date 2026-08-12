@@ -156,11 +156,11 @@ recurrence, $`n = 300`$, true baseline $`h_0(t) = t^{-1/2}`$).
 
 ![](basis-comparison_files/figure-html/baseline-plot-1.png)
 
-All four bases agree on the broad shape — a hazard that is high early
-and decays over time — and on the implied survival curve. The smooth
-bases (Gaussian, M-Splines, Epanechnikov) produce continuous estimates;
-the uniform basis introduces visible step artefacts that diminish with
-more knots.
+All four bases agree on the broad shape (a hazard that is high early and
+decays over time) and on the implied survival curve. The smooth bases
+(Gaussian, M-Splines, Epanechnikov) produce continuous estimates; the
+uniform basis introduces visible step artefacts that diminish with more
+knots.
 
 Note that these are predictions at the *mean* covariate vector, so each
 curve estimates $`h_0(t)\exp(\bar{\mathbf{x}}^T\boldsymbol{\beta})`$

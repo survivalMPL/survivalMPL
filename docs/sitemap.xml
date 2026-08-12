@@ -7,6 +7,7 @@
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/index.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/interval-censoring.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/left-censoring.html</loc></url>
+<url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/left-truncation.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/right-censoring.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/authors.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/index.html</loc></url>
@@ -34,5 +35,6 @@
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/reference/resolve_basis_name.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/reference/summary.coxph_mpl.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/reference/survivalMPL-package.html</loc></url>
+<url><loc>https://CRAN.R-project.org/package=survivalMPL/TASKS_12.08.html</loc></url>
 </urlset>
 

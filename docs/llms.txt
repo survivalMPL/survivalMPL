@@ -15,21 +15,31 @@ non-negativity enforced during optimisation.
 
 ## Installation
 
-    install.packages("survivalMPL")
+[`install.packages`](https://rdrr.io/r/utils/install.packages.html)`(``"survivalMPL"``)`
 
 ## Quick start
 
-### Right-censored example (`survival::lung`)
+A right-censored fit on
+[`survival::lung`](https://rdrr.io/pkg/survival/man/lung.html):
 
 [`library`](https://rdrr.io/r/base/library.html)`(`[`survivalMPL`](https://CRAN.R-project.org/package=survivalMPL)`)`` `[`library`](https://rdrr.io/r/base/library.html)`(`[`survival`](https://github.com/therneau/survival)`)`` `` ``lung`` ``<-`` `[`na.omit`](https://rdrr.io/r/stats/na.fail.html)`(``lung``[``, `[`c`](https://rdrr.io/r/base/c.html)`(``"time"``, ``"status"``, ``"age"``, ``"sex"``, ``"ph.karno"``, ``"wt.loss"``)``]``)`` `` ``fit_lung`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(`` `` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status`` ``==`` ``2``)`` ``~`` ``age`` ``+`` ``sex`` ``+`` ``ph.karno`` ``+`` ``wt.loss``,`` `` data ``=`` ``lung``,`` `` control ``=`` `[`coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)`(`` `` n.obs ``=`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``lung``$``status`` ``==`` ``2``)``,`` `` max.iter ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``40``, ``2000``, ``4000``)``,`` `` smooth ``=`` ``0`` `` ``)`` ``)`` `` `[`summary`](https://rdrr.io/r/base/summary.html)`(``fit_lung``)`` `[`plot`](https://rdrr.io/r/graphics/plot.default.html)`(`[`predict`](https://rdrr.io/r/stats/predict.html)`(``fit_lung``, type ``=`` ``"survival"``)``)`
 
-### Interval-censored example (`bcos2`)
+Because
+[`coxph_mpl()`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)
+estimates the baseline hazard rather than profiling it out,
+[`predict()`](https://rdrr.io/r/stats/predict.html) returns absolute
+survival and hazard estimates with standard errors.
 
-[`data`](https://rdrr.io/r/utils/data.html)`(``bcos2``)`` `` ``fit_bcos`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(`` `` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``left``, ``right``, type ``=`` ``"interval2"``)`` ``~`` ``treatment``,`` `` data ``=`` ``bcos2``,`` `` control ``=`` `[`coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)`(`` `` basis ``=`` ``"msplines"``,`` `` n.obs ``=`` `[`nrow`](https://rdrr.io/r/base/nrow.html)`(``bcos2``)``,`` `` max.iter ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``40``, ``2000``, ``4000``)``,`` `` smooth ``=`` ``0`` `` ``)`` ``)`` `` `[`summary`](https://rdrr.io/r/base/summary.html)`(``fit_bcos``)`` `[`plot`](https://rdrr.io/r/graphics/plot.default.html)`(`[`predict`](https://rdrr.io/r/stats/predict.html)`(``fit_bcos``, type ``=`` ``"survival"``, i ``=`` ``1``)``)`
+See the [Getting
+Started](https://CRAN.R-project.org/package=survivalMPL/articles/getting-started.md)
+article for installation notes, the
+[`coxph_mpl()`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)
+interface, how each censoring scheme is encoded, and the control
+arguments. The remaining articles work through one censoring scheme at a
+time and compare the modelling choices.
 
 ## Resources
 
-- Vignette: `vignettes/getting-started.Rmd`
 - Reference documentation:
   [`?coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md),
   [`?coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md),
@@ -100,9 +110,9 @@ non-negativity enforced during optimisation.
 - [Getting Started with
   survivalMPL](https://CRAN.R-project.org/package=survivalMPL/articles/getting-started.md):
 
-### Censoring schemes
+### Censoring and truncation
 
-One article per censoring scheme, each with a complete worked example.
+One article per observation scheme, each with a complete worked example.
 
 - [Right Censoring with
   survivalMPL](https://CRAN.R-project.org/package=survivalMPL/articles/right-censoring.md):
@@ -110,6 +120,8 @@ One article per censoring scheme, each with a complete worked example.
   survivalMPL](https://CRAN.R-project.org/package=survivalMPL/articles/left-censoring.md):
 - [Interval Censoring with
   survivalMPL](https://CRAN.R-project.org/package=survivalMPL/articles/interval-censoring.md):
+- [Left Truncation with
+  survivalMPL](https://CRAN.R-project.org/package=survivalMPL/articles/left-truncation.md):
 
 ### Modelling choices
 
@@ -118,5 +130,5 @@ partial likelihood.
 
 - [Basis Functions for the Baseline
   Hazard](https://CRAN.R-project.org/package=survivalMPL/articles/basis-comparison.md):
-- [Comparing coxph and
-  coxph_mpl](https://CRAN.R-project.org/package=survivalMPL/articles/coxph-comparison.md):
+- [Comparing coxph() and
+  coxph_mpl()](https://CRAN.R-project.org/package=survivalMPL/articles/coxph-comparison.md):

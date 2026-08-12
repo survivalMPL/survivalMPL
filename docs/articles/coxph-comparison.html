@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Comparing coxph and coxph_mpl • survivalMPL</title>
+<title>Comparing coxph() and coxph_mpl() • survivalMPL</title>
 <script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Comparing coxph and coxph_mpl">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Comparing coxph() and coxph_mpl()">
 <style>
   /* Bootstrap caps navbar dropdowns at 280px / 50vh and adds a
      scrollbar; the Tutorials menu is taller than that, so show it
@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,14 +44,15 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Censoring schemes</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Censoring and truncation</h6></li>
     <li><a class="dropdown-item" href="../articles/right-censoring.html">Right Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/left-censoring.html">Left Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/interval-censoring.html">Interval Censoring</a></li>
+    <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
-    <li><a class="dropdown-item" href="../articles/coxph-comparison.html">coxph vs coxph_mpl</a></li>
+    <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -81,7 +82,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Comparing coxph and coxph_mpl</h1>
+      <h1>Comparing coxph() and coxph_mpl()</h1>
             
       
 
@@ -118,7 +119,7 @@ cancer, right-censored overall survival to compare:</p>
 <ol style="list-style-type: decimal">
 <li>Regression coefficient estimates and standard errors.</li>
 <li>95 % confidence intervals (forest plot).</li>
-<li>Estimated baseline survival: Kaplan–Meier, Breslow (from
+<li>Estimated baseline survival: Kaplan-Meier, Breslow (from
 <code>coxph</code>), and M-spline (from <code>coxph_mpl</code>).</li>
 </ol>
 <hr>
@@ -253,7 +254,7 @@ variance estimator for a fixed smoothing parameter derived in <span class="citat
 <p>Three survival estimators are overlaid:</p>
 <ul>
 <li>
-<strong>Kaplan–Meier</strong> - nonparametric marginal estimate, no
+<strong>Kaplan-Meier</strong> - nonparametric marginal estimate, no
 covariate adjustment. Serves as a visual reference for the raw
 data.</li>
 <li>
@@ -267,13 +268,13 @@ data.</li>
 </ul>
 <p>Breslow and M-splines estimate the same quantity
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo>∣</mo><mover><mi mathvariant="bold-italic">𝒙</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\hat{S}(t \mid \bar{\mathbf{x}})</annotation></semantics></math>
-and should track each other closely. Kaplan–Meier sits apart because it
+and should track each other closely. Kaplan-Meier sits apart because it
 does not adjust for covariates.</p>
 <p><img src="coxph-comparison_files/figure-html/baseline-surv-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 <p>The Breslow estimate is a step function that jumps only at observed
 event times. The M-spline estimate is smooth by construction and closely
 tracks the Breslow curve, while avoiding the staircase artefacts that
-arise from tied or sparse event times. The Kaplan–Meier curve sits above
+arise from tied or sparse event times. The Kaplan-Meier curve sits above
 both because it is not adjusted for covariates - in particular it does
 not account for the protective effect of female sex and higher Karnofsky
 score at the mean covariate profile.</p>

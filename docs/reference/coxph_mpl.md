@@ -47,7 +47,8 @@ print(x, ...)
   giving each subject's left-truncation (delayed entry) time. Every
   value must be strictly less than that subject's event/interval lower
   bound; violations raise an error. Left-truncated and
-  non-left-truncated subjects may be mixed in the same call. Defaults to
+  non-left-truncated subjects may be mixed in the same call. Requires
+  `basis = "uniform"`; any other basis raises an error. Defaults to
   `NULL` (no truncation), which reproduces prior behaviour exactly.
 
 - ...:
@@ -79,9 +80,10 @@ adjustment.
 
 ## Limitations
 
+`entry` is only supported for `basis = "uniform"`. Also,
 \[residuals.coxph_mpl()\] and \[predict.coxph_mpl()\] do not yet account
 for `entry` — they compute cumulative hazard and survival from time 0
-rather than from each subject's entry time. This is a known follow-up,
+rather than from each subject's entry time. Both are known follow-ups,
 not yet implemented.
 
 ## See also

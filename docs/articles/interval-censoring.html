@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,14 +44,15 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Censoring schemes</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Censoring and truncation</h6></li>
     <li><a class="dropdown-item" href="../articles/right-censoring.html">Right Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/left-censoring.html">Left Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/interval-censoring.html">Interval Censoring</a></li>
+    <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
-    <li><a class="dropdown-item" href="../articles/coxph-comparison.html">coxph vs coxph_mpl</a></li>
+    <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -98,7 +99,7 @@ to have occurred in an interval
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>L</mi></msub><mo>,</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">(t_L, t_R]</annotation></semantics></math>
 rather than at an exact time. This is common in clinical studies where
 patients are examined only periodically (e.g. follow-up visits).</p>
-<p><code>survivalMPL</code> handles partly interval-censored data —
+<p><code>survivalMPL</code> handles partly interval-censored data:
 datasets that may contain a mix of exact event times and left-, right-,
 and interval-censored observations. The censoring type is communicated
 through <code>survival::Surv(..., type = "interval2")</code>.</p>
@@ -107,7 +108,7 @@ al. (2024)</span>.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="example---simulation-study">Example - Simulation study<a class="anchor" aria-label="anchor" href="#example---simulation-study"></a>
+<h2 id="example-simulation-study">Example: simulation study<a class="anchor" aria-label="anchor" href="#example-simulation-study"></a>
 </h2>
 <p>We compare the MPL M-spline method against partial likelihood (PL)
 with midpoint imputation. The true model is a Cox model with Weibull
@@ -206,7 +207,7 @@ build due to computation time.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="example---pseudo-melanoma-study">Example - Pseudo melanoma study<a class="anchor" aria-label="anchor" href="#example---pseudo-melanoma-study"></a>
+<h2 id="example-pseudo-melanoma-data">Example: pseudo-melanoma data<a class="anchor" aria-label="anchor" href="#example-pseudo-melanoma-data"></a>
 </h2>
 <p>We fit the MPL Cox model to a pseudo melanoma dataset: time to first
 local recurrence for
@@ -330,9 +331,33 @@ mm), <strong>gender</strong> (reference: Male), and centred
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -----</span></span></code></pre></div>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mela_fit</span>, which <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span></span></code></pre></div>
-<p><img src="interval-censoring_files/figure-html/melanoma-plot-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"><img src="interval-censoring_files/figure-html/melanoma-plot-2.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"><img src="interval-censoring_files/figure-html/melanoma-plot-3.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mela_fit</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, which <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">4</span>, cex.main <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></code></pre></div>
+<p><img src="interval-censoring_files/figure-html/melanoma-plot-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
+<hr>
 </div>
+</div>
+<div class="section level2">
+<h2 id="next-steps">Next steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
+</h2>
+<ul>
+<li>
+<strong>Left Censoring</strong> covers the boundary case of interval
+censoring, where the lower endpoint is unknown, and shows that recording
+an observation as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">(0, t_R]</annotation></semantics></math>
+and as left censored at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>R</mi></msub><annotation encoding="application/x-tex">t_R</annotation></semantics></math>
+give the same fit.</li>
+<li>
+<strong>Right Censoring</strong> covers the standard scheme and the
+<code>Surv(time, status)</code> response.</li>
+<li>
+<strong>Basis Functions for the Baseline Hazard</strong> explains
+the four choices for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ψ</mi><mi>u</mi></msub><annotation encoding="application/x-tex">\psi_u</annotation></semantics></math>,
+including the <code>"msplines"</code> basis used above.</li>
+</ul>
 </div>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

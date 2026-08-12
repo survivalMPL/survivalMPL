@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,14 +44,15 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Censoring schemes</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Censoring and truncation</h6></li>
     <li><a class="dropdown-item" href="../articles/right-censoring.html">Right Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/left-censoring.html">Left Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/interval-censoring.html">Interval Censoring</a></li>
+    <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
-    <li><a class="dropdown-item" href="../articles/coxph-comparison.html">coxph vs coxph_mpl</a></li>
+    <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -300,13 +301,13 @@ generics:</p>
 <div class="section level2">
 <h2 id="where-to-go-next">Where to go next<a class="anchor" aria-label="anchor" href="#where-to-go-next"></a>
 </h2>
-<p>The tutorials work through one censoring scheme at a time —
-<strong>right censoring</strong>, <strong>left censoring</strong>, and
-<strong>interval censoring</strong> — each with a complete worked
-example. Two further articles cover the modelling choices: <strong>basis
-functions for the baseline hazard</strong>, and a side-by-side
-comparison of <strong><code>coxph</code> and
-<code>coxph_mpl</code></strong> on the same data.</p>
+<p>The tutorials work through one censoring scheme at a time
+(<strong>Right Censoring</strong>, <strong>Left Censoring</strong>,
+<strong>Interval Censoring</strong>), each with a complete worked
+example. Two further articles cover the modelling choices: <strong>Basis
+Functions for the Baseline Hazard</strong>, and <strong>Comparing
+<code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code> and <code><a href="../reference/coxph_mpl.html">coxph_mpl()</a></code></strong> on the same
+data.</p>
 <p>See <code><a href="../reference/coxph_mpl.html">?coxph_mpl</a></code> and <code><a href="../reference/coxph_mpl.control.html">?coxph_mpl.control</a></code> for
 the full argument lists.</p>
 </div>

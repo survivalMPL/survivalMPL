@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,14 +44,15 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Censoring schemes</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Censoring and truncation</h6></li>
     <li><a class="dropdown-item" href="../articles/right-censoring.html">Right Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/left-censoring.html">Left Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/interval-censoring.html">Interval Censoring</a></li>
+    <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
-    <li><a class="dropdown-item" href="../articles/coxph-comparison.html">coxph vs coxph_mpl</a></li>
+    <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -317,8 +318,8 @@ true baseline
 <h3 id="estimated-baseline-hazards">Estimated baseline hazards<a class="anchor" aria-label="anchor" href="#estimated-baseline-hazards"></a>
 </h3>
 <p><img src="basis-comparison_files/figure-html/baseline-plot-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
-<p>All four bases agree on the broad shape — a hazard that is high early
-and decays over time — and on the implied survival curve. The smooth
+<p>All four bases agree on the broad shape (a hazard that is high early
+and decays over time) and on the implied survival curve. The smooth
 bases (Gaussian, M-Splines, Epanechnikov) produce continuous estimates;
 the uniform basis introduces visible step artefacts that diminish with
 more knots.</p>

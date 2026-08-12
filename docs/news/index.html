@@ -15,7 +15,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,14 +28,15 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorials" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorials</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Censoring schemes</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Censoring and truncation</h6></li>
     <li><a class="dropdown-item" href="../articles/right-censoring.html">Right Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/left-censoring.html">Left Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/interval-censoring.html">Interval Censoring</a></li>
+    <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
-    <li><a class="dropdown-item" href="../articles/coxph-comparison.html">coxph vs coxph_mpl</a></li>
+    <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -59,6 +60,16 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2-4.9004" id="survivalmpl-02-49004-development">survivalMPL 0.2-4.9004 (development)<a class="anchor" aria-label="anchor" href="#survivalmpl-02-49004-development"></a></h2>
+<ul><li>
+<strong><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> legends now describe only what is drawn.</strong> <code><a href="../reference/plot.coxph_mpl.html">plot.coxph_mpl()</a></code> listed “Observed”, “Censored” and a quantile reference line in its legends, none of which the code draws: the points were never plotted and the quantile line and shaded region are commented out. The legends now show the knots and the line type marking <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>u</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\hat\theta_u = 0</annotation></semantics></math>, and, for the baseline function panels, the estimate and its confidence band. Panels gained vertical headroom and the legends an opaque background so they no longer sit on the curves. <code><a href="../reference/residuals.coxph_mpl.html">plot.residuals.coxph_mpl()</a></code> gained the same treatment.</li>
+<li>
+<strong><code><a href="../reference/plot.coxph_mpl.html">plot.coxph_mpl()</a></code> gains an <code>xlim</code> argument</strong> for narrowing the displayed time range, which the baseline function panels need for right-skewed data where the full knot range compresses everything into the left edge. Only the display changes; the fit and the knots do not. <code>upper.quantile</code> is documented as having no effect, which has been true since the quantile line was disabled.</li>
+<li>New vignette <strong>Left Truncation</strong>, following the profile-likelihood treatment of Bhaskaran, Liquet and Ma. It shows on the <code>hiroshima</code> data that ignoring delayed entry biases the dose and city coefficients upwards by 1.3 and 2.1 standard errors, and explains why <code>entry=</code> is restricted to the uniform basis.</li>
+<li>The tutorials are regrouped into “Censoring and truncation” and “Modelling choices”. The home page now carries installation and one right-censored example, pointing at Getting Started for the rest. All seven articles share one output format (<code>html_vignette</code> with a table of contents) and one set of knitr defaults, use <code>Example: ...</code> headings, and end with a Next steps section.</li>
+<li>Documentation regenerated: <code>man/coxph_mpl.Rd</code> had not been rebuilt after the <code>entry=</code> basis restriction was documented.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2-4.9003" id="survivalmpl-02-49003-development">survivalMPL 0.2-4.9003 (development)<a class="anchor" aria-label="anchor" href="#survivalmpl-02-49003-development"></a></h2>
 <ul><li>
 <strong><code>hiroshima</code> dataset rebuilt, breaking change.</strong> It is now one row per subject (86,611 subjects), reconstructed from the RERF LSS14 grouped person-time table, rather than one pseudo-subject per grouped-table cell (53,782 rows). The pseudo-subject version was not usable for analysis: it produced a <em>negative</em> colon-dose coefficient for all-cause mortality, an artefact of high-dose cells having more person-years and hence a longer mean attained age. Changes for existing code:
@@ -70,6 +81,10 @@
 <code>status</code> is a per-subject death indicator (50,620 deaths), not a “any death in this cell” indicator.</li>
 <li>reproduces the source table’s subjects, deaths and colon-cancer deaths exactly, and its person-years to within 0.33%.</li>
 </ul></li>
+<li>
+<strong><code>entry=</code> now requires <code>basis = "uniform"</code>.</strong> Left truncation is implemented by differencing the cumulative basis, <code>H(t) - H(entry)</code>, which is only correct for the piecewise-constant basis. Any other basis combined with <code>entry=</code> previously returned a silently wrong fit and now raises an error.</li>
+<li>New vignettes <strong>Right Censoring</strong> and <strong>Left Censoring</strong>; left censoring was previously undocumented. <code>Getting Started</code> is now general information only: installation, the <code><a href="../reference/coxph_mpl.html">coxph_mpl()</a></code> interface, response encodings, control arguments and methods, with its worked examples moved into those two articles. The pkgdown site groups the tutorials into sections.</li>
+<li>The pkgdown site is now built into <code>docs/</code> rather than <code>pkgdown/</code>. The old destination collided with pkgdown’s own source lookup: a generated <code>pkgdown/index.md</code> outranked the real <code>index.md</code> and the home page rendered its own previous output.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2-4" id="survivalmpl-02-4-2025-03-23">survivalMPL 0.2-4 (2025-03-23)<a class="anchor" aria-label="anchor" href="#survivalmpl-02-4-2025-03-23"></a></h2><p class="text-muted">CRAN release: 2025-03-24</p>

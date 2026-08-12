@@ -8,7 +8,15 @@ survival functions. Each plot can be toggled with `which`.
 
 ``` r
 # S3 method for class 'coxph_mpl'
-plot(x, se = "M2QM2", ask = TRUE, which = 1:4, upper.quantile = 0.95, ...)
+plot(
+  x,
+  se = "M2QM2",
+  ask = TRUE,
+  which = 1:4,
+  upper.quantile = 0.95,
+  xlim = NULL,
+  ...
+)
 ```
 
 ## Arguments
@@ -33,8 +41,16 @@ plot(x, se = "M2QM2", ask = TRUE, which = 1:4, upper.quantile = 0.95, ...)
 
 - upper.quantile:
 
-  Quantile of the response used to set the upper x-axis limit for
-  baseline function plots. Default `0.95`.
+  Currently has no effect. The quantile reference line it labelled is
+  disabled in the plotting code, so the plots span `xlim`. Retained for
+  backward compatibility. Default `0.95`.
+
+- xlim:
+
+  Numeric of length 2 giving the time range to display, passed to every
+  panel. Defaults to `NULL`, meaning the full range of the knot
+  sequence. Useful for right-skewed data, where the full range
+  compresses all the structure into the left edge of the plot.
 
 - ...:
 

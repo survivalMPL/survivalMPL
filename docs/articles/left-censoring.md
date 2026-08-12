@@ -6,7 +6,7 @@ A survival time is *left censored* when the event is known to have
 happened already by the time the subject is first examined, but not
 when. All that is recorded is an upper bound $`t_R`$: the event occurred
 somewhere in $`(0, t_R]`$. This arises whenever the outcome is detected
-by inspection rather than observed as it happens — a tumour already
+by inspection rather than observed as it happens: a tumour already
 present at the first scan, seroconversion already complete at enrolment,
 a milestone already reached at the first assessment.
 
@@ -44,7 +44,7 @@ kept, not dropped by `na.action`.
 
 ------------------------------------------------------------------------
 
-## Example — pseudo-melanoma data
+## Example: pseudo-melanoma data
 
 The bundled `melanoma` data (time to first local recurrence,
 $`n = 300`$, simulated) is partly interval censored and contains all
@@ -53,7 +53,7 @@ assessment are recorded with a lower endpoint of zero:
 
 [`data`](https://rdrr.io/r/utils/data.html)`(``melanoma``)`` `` `[`with`](https://rdrr.io/r/base/with.html)`(``melanoma``, `[`c`](https://rdrr.io/r/base/c.html)`(`` `` exact ``=`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``t_L`` ``==`` ``t_R`` ``&`` `[`is.finite`](https://rdrr.io/r/base/is.finite.html)`(``t_R``)``)``,`` `` left ``=`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``t_L`` ``==`` ``0`` ``&`` `[`is.finite`](https://rdrr.io/r/base/is.finite.html)`(``t_R``)``)``,`` `` interval ``=`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``t_L`` ``>`` ``0`` ``&`` ``t_L`` ``<`` ``t_R`` ``&`` `[`is.finite`](https://rdrr.io/r/base/is.finite.html)`(``t_R``)``)``,`` `` right ``=`` `[`sum`](https://rdrr.io/r/base/sum.html)`(`[`is.infinite`](https://rdrr.io/r/base/is.finite.html)`(``t_R``)``)`` ``)``)`` ``#> exact left interval right `` ``#> 117 132 35 16`
 
-So 132 of the 300 subjects — 44% — are left censored.
+So 132 of the 300 subjects (44%) are left censored.
 
 ### Two equivalent encodings
 
@@ -72,20 +72,32 @@ The 132 observations move from status `3` (interval) to status `2`
 
 The two columns agree to about 0.02. They are not bit-identical because
 the knot positions are quantiles of the observed endpoint times, and the
-two encodings present slightly different sets of endpoints — not because
+two encodings present slightly different sets of endpoints, not because
 the likelihoods differ.
 
 ### Inspecting the fit
 
 [`summary`](https://rdrr.io/r/base/summary.html)`(``fit_left``)`` ``#> `` ``#> coxph_mpl(formula = Surv(t_L2, t_R2, type = "interval2") ~ Arm + `` ``#> Leg + Trunk + mm1to2 + mm2to4 + mm4plus + Female + Age_centred, `` ``#> data = mel, control = ctrl)`` ``#> `` ``#> -----`` ``#> `` ``#> Cox Proportional Hazards Model Fit Using MPL `` ``#> `` ``#> `` ``#> Penalized log-likelihood : -18.53554`` ``#> Fixed smoothing value : 0`` ``#> Convergence : Yes (233 iter.) `` ``#> `` ``#> Data : mel`` ``#> Number of obs. : 300`` ``#> Number of events : 117 (39%)`` ``#> Number of cens. : 183 (61%)`` ``#> `` ``#> Regression parameters : Surv(t_L2, t_R2, type = "interval2") ~ Arm + Leg + Trunk + mm1to2 + mm2to4 + mm4plus + Female + Age_centred`` ``#> Estimate Std. Error z-value Pr(>|z|) `` ``#> Arm -0.575622 0.195228 -2.9485 0.003194 ** `` ``#> Leg -0.107484 0.171015 -0.6285 0.529670 `` ``#> Trunk -0.247131 0.155375 -1.5906 0.111710 `` ``#> mm1to2 0.034775 0.189120 0.1839 0.854108 `` ``#> mm2to4 0.624525 0.203372 3.0709 0.002135 ** `` ``#> mm4plus 1.416740 0.243783 5.8115 6.192e-09 ***`` ``#> Female -0.090508 0.131017 -0.6908 0.489684 `` ``#> Age_centred 0.113420 0.048858 2.3214 0.020263 * `` ``#> ---`` ``#> Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1`` ``#> `` ``#> Baseline hasard parameters approximated using M-Splines :`` ``#> (2 (min/max) + 8 quantile knots + 2 equally spaced knots + 3 (order) - 2 = 13 parameters) `` ``#> 1 2 3 4 5 6 `` ``#> 1.436162e-01 9.825969e-03 2.966489e-01 2.336807e-01 3.805598e-01 1.736077e-01 `` ``#> 7 8 9 11 13 `` ``#> 5.493765e-01 1.773562e-09 1.817603e+00 2.486888e+00 2.037200e+00 `` ``#> `` ``#> -----`
 
-[`plot`](https://rdrr.io/r/graphics/plot.default.html)`(``fit_left``)`
+The recurrence times are strongly right-skewed: 95% of the observed
+endpoints fall below 1.1 years, but a few reach 4. Over the full range
+every feature of the fit is squeezed into the left-hand tenth of the
+panel, so we narrow the displayed range with `xlim`. This affects only
+what is drawn; the fit itself, and the knots, are unchanged.
 
-![](left-censoring_files/figure-html/plot-left-1.png)![](left-censoring_files/figure-html/plot-left-2.png)![](left-censoring_files/figure-html/plot-left-3.png)![](left-censoring_files/figure-html/plot-left-4.png)
+[`par`](https://rdrr.io/r/graphics/par.html)`(``mfrow ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``2``, ``2``)``, mar ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``4``, ``4``, ``3``, ``1``)``)`` `[`plot`](https://rdrr.io/r/graphics/plot.default.html)`(``fit_left``, ask ``=`` ``FALSE``, cex.main ``=`` ``0.8``, xlim ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``0``, ``1.2``)``)`
+
+![](left-censoring_files/figure-html/plot-left-1.png)
+
+The M-spline basis places most of its knots where the events are, so the
+first panel is dense near zero. The wide confidence band on $`S_0(t)`$
+reflects how little information the left-censored observations carry
+individually: each one says only that the event happened at some point
+before $`t_R`$.
 
 ------------------------------------------------------------------------
 
-## Example — `bcos2`
+## Example: `bcos2`
 
 The breast cosmesis data are mostly interval censored, but include a
 handful of genuinely left-censored subjects, already coded with `NA`:
@@ -95,6 +107,22 @@ handful of genuinely left-censored subjects, already coded with `NA`:
 Status `2` marks the left-censored rows; no special handling is needed:
 
 `fit_bcos`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(`` `` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``left``, ``right``, type ``=`` ``"interval2"``)`` ``~`` ``treatment``,`` `` data ``=`` ``bcos2``,`` `` control ``=`` `[`coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)`(`` `` basis ``=`` ``"msplines"``,`` `` n.obs ``=`` `[`nrow`](https://rdrr.io/r/base/nrow.html)`(``bcos2``)``,`` `` max.iter ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``40``, ``2000``, ``4000``)``,`` `` smooth ``=`` ``0`` `` ``)`` ``)`` `` `[`summary`](https://rdrr.io/r/base/summary.html)`(``fit_bcos``)`` ``#> `` ``#> coxph_mpl(formula = Surv(left, right, type = "interval2") ~ treatment, `` ``#> data = bcos2, control = coxph_mpl.control(basis = "msplines", `` ``#> n.obs = nrow(bcos2), max.iter = c(40, 2000, 4000), smooth = 0))`` ``#> `` ``#> -----`` ``#> `` ``#> Cox Proportional Hazards Model Fit Using MPL `` ``#> `` ``#> `` ``#> Penalized log-likelihood : -140.254`` ``#> Fixed smoothing value : 0`` ``#> Convergence : NO `` ``#> `` ``#> Data : bcos2`` ``#> Number of obs. : 94`` ``#> Number of events : 0 ( 0%)`` ``#> Number of cens. : 94 (100%)`` ``#> `` ``#> Regression parameters : Surv(left, right, type = "interval2") ~ treatment`` ``#> Estimate Std. Error z-value Pr(>|z|) `` ``#> treatmentRadChem 0.87311 0.33348 2.6181 0.008841 **`` ``#> ---`` ``#> Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1`` ``#> `` ``#> Baseline hasard parameters approximated using M-Splines :`` ``#> (2 (min/max) + 8 quantile knots + 2 equally spaced knots + 3 (order) - 2 = 13 parameters) `` ``#> 1 2 3 4 5 6 `` ``#> 4.284005e-02 1.608827e-02 5.030707e-02 3.116483e-02 1.317693e-01 1.213149e-01 `` ``#> 7 8 9 10 11 12 `` ``#> 2.396608e-02 2.067590e-01 2.068148e-01 6.402848e-10 4.310156e+00 6.628441e-01 `` ``#> 13 `` ``#> 6.628441e-01 `` ``#> `` ``#> -----`
+
+The same [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method
+applies. Here we show the basis functions and the estimated baseline
+survival:
+
+[`par`](https://rdrr.io/r/graphics/par.html)`(``mfrow ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``1``, ``2``)``, mar ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``4``, ``4``, ``3``, ``1``)``)`` `[`plot`](https://rdrr.io/r/graphics/plot.default.html)`(``fit_bcos``, ask ``=`` ``FALSE``, which ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``1``, ``4``)``, cex.main ``=`` ``0.85``)`
+
+![](left-censoring_files/figure-html/bcos2-plot-1.png)
+
+The hazard and cumulative hazard panels (`which = 2:3`) are omitted for
+this fit rather than shown: with no exact event times and very little
+information in the last knot interval, the delta-method standard error
+of the final $`\hat\theta_u`$ is enormous, and the resulting confidence
+band dominates the vertical scale to the point where the estimate itself
+is invisible. The survival panel is unaffected because it is bounded in
+$`[0, 1]`$.
 
 ------------------------------------------------------------------------
 

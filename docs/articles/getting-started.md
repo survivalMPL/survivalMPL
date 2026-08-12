@@ -101,11 +101,13 @@ A fitted `coxph_mpl` object supports the usual generics:
 
 ## Where to go next
 
-The tutorials work through one censoring scheme at a time — **right
-censoring**, **left censoring**, and **interval censoring** — each with
-a complete worked example. Two further articles cover the modelling
-choices: **basis functions for the baseline hazard**, and a side-by-side
-comparison of **`coxph` and `coxph_mpl`** on the same data.
+The tutorials work through one censoring scheme at a time (**Right
+Censoring**, **Left Censoring**, **Interval Censoring**), each with a
+complete worked example. Two further articles cover the modelling
+choices: **Basis Functions for the Baseline Hazard**, and **Comparing
+[`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) and
+[`coxph_mpl()`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)**
+on the same data.
 
 See
 [`?coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)

@@ -15,17 +15,22 @@ it out. The practical consequence is that a fit gives absolute hazard
 and survival estimates directly, with standard errors, rather than
 requiring a separate Breslow-type step afterwards.
 
+## Encoding right-censored observations
+
 Right-censored data use the ordinary two-argument response, exactly as
 in [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html):
 
 [`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status``)`
 
 where `status` is `1`/`TRUE` for an observed event and `0`/`FALSE` for a
-censored observation.
+censored observation. This is the one scheme that does not need
+`type = "interval2"`; internally
+[`coxph_mpl()`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)
+converts it to that form anyway.
 
 ------------------------------------------------------------------------
 
-## Example — `survival::lung`
+## Example: `survival::lung`
 
 The `lung` data from the **survival** package records survival in
 patients with advanced lung cancer. `status` is coded `2` for death and
@@ -45,8 +50,8 @@ for the baseline hazard. Here we fix the smoothing parameter at
 `fit_lung`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(`` `` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status`` ``==`` ``2``)`` ``~`` ``age`` ``+`` ``sex`` ``+`` ``ph.karno`` ``+`` ``wt.loss``,`` `` data ``=`` ``lung``,`` `` control ``=`` `[`coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)`(`` `` n.obs ``=`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``lung``$``status`` ``==`` ``2``)``,`` `` max.iter ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``40``, ``2000``, ``4000``)``,`` `` smooth ``=`` ``0`` `` ``)`` ``)`` `` `[`summary`](https://rdrr.io/r/base/summary.html)`(``fit_lung``)`` ``#> `` ``#> coxph_mpl(formula = Surv(time, status == 2) ~ age + sex + ph.karno + `` ``#> wt.loss, data = lung, control = coxph_mpl.control(n.obs = sum(lung$status == `` ``#> 2), max.iter = c(40, 2000, 4000), smooth = 0))`` ``#> `` ``#> -----`` ``#> `` ``#> Cox Proportional Hazards Model Fit Using MPL `` ``#> `` ``#> `` ``#> Penalized log-likelihood : -1052.062`` ``#> Fixed smoothing value : 0`` ``#> Convergence : Yes (8 iter.) `` ``#> `` ``#> Data : lung`` ``#> Number of obs. : 214`` ``#> Number of events : 152 (71.02804%)`` ``#> Number of cens. : 62 (28.97196%)`` ``#> `` ``#> Regression parameters : Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss`` ``#> Estimate Std. Error z-value Pr(>|z|) `` ``#> age 0.0151013 0.0101696 1.4849 0.137559 `` ``#> sex -0.5148282 0.1691462 -3.0437 0.002337 **`` ``#> ph.karno -0.0126768 0.0086042 -1.4733 0.140664 `` ``#> wt.loss -0.0020624 0.0069833 -0.2953 0.767745 `` ``#> ---`` ``#> Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1`` ``#> `` ``#> Baseline hasard parameters approximated using Uniform :`` ``#> (11 equal events bins)`` ``#> 1 2 3 4 5 6 `` ``#> 3.091190e-03 3.073782e-03 8.005268e-03 6.378672e-03 5.284837e-03 6.891828e-03 `` ``#> 7 8 9 10 11 `` ``#> 6.688682e-03 6.777236e-03 1.262414e-02 9.950425e-03 2.312947e-10 `` ``#> `` ``#> -----`
 
 The coefficient table is read as in any Cox fit: `sex` is strongly
-protective (coded 1 = male, 2 = female), and higher `ph.karno` — better
-performance status — is associated with lower hazard. The summary also
+protective (coded 1 = male, 2 = female), and higher `ph.karno` (better
+performance status) is associated with lower hazard. The summary also
 reports the estimated baseline hazard coefficients
 $`\boldsymbol{\theta}`$, which have no counterpart in a partial
 likelihood fit.
@@ -54,11 +59,25 @@ likelihood fit.
 ### Baseline hazard and survival
 
 Because $`h_0`$ is part of the model, it can be plotted with confidence
-bands straight from the fitted object:
+bands straight from the fitted object.
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) produces four
+panels: the basis functions, then the estimated baseline hazard,
+cumulative hazard and survival.
 
-[`plot`](https://rdrr.io/r/graphics/plot.default.html)`(``fit_lung``)`
+[`par`](https://rdrr.io/r/graphics/par.html)`(``mfrow ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``2``, ``2``)``, mar ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``4``, ``4``, ``3``, ``1``)``)`` `[`plot`](https://rdrr.io/r/graphics/plot.default.html)`(``fit_lung``, ask ``=`` ``FALSE``, cex.main ``=`` ``0.8``)`
 
-![](right-censoring_files/figure-html/plot-baseline-1.png)![](right-censoring_files/figure-html/plot-baseline-2.png)![](right-censoring_files/figure-html/plot-baseline-3.png)![](right-censoring_files/figure-html/plot-baseline-4.png)
+![](right-censoring_files/figure-html/plot-baseline-1.png)
+
+In the first panel each of the $`m`$ basis functions is drawn in its own
+colour, running through
+[`terrain.colors()`](https://rdrr.io/r/grDevices/palettes.html) from the
+earliest to the latest, so the colour simply indexes $`u`$ in $`\psi_u`$
+and carries no other meaning. With the default uniform basis each
+$`\psi_u`$ is an indicator on one knot interval, so the panel reads as a
+row of adjacent boxes of height 1, one colour per interval; the pale
+grey verticals are the knots $`\boldsymbol{\alpha}`$. A basis drawn
+dashed would indicate $`\hat\theta_u`$ driven to zero, meaning that
+interval contributes nothing to the fitted hazard.
 
 ### Predicted survival
 
@@ -68,8 +87,8 @@ estimates with standard errors and pointwise confidence limits. With no
 
 `pred_lung`` ``<-`` `[`predict`](https://rdrr.io/r/stats/predict.html)`(``fit_lung``, type ``=`` ``"survival"``)`` `[`head`](https://rdrr.io/r/utils/head.html)`(``pred_lung``)`` ``#> time survival se low high`` ``#> 1 4.999000 1.0000000 0.0000000000 1.0000000 1.0000000`` ``#> 2 6.017019 0.9986404 0.0002927774 0.9980548 0.9992259`` ``#> 3 7.035038 0.9972826 0.0005847586 0.9961131 0.9984521`` ``#> 4 8.053057 0.9959267 0.0008759453 0.9941748 0.9976785`` ``#> 5 9.071076 0.9945726 0.0011663392 0.9922399 0.9969052`` ``#> 6 10.089095 0.9932203 0.0014559417 0.9903084 0.9961322`
 
-A single subject is selected with `i` (one row index at a time — only
-the first element is used):
+A single subject is selected with `i` (one row index at a time; only the
+first element is used):
 
 `pred_one`` ``<-`` `[`predict`](https://rdrr.io/r/stats/predict.html)`(``fit_lung``, type ``=`` ``"survival"``, i ``=`` ``1``)`` `[`head`](https://rdrr.io/r/utils/head.html)`(``pred_one``)`` ``#> time survival se low high`` ``#> 1 4.999000 1.0000000 0.0000000000 1.0000000 1.0000000`` ``#> 2 6.017019 0.9983745 0.0003499798 0.9976746 0.9990745`` ``#> 3 7.035038 0.9967517 0.0006988218 0.9953540 0.9981493`` ``#> 4 8.053057 0.9951315 0.0010465287 0.9930384 0.9972245`` ``#> 5 9.071076 0.9935139 0.0013931035 0.9907277 0.9963001`` ``#> 6 10.089095 0.9918989 0.0017385488 0.9884218 0.9953760`
 
@@ -83,27 +102,18 @@ Martingale residuals are available for checking the fit:
 
 ------------------------------------------------------------------------
 
-## Left truncation (delayed entry)
-
-Right-censored data are often also *left truncated*: subjects enter the
-risk set only at some entry time, and anyone who fails before that time
-is never observed. Pass those times through `entry`:
-
-[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(`[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status``)`` ``~`` ``x``, data ``=`` ``df``, entry ``=`` ``df``$``start``,`` `` control ``=`` `[`coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)`(``basis ``=`` ``"uniform"``, n.obs ``=`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``df``$``status``)``)``)`
-
-Entry times must strictly precede the observed event or censoring time,
-and left truncation currently requires `basis = "uniform"`. Truncated
-and untruncated subjects may be mixed in the same call. See
-[`?coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)
-for details.
-
-------------------------------------------------------------------------
-
 ## Next steps
 
+- **Left Truncation** covers delayed entry, where subjects join the risk
+  set only at some entry time. Right-censored data are often also left
+  truncated, and
+  [`coxph_mpl()`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)
+  handles it through the `entry` argument.
 - **Left Censoring** and **Interval Censoring** cover the other
   censoring schemes, which use the `type = "interval2"` response.
 - **Basis Functions for the Baseline Hazard** explains the four choices
   for $`\psi_u`$ and how the knots are placed.
-- **Comparing `coxph` and `coxph_mpl`** fits both to the same
-  right-censored data and contrasts the results.
+- **Comparing [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html)
+  and
+  [`coxph_mpl()`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)**
+  fits both to the same right-censored data and contrasts the results.

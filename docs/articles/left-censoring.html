@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,14 +44,15 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Censoring schemes</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Censoring and truncation</h6></li>
     <li><a class="dropdown-item" href="../articles/right-censoring.html">Right Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/left-censoring.html">Left Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/interval-censoring.html">Interval Censoring</a></li>
+    <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
-    <li><a class="dropdown-item" href="../articles/coxph-comparison.html">coxph vs coxph_mpl</a></li>
+    <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -100,7 +101,7 @@ when. All that is recorded is an upper bound
 the event occurred somewhere in
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">(0, t_R]</annotation></semantics></math>.
 This arises whenever the outcome is detected by inspection rather than
-observed as it happens — a tumour already present at the first scan,
+observed as it happens: a tumour already present at the first scan,
 seroconversion already complete at enrolment, a milestone already
 reached at the first assessment.</p>
 <p>The likelihood contribution is the distribution function rather than
@@ -148,7 +149,7 @@ missingness: these rows are kept, not dropped by
 <hr>
 </div>
 <div class="section level2">
-<h2 id="example-pseudo-melanoma-data">Example — pseudo-melanoma data<a class="anchor" aria-label="anchor" href="#example-pseudo-melanoma-data"></a>
+<h2 id="example-pseudo-melanoma-data">Example: pseudo-melanoma data<a class="anchor" aria-label="anchor" href="#example-pseudo-melanoma-data"></a>
 </h2>
 <p>The bundled <code>melanoma</code> data (time to first local
 recurrence,
@@ -167,7 +168,7 @@ with a lower endpoint of zero:</p>
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    exact     left interval    right </span></span>
 <span><span class="co">#&gt;      117      132       35       16</span></span></code></pre></div>
-<p>So 132 of the 300 subjects — 44% — are left censored.</p>
+<p>So 132 of the 300 subjects (44%) are left censored.</p>
 <div class="section level3">
 <h3 id="two-equivalent-encodings">Two equivalent encodings<a class="anchor" aria-label="anchor" href="#two-equivalent-encodings"></a>
 </h3>
@@ -233,7 +234,7 @@ answer:</p>
 <span><span class="co">#&gt; Age_centred             0.111         0.113</span></span></code></pre></div>
 <p>The two columns agree to about 0.02. They are not bit-identical
 because the knot positions are quantiles of the observed endpoint times,
-and the two encodings present slightly different sets of endpoints — not
+and the two encodings present slightly different sets of endpoints, not
 because the likelihoods differ.</p>
 </div>
 <div class="section level3">
@@ -281,14 +282,28 @@ because the likelihoods differ.</p>
 <span><span class="co">#&gt; 5.493765e-01 1.773562e-09 1.817603e+00 2.486888e+00 2.037200e+00 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -----</span></span></code></pre></div>
+<p>The recurrence times are strongly right-skewed: 95% of the observed
+endpoints fall below 1.1 years, but a few reach 4. Over the full range
+every feature of the fit is squeezed into the left-hand tenth of the
+panel, so we narrow the displayed range with <code>xlim</code>. This
+affects only what is drawn; the fit itself, and the knots, are
+unchanged.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_left</span><span class="op">)</span></span></code></pre></div>
-<p><img src="left-censoring_files/figure-html/plot-left-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"><img src="left-censoring_files/figure-html/plot-left-2.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"><img src="left-censoring_files/figure-html/plot-left-3.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"><img src="left-censoring_files/figure-html/plot-left-4.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_left</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, cex.main <span class="op">=</span> <span class="fl">0.8</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1.2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="left-censoring_files/figure-html/plot-left-1.png" class="r-plt" alt="" width="768" style="display: block; margin: auto;"></p>
+<p>The M-spline basis places most of its knots where the events are, so
+the first panel is dense near zero. The wide confidence band on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">S_0(t)</annotation></semantics></math>
+reflects how little information the left-censored observations carry
+individually: each one says only that the event happened at some point
+before
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>R</mi></msub><annotation encoding="application/x-tex">t_R</annotation></semantics></math>.</p>
 <hr>
 </div>
 </div>
 <div class="section level2">
-<h2 id="example-bcos2">Example — <code>bcos2</code><a class="anchor" aria-label="anchor" href="#example-bcos2"></a>
+<h2 id="example-bcos2">Example: <code>bcos2</code><a class="anchor" aria-label="anchor" href="#example-bcos2"></a>
 </h2>
 <p>The breast cosmesis data are mostly interval censored, but include a
 handful of genuinely left-censored subjects, already coded with
@@ -357,6 +372,21 @@ handling is needed:</p>
 <span><span class="co">#&gt; 6.628441e-01 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -----</span></span></code></pre></div>
+<p>The same <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method applies. Here we show the basis
+functions and the estimated baseline survival:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_bcos</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, which <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">4</span><span class="op">)</span>, cex.main <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span></span></code></pre></div>
+<p><img src="left-censoring_files/figure-html/bcos2-plot-1.png" class="r-plt" alt="" width="768" style="display: block; margin: auto;"></p>
+<p>The hazard and cumulative hazard panels (<code>which = 2:3</code>)
+are omitted for this fit rather than shown: with no exact event times
+and very little information in the last knot interval, the delta-method
+standard error of the final
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>u</mi></msub><annotation encoding="application/x-tex">\hat\theta_u</annotation></semantics></math>
+is enormous, and the resulting confidence band dominates the vertical
+scale to the point where the estimate itself is invisible. The survival
+panel is unaffected because it is bounded in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[0, 1]</annotation></semantics></math>.</p>
 <hr>
 </div>
 <div class="section level2">

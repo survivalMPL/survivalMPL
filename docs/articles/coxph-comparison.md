@@ -1,4 +1,4 @@
-# Comparing coxph and coxph_mpl
+# Comparing coxph() and coxph_mpl()
 
 ## Overview
 
@@ -23,7 +23,7 @@ compare:
 
 1.  Regression coefficient estimates and standard errors.
 2.  95 % confidence intervals (forest plot).
-3.  Estimated baseline survival: Kaplan–Meier, Breslow (from `coxph`),
+3.  Estimated baseline survival: Kaplan-Meier, Breslow (from `coxph`),
     and M-spline (from `coxph_mpl`).
 
 ------------------------------------------------------------------------
@@ -66,7 +66,7 @@ estimator for a fixed smoothing parameter derived in Ma et al. (2014)
 
 Three survival estimators are overlaid:
 
-- **Kaplan–Meier** - nonparametric marginal estimate, no covariate
+- **Kaplan-Meier** - nonparametric marginal estimate, no covariate
   adjustment. Serves as a visual reference for the raw data.
 - **Breslow** - step-function baseline from `coxph` evaluated at mean
   covariates via
@@ -77,7 +77,7 @@ Three survival estimators are overlaid:
 
 Breslow and M-splines estimate the same quantity
 $`\hat{S}(t \mid \bar{\mathbf{x}})`$ and should track each other
-closely. Kaplan–Meier sits apart because it does not adjust for
+closely. Kaplan-Meier sits apart because it does not adjust for
 covariates.
 
 ![](coxph-comparison_files/figure-html/baseline-surv-1.png)
@@ -85,7 +85,7 @@ covariates.
 The Breslow estimate is a step function that jumps only at observed
 event times. The M-spline estimate is smooth by construction and closely
 tracks the Breslow curve, while avoiding the staircase artefacts that
-arise from tied or sparse event times. The Kaplan–Meier curve sits above
+arise from tied or sparse event times. The Kaplan-Meier curve sits above
 both because it is not adjusted for covariates - in particular it does
 not account for the protective effect of female sex and higher Karnofsky
 score at the mean covariate profile.

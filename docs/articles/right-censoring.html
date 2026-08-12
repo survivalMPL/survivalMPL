@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,14 +44,15 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Censoring schemes</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Censoring and truncation</h6></li>
     <li><a class="dropdown-item" href="../articles/right-censoring.html">Right Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/left-censoring.html">Left Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/interval-censoring.html">Interval Censoring</a></li>
+    <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
-    <li><a class="dropdown-item" href="../articles/coxph-comparison.html">coxph vs coxph_mpl</a></li>
+    <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -107,17 +108,23 @@ instead of profiling it out. The practical consequence is that a fit
 gives absolute hazard and survival estimates directly, with standard
 errors, rather than requiring a separate Breslow-type step
 afterwards.</p>
+</div>
+<div class="section level2">
+<h2 id="encoding-right-censored-observations">Encoding right-censored observations<a class="anchor" aria-label="anchor" href="#encoding-right-censored-observations"></a>
+</h2>
 <p>Right-censored data use the ordinary two-argument response, exactly
 as in <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span></span></code></pre></div>
 <p>where <code>status</code> is <code>1</code>/<code>TRUE</code> for an
 observed event and <code>0</code>/<code>FALSE</code> for a censored
-observation.</p>
+observation. This is the one scheme that does not need
+<code>type = "interval2"</code>; internally <code><a href="../reference/coxph_mpl.html">coxph_mpl()</a></code>
+converts it to that form anyway.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="example-survivallung">Example — <code>survival::lung</code><a class="anchor" aria-label="anchor" href="#example-survivallung"></a>
+<h2 id="example-survivallung">Example: <code>survival::lung</code><a class="anchor" aria-label="anchor" href="#example-survivallung"></a>
 </h2>
 <p>The <code>lung</code> data from the <strong>survival</strong> package
 records survival in patients with advanced lung cancer.
@@ -193,7 +200,7 @@ baseline hazard. Here we fix the smoothing parameter at
 <span><span class="co">#&gt; -----</span></span></code></pre></div>
 <p>The coefficient table is read as in any Cox fit: <code>sex</code> is
 strongly protective (coded 1 = male, 2 = female), and higher
-<code>ph.karno</code> — better performance status — is associated with
+<code>ph.karno</code> (better performance status) is associated with
 lower hazard. The summary also reports the estimated baseline hazard
 coefficients
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝜽</mi><annotation encoding="application/x-tex">\boldsymbol{\theta}</annotation></semantics></math>,
@@ -205,10 +212,31 @@ which have no counterpart in a partial likelihood fit.</p>
 <p>Because
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>h</mi><mn>0</mn></msub><annotation encoding="application/x-tex">h_0</annotation></semantics></math>
 is part of the model, it can be plotted with confidence bands straight
-from the fitted object:</p>
+from the fitted object. <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> produces four panels: the
+basis functions, then the estimated baseline hazard, cumulative hazard
+and survival.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_lung</span><span class="op">)</span></span></code></pre></div>
-<p><img src="right-censoring_files/figure-html/plot-baseline-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"><img src="right-censoring_files/figure-html/plot-baseline-2.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"><img src="right-censoring_files/figure-html/plot-baseline-3.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"><img src="right-censoring_files/figure-html/plot-baseline-4.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_lung</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, cex.main <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></code></pre></div>
+<p><img src="right-censoring_files/figure-html/plot-baseline-1.png" class="r-plt" alt="" width="768" style="display: block; margin: auto;"></p>
+<p>In the first panel each of the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>
+basis functions is drawn in its own colour, running through
+<code><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">terrain.colors()</a></code> from the earliest to the latest, so the
+colour simply indexes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>
+in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ψ</mi><mi>u</mi></msub><annotation encoding="application/x-tex">\psi_u</annotation></semantics></math>
+and carries no other meaning. With the default uniform basis each
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ψ</mi><mi>u</mi></msub><annotation encoding="application/x-tex">\psi_u</annotation></semantics></math>
+is an indicator on one knot interval, so the panel reads as a row of
+adjacent boxes of height 1, one colour per interval; the pale grey
+verticals are the knots
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝜶</mi><annotation encoding="application/x-tex">\boldsymbol{\alpha}</annotation></semantics></math>.
+A basis drawn dashed would indicate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>u</mi></msub><annotation encoding="application/x-tex">\hat\theta_u</annotation></semantics></math>
+driven to zero, meaning that interval contributes nothing to the fitted
+hazard.</p>
 </div>
 <div class="section level3">
 <h3 id="predicted-survival">Predicted survival<a class="anchor" aria-label="anchor" href="#predicted-survival"></a>
@@ -227,7 +255,7 @@ it evaluates at the mean covariate vector:</p>
 <span><span class="co">#&gt; 5  9.071076 0.9945726 0.0011663392 0.9922399 0.9969052</span></span>
 <span><span class="co">#&gt; 6 10.089095 0.9932203 0.0014559417 0.9903084 0.9961322</span></span></code></pre></div>
 <p>A single subject is selected with <code>i</code> (one row index at a
-time — only the first element is used):</p>
+time; only the first element is used):</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_one</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_lung</span>, type <span class="op">=</span> <span class="st">"survival"</span>, i <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred_one</span><span class="op">)</span></span>
@@ -250,25 +278,14 @@ time — only the first element is used):</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="left-truncation-delayed-entry">Left truncation (delayed entry)<a class="anchor" aria-label="anchor" href="#left-truncation-delayed-entry"></a>
-</h2>
-<p>Right-censored data are often also <em>left truncated</em>: subjects
-enter the risk set only at some entry time, and anyone who fails before
-that time is never observed. Pass those times through
-<code>entry</code>:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">x</span>, data <span class="op">=</span> <span class="va">df</span>, entry <span class="op">=</span> <span class="va">df</span><span class="op">$</span><span class="va">start</span>,</span>
-<span>          control <span class="op">=</span> <span class="fu"><a href="../reference/coxph_mpl.control.html">coxph_mpl.control</a></span><span class="op">(</span>basis <span class="op">=</span> <span class="st">"uniform"</span>, n.obs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">status</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Entry times must strictly precede the observed event or censoring
-time, and left truncation currently requires
-<code>basis = "uniform"</code>. Truncated and untruncated subjects may
-be mixed in the same call. See <code><a href="../reference/coxph_mpl.html">?coxph_mpl</a></code> for details.</p>
-<hr>
-</div>
-<div class="section level2">
 <h2 id="next-steps">Next steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
 </h2>
 <ul>
+<li>
+<strong>Left Truncation</strong> covers delayed entry, where
+subjects join the risk set only at some entry time. Right-censored data
+are often also left truncated, and <code><a href="../reference/coxph_mpl.html">coxph_mpl()</a></code> handles it
+through the <code>entry</code> argument.</li>
 <li>
 <strong>Left Censoring</strong> and <strong>Interval
 Censoring</strong> cover the other censoring schemes, which use the
@@ -279,8 +296,8 @@ the four choices for
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ψ</mi><mi>u</mi></msub><annotation encoding="application/x-tex">\psi_u</annotation></semantics></math>
 and how the knots are placed.</li>
 <li>
-<strong>Comparing <code>coxph</code> and
-<code>coxph_mpl</code></strong> fits both to the same right-censored
+<strong>Comparing <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code> and
+<code><a href="../reference/coxph_mpl.html">coxph_mpl()</a></code></strong> fits both to the same right-censored
 data and contrasts the results.</li>
 </ul>
 </div>

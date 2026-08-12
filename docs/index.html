@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,14 +46,15 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials">
 <li><a class="dropdown-item" href="articles/getting-started.html">Getting Started</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Censoring schemes</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Censoring and truncation</h6></li>
     <li><a class="dropdown-item" href="articles/right-censoring.html">Right Censoring</a></li>
     <li><a class="dropdown-item" href="articles/left-censoring.html">Left Censoring</a></li>
     <li><a class="dropdown-item" href="articles/interval-censoring.html">Interval Censoring</a></li>
+    <li><a class="dropdown-item" href="articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
     <li><a class="dropdown-item" href="articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
-    <li><a class="dropdown-item" href="articles/coxph-comparison.html">coxph vs coxph_mpl</a></li>
+    <li><a class="dropdown-item" href="articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">News</a></li>
@@ -94,14 +95,13 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<pre><code><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"survivalMPL"</span><span class="op">)</span></span></code></pre>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"survivalMPL"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
-<div class="section level3">
-<h3 id="right-censored-example-survivallung">Right-censored example (<code>survival::lung</code>)<a class="anchor" aria-label="anchor" href="#right-censored-example-survivallung"></a>
-</h3>
+<p>A right-censored fit on <code><a href="https://rdrr.io/pkg/survival/man/lung.html" class="external-link">survival::lung</a></code>:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://CRAN.R-project.org/package=survivalMPL">survivalMPL</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/therneau/survival" class="external-link">survival</a></span><span class="op">)</span></span>
@@ -120,34 +120,13 @@
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_lung</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_lung</span>, type <span class="op">=</span> <span class="st">"survival"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="interval-censored-example-bcos2">Interval-censored example (<code>bcos2</code>)<a class="anchor" aria-label="anchor" href="#interval-censored-example-bcos2"></a>
-</h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">bcos2</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">fit_bcos</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">left</span>, <span class="va">right</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span> <span class="op">~</span> <span class="va">treatment</span>,</span>
-<span>  data <span class="op">=</span> <span class="va">bcos2</span>,</span>
-<span>  control <span class="op">=</span> <span class="fu"><a href="reference/coxph_mpl.control.html">coxph_mpl.control</a></span><span class="op">(</span></span>
-<span>    basis <span class="op">=</span> <span class="st">"msplines"</span>,</span>
-<span>    n.obs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">bcos2</span><span class="op">)</span>,</span>
-<span>    max.iter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">2000</span>, <span class="fl">4000</span><span class="op">)</span>,</span>
-<span>    smooth <span class="op">=</span> <span class="fl">0</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_bcos</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_bcos</span>, type <span class="op">=</span> <span class="st">"survival"</span>, i <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-</div>
+<p>Because <code><a href="reference/coxph_mpl.html">coxph_mpl()</a></code> estimates the baseline hazard rather than profiling it out, <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> returns absolute survival and hazard estimates with standard errors.</p>
+<p>See the <a href="articles/getting-started.html">Getting Started</a> article for installation notes, the <code><a href="reference/coxph_mpl.html">coxph_mpl()</a></code> interface, how each censoring scheme is encoded, and the control arguments. The remaining articles work through one censoring scheme at a time and compare the modelling choices.</p>
 </div>
 <div class="section level2">
 <h2 id="resources">Resources<a class="anchor" aria-label="anchor" href="#resources"></a>
 </h2>
 <ul>
-<li>Vignette: <code>vignettes/getting-started.Rmd</code>
-</li>
 <li>Reference documentation: <code><a href="reference/coxph_mpl.html">?coxph_mpl</a></code>, <code><a href="reference/coxph_mpl.control.html">?coxph_mpl.control</a></code>, <code><a href="reference/predict.coxph_mpl.html">?predict.coxph_mpl</a></code>, <code><a href="reference/residuals.coxph_mpl.html">?residuals.coxph_mpl</a></code>
 </li>
 </ul>
