@@ -19,6 +19,7 @@ Depends: R (>= 3.5.0), survival, stats, MASS
 Suggests: knitr,
     rmarkdown,
     pkgdown,
+    pkgload,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 NeedsCompilation: no
