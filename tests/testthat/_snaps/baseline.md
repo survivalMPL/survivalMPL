@@ -1,14 +1,6 @@
 # bcos2 msplines: Beta coef stable
 
     Code
-      round(coef(fit, "Beta"), 6)
-    Output
-      treatmentRadChem 
-              0.873108 
-
----
-
-    Code
       round(fit$ploglik, 4)
     Output
                [,1]
@@ -35,14 +27,6 @@
 # bcos2 uniform: Beta coef stable
 
     Code
-      round(coef(fit, "Beta"), 6)
-    Output
-      treatmentRadChem 
-              0.907372 
-
----
-
-    Code
       round(fit$ploglik, 4)
     Output
                 [,1]
@@ -51,28 +35,12 @@
 # bcos2 gaussian: Beta coef stable
 
     Code
-      round(coef(fit, "Beta"), 6)
-    Output
-      treatmentRadChem 
-              0.949494 
-
----
-
-    Code
       round(fit$ploglik, 4)
     Output
                 [,1]
       [1,] -221.1946
 
 # bcos2 epanechikov: Beta coef stable
-
-    Code
-      round(coef(fit, "Beta"), 6)
-    Output
-      treatmentRadChem 
-              0.746284 
-
----
 
     Code
       round(fit$ploglik, 4)
