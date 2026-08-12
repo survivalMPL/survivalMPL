@@ -18,6 +18,7 @@
 ^\.github$
 ^_pkgdown\.yml$
 ^pkgdown$
+^docs$
 ^old_sources$
 ^experiments$
 ^learning$

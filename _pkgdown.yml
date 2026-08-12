@@ -1,8 +1,19 @@
-destination: pkgdown
+destination: docs
 url: https://CRAN.R-project.org/package=survivalMPL
 template:
   bootstrap: 5
   light-switch: true
+  includes:
+    in_header: |
+      <style>
+        /* Bootstrap caps navbar dropdowns at 280px / 50vh and adds a
+           scrollbar; the Tutorials menu is taller than that, so show it
+           in full instead. */
+        .navbar .dropdown-menu {
+          max-height: none;
+          overflow-y: visible;
+        }
+      </style>
 
 home:
   sidebar:
