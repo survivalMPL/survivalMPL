@@ -73,23 +73,23 @@ plot.residuals.coxph_mpl=function(x,ask=TRUE,which=1:2,upper.quantile=.95,...){
   if(which.plot[1]){
     plot(1:nrow(x),x$martingale,col=(!(x$censoring==1))+1,ylab="",
          xlab="Index",main="Martingale Residuals",axes=FALSE,
-         ylim=c(min(x$martingale),1+(1-min(x$martingale))*.075),...)
+         ylim=c(min(x$martingale),1+(1-min(x$martingale))*.18),...)
     mtext(expression(delta[i]-plain(e)^(x[i]^T*hat(beta))*widehat(H)[0](t[i])),2,padj=-2,...)
     abline(h=1,col="light gray")
     abline(h=0,col="light gray",lty=2)
     axis(1,...)
     axis(2,...)
-    legend("top",ncol=2,legend=c("observed","censored"),col=c(1,2),pch=1,cex=.75)
+    legend("top",ncol=2,legend=c("observed","censored"),col=c(1,2),pch=1,cex=.75,bg="white",box.col="white")
   }
   # coxsnell
   if(which.plot[2]){
     plot(1:nrow(x),x$coxsnell,col=(!(x$censoring==1))+1,ylab="",
          xlab="Index",main="Adjusted Cox & Snell Residuals",axes=FALSE,
-         ylim=c(0,max(x$coxsnell)*1.075),...)
+         ylim=c(0,max(x$coxsnell)*1.22),...)
     mtext(expression(plain(e)^(x[i]^T*hat(beta))*widehat(H)[0](t[i])),2,padj=-2,...)
     abline(h=1,col="light gray",lty=2)
     axis(1,pos=0,...)
     axis(2,...)
-    legend("top",ncol=2,legend=c("observed","censored"),col=c(1,2),pch=1,cex=.75)
+    legend("top",ncol=2,legend=c("observed","censored"),col=c(1,2),pch=1,cex=.75,bg="white",box.col="white")
   }
 }

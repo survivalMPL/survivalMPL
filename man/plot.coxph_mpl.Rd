@@ -4,7 +4,15 @@
 \alias{plot.coxph_mpl}
 \title{Plot a \code{coxph_mpl} Object}
 \usage{
-\method{plot}{coxph_mpl}(x, se = "M2QM2", ask = TRUE, which = 1:4, upper.quantile = 0.95, ...)
+\method{plot}{coxph_mpl}(
+  x,
+  se = "M2QM2",
+  ask = TRUE,
+  which = 1:4,
+  upper.quantile = 0.95,
+  xlim = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{A fitted model of class \code{"coxph_mpl"}.}
@@ -17,8 +25,14 @@
 
 \item{which}{Integer vector selecting plots to produce (subset of \code{1:4}).}
 
-\item{upper.quantile}{Quantile of the response used to set the upper x-axis
-limit for baseline function plots. Default \code{0.95}.}
+\item{upper.quantile}{Currently has no effect. The quantile reference line it
+labelled is disabled in the plotting code, so the plots span \code{xlim}.
+Retained for backward compatibility. Default \code{0.95}.}
+
+\item{xlim}{Numeric of length 2 giving the time range to display, passed to
+every panel. Defaults to \code{NULL}, meaning the full range of the knot
+sequence. Useful for right-skewed data, where the full range compresses all
+the structure into the left edge of the plot.}
 
 \item{...}{Additional arguments passed to plotting functions.}
 }

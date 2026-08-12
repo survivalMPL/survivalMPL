@@ -30,7 +30,8 @@ missing, defaults are built from \code{...}.}
 \code{data}) giving each subject's left-truncation (delayed entry) time.
 Every value must be strictly less than that subject's event/interval
 lower bound; violations raise an error. Left-truncated and
-non-left-truncated subjects may be mixed in the same call. Defaults to
+non-left-truncated subjects may be mixed in the same call. Requires
+\code{basis = "uniform"}; any other basis raises an error. Defaults to
 \code{NULL} (no truncation), which reproduces prior behaviour exactly.}
 
 \item{...}{Additional arguments passed to [coxph_mpl.control()].}
@@ -59,10 +60,11 @@ centred during optimisation; baseline estimates and covariance matrices are
 corrected afterwards using a delta-method adjustment.
 }
 \section{Limitations}{
- [residuals.coxph_mpl()] and [predict.coxph_mpl()] do
-  not yet account for \code{entry} — they compute cumulative hazard and
-  survival from time 0 rather than from each subject's entry time. This is
-  a known follow-up, not yet implemented.
+ \code{entry} is only supported for
+  \code{basis = "uniform"}. Also, [residuals.coxph_mpl()] and
+  [predict.coxph_mpl()] do not yet account for \code{entry} — they compute
+  cumulative hazard and survival from time 0 rather than from each subject's
+  entry time. Both are known follow-ups, not yet implemented.
 }
 
 \examples{
