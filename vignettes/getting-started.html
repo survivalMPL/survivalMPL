@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Getting Started with survivalMPL</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Getting Started with survivalMPL</h1>
+
+
+
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p><code>survivalMPL</code> fits Cox proportional hazards models by
+<strong>maximum penalised likelihood</strong> (MPL). Unlike partial
+likelihood, MPL estimates the baseline hazard <span class="math inline">\(h_0\)</span> jointly with the regression
+coefficients <span class="math inline">\(\boldsymbol{\beta}\)</span>, by
+expanding it in a basis of non-negative functions</p>
+<p><span class="math display">\[h_0(t) = \sum_{u=1}^{m} \theta_u
+\psi_u(t), \qquad \boldsymbol{\theta} \geq \mathbf{0},\]</span></p>
+<p>and penalising the roughness of the result. Because <span class="math inline">\(h_0\)</span> is estimated rather than profiled
+out, fits yield <em>absolute</em> hazard, cumulative hazard and survival
+estimates, and the method extends naturally to censoring schemes the
+partial likelihood cannot handle.</p>
+<p>Supported data:</p>
+<ul>
+<li>right censoring, including left truncation (delayed entry)</li>
+<li>left censoring</li>
+<li>interval censoring</li>
+<li>any mixture of the above, together with exact event times</li>
+</ul>
+</div>
+<div id="installation" class="section level2">
+<h2>Installation</h2>
+<p>From CRAN:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;survivalMPL&quot;</span>)</span></code></pre></div>
+<p>The development version:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># install.packages(&quot;remotes&quot;)</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;survivalMPL/survivalMPL&quot;</span>)</span></code></pre></div>
+<p>Then attach it alongside <code>survival</code>, which provides the
+<code>Surv()</code> response constructor:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(survivalMPL)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">library</span>(survival)</span></code></pre></div>
+</div>
+<div id="the-main-function" class="section level2">
+<h2>The main function</h2>
+<p><code>coxph_mpl()</code> is the entry point. Its interface follows
+<code>survival::coxph()</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">coxph_mpl</span>(formula, data, subset, na.action, entry, control, ...)</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th>Argument</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>formula</code></td>
+<td>A model formula whose response is a <code>Surv()</code> object</td>
+</tr>
+<tr class="even">
+<td><code>data</code></td>
+<td>Data frame containing the variables in <code>formula</code></td>
+</tr>
+<tr class="odd">
+<td><code>entry</code></td>
+<td>Optional left-truncation (delayed entry) times</td>
+</tr>
+<tr class="even">
+<td><code>control</code></td>
+<td>A list from <code>coxph_mpl.control()</code></td>
+</tr>
+</tbody>
+</table>
+<p>The response tells <code>coxph_mpl()</code> which censoring scheme
+applies. Right-censored data can use the familiar two-argument form;
+everything else uses <code>type = &quot;interval2&quot;</code>, where
+<code>NA</code> marks an unobserved endpoint:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Data</th>
+<th>Response</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Right censored</td>
+<td><code>Surv(time, status)</code></td>
+</tr>
+<tr class="even">
+<td>Left censored</td>
+<td><code>Surv(NA, t_R, type = &quot;interval2&quot;)</code></td>
+</tr>
+<tr class="odd">
+<td>Interval censored</td>
+<td><code>Surv(t_L, t_R, type = &quot;interval2&quot;)</code></td>
+</tr>
+<tr class="even">
+<td>Exact event</td>
+<td><code>Surv(t, t, type = &quot;interval2&quot;)</code></td>
+</tr>
+</tbody>
+</table>
+<div id="tuning-the-fit" class="section level3">
+<h3>Tuning the fit</h3>
+<p><code>coxph_mpl.control()</code> collects everything governing the
+baseline hazard and the optimiser. The arguments most often changed
+are:</p>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Argument</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>basis</code></td>
+<td>Basis for <span class="math inline">\(h_0\)</span>:
+<code>&quot;uniform&quot;</code>, <code>&quot;gaussian&quot;</code>,
+<code>&quot;msplines&quot;</code>, <code>&quot;epanechikov&quot;</code></td>
+</tr>
+<tr class="even">
+<td><code>n.knots</code></td>
+<td>Length-2 vector: numbers of quantile and equally spaced internal
+knots</td>
+</tr>
+<tr class="odd">
+<td><code>smooth</code></td>
+<td>Smoothing parameter <span class="math inline">\(\lambda\)</span>;
+<code>NULL</code> estimates it by REML</td>
+</tr>
+<tr class="even">
+<td><code>n.obs</code></td>
+<td>Number of exact events, used to set default knot counts</td>
+</tr>
+<tr class="odd">
+<td><code>max.iter</code></td>
+<td>Iteration limits for the three optimisation stages</td>
+</tr>
+</tbody>
+</table>
+<p>The registered bases are:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">list_bases</span>()</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt;          name        label</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; 1    bsplines    B-Splines</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; 2 epanechikov Epanechnikov</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; 3    gaussian     Gaussian</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; 4    msplines    M-Splines</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; 5     uniform      Uniform</span></span></code></pre></div>
+</div>
+<div id="methods" class="section level3">
+<h3>Methods</h3>
+<p>A fitted <code>coxph_mpl</code> object supports the usual
+generics:</p>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Call</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>summary(fit)</code></td>
+<td>Coefficients, standard errors, and <span class="math inline">\(\boldsymbol{\theta}\)</span></td>
+</tr>
+<tr class="even">
+<td><code>coef(fit)</code></td>
+<td>Regression coefficients</td>
+</tr>
+<tr class="odd">
+<td><code>predict(fit, type = &quot;risk&quot;)</code></td>
+<td>Estimated hazard <span class="math inline">\(\hat h(t)\)</span></td>
+</tr>
+<tr class="even">
+<td><code>predict(fit, type = &quot;survival&quot;)</code></td>
+<td>Estimated survival <span class="math inline">\(\hat
+S(t)\)</span></td>
+</tr>
+<tr class="odd">
+<td><code>plot(fit)</code></td>
+<td>Baseline hazard and survival with confidence bands</td>
+</tr>
+<tr class="even">
+<td><code>residuals(fit)</code></td>
+<td>Martingale residuals</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="where-to-go-next" class="section level2">
+<h2>Where to go next</h2>
+<p>The tutorials work through one censoring scheme at a time —
+<strong>right censoring</strong>, <strong>left censoring</strong>, and
+<strong>interval censoring</strong> — each with a complete worked
+example. Two further articles cover the modelling choices: <strong>basis
+functions for the baseline hazard</strong>, and a side-by-side
+comparison of <strong><code>coxph</code> and
+<code>coxph_mpl</code></strong> on the same data.</p>
+<p>See <code>?coxph_mpl</code> and <code>?coxph_mpl.control</code> for
+the full argument lists.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

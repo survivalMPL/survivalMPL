@@ -167,18 +167,26 @@ psi_e <- survivalMPL:::compute_basis_matrix(t_vis, knots_e, "epanechikov", ctrl_
 # ---- plot ----
 par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
 
-plot_basis <- function(mat, t, title, knots_alpha) {
-  m     <- ncol(mat)
-  cols  <- seq_len(m)
-  y_cap <- quantile(mat[mat > 0 & is.finite(mat)], 0.99, na.rm = TRUE)
-  matplot(t, mat, type = "l", lty = 1, col = cols,
+# The bases produce 11-23 functions from the default knots, which is far too
+# many to read in one panel.  Draw an evenly spaced subset of `n_show` of them
+# instead: enough to see the shape and the overlap, still spanning the whole
+# time range.  The legend gives the indices actually plotted.
+plot_basis <- function(mat, t, title, knots_alpha, n_show = 6) {
+  idx   <- unique(round(seq(1, ncol(mat), length.out = min(n_show, ncol(mat)))))
+  mat   <- mat[, idx, drop = FALSE]
+  cols  <- seq_along(idx)
+  # With only a handful of columns the old 0.99 cap is set by the boundary
+  # functions, which are several times taller than the rest; 0.95 keeps the
+  # interior bumps filling the panel.
+  y_cap <- quantile(mat[mat > 0 & is.finite(mat)], 0.95, na.rm = TRUE) * 1.1
+  matplot(t, mat, type = "l", lty = 1, col = cols, lwd = 1.6,
           xlab = "t (years)", ylab = expression(psi[u](t)),
           main = title, ylim = c(0, y_cap))
   abline(v = knots_alpha[knots_alpha <= max(t)], col = "grey70", lty = 2)
   legend("topright",
-         legend = paste0("ψ", seq_len(m)),
-         col = cols, lty = 1, lwd = 1.5,
-         bty = "n", cex = 0.7, ncol = ceiling(m / 5))
+         legend = paste0("ψ", idx),
+         col = cols, lty = 1, lwd = 1.6,
+         bty = "n", cex = 0.75)
 }
 
 plot_basis(psi_u, t_vis, "Uniform",      knots_u$Alpha)
@@ -252,18 +260,16 @@ t_min <- quantile(events, 0.02)
 t_seq <- seq(t_min, max(events), length.out = 300)
 
 # instantaneous risk at mean covariates
-# ylim based on estimated curves only — true h0 = t^{-1/2} diverges near 0
 risks <- sapply(fits, function(f) predict(f, type = "risk", time = t_seq)$risk)
-y_max <- max(t_min^(-0.5), quantile(risks, 0.995)) * 1.1
+y_max <- quantile(risks, 0.995) * 1.1
 plot(NA, xlim = range(t_seq), ylim = c(0, y_max),
      xlab = "Time (years)", ylab = expression(hat(h)(t)),
      main = "Instantaneous risk (mean covariates)", cex.main = 0.9)
 for (i in seq_along(fits))
   lines(t_seq, risks[, i], col = cols[i], lwd = 1.5)
-lines(t_seq, t_seq^(-0.5), lty = 2, lwd = 1.5, col = "black")
 legend("topright",
-       legend = c(labels, "True h₀"),
-       col = c(cols, "black"), lty = c(1, 1, 1, 1, 2),
+       legend = labels,
+       col = cols, lty = 1,
        lwd = 1.5, bty = "n", cex = 0.75)
 
 # survival at mean covariates
@@ -274,17 +280,21 @@ for (i in seq_along(fits)) {
   p <- predict(fits[[i]], type = "survival", time = t_seq)
   lines(p$time, p$survival, col = cols[i], lwd = 1.5)
 }
-lines(t_seq, exp(-2 * sqrt(t_seq)), lty = 2, lwd = 1.5, col = "black")
 legend("topright",
-       legend = c(labels, "True S₀"),
-       col = c(cols, "black"), lty = c(1, 1, 1, 1, 2),
+       legend = labels,
+       col = cols, lty = 1,
        lwd = 1.5, bty = "n", cex = 0.75)
 ```
 
-All four bases recover the broad shape of the true Weibull baseline
-$h_0(t) = t^{-1/2}$ (dashed). The smooth bases (Gaussian, M-Splines,
-Epanechnikov) produce continuous estimates; the uniform basis introduces
-visible step artefacts that diminish with more knots.
+All four bases agree on the broad shape — a hazard that is high early and decays
+over time — and on the implied survival curve.  The smooth bases (Gaussian,
+M-Splines, Epanechnikov) produce continuous estimates; the uniform basis
+introduces visible step artefacts that diminish with more knots.
+
+Note that these are predictions at the *mean* covariate vector, so each curve
+estimates $h_0(t)\exp(\bar{\mathbf{x}}^T\boldsymbol{\beta})$ rather than $h_0(t)$
+itself.  The covariates are not centred, so this is not directly comparable to
+the Weibull baseline used to simulate the data.
 
 ---
 
