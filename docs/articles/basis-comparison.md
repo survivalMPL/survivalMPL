@@ -130,9 +130,28 @@ these use the augmented knot sequence $`\boldsymbol{\alpha}^\star`$.
 The code below uses the package’s internal basis machinery to evaluate
 $`\psi_u(t)`$ on a fine grid and plot each set of basis functions.
 
+`n.knots = c(k_1, k_2)` places $`k_1 + 1`$ quantile-based knots over the
+lower `range.quant[2]` (90% by default) of the event times, plus
+$`k_2 + 1`$ equally spaced knots above that quantile, giving
+$`k_1 + k_2 + 2`$ knots in total. The defaults are `c(8, 2)` for
+`"uniform"` and `"msplines"` (12 knots, $`m = 11`$ and $`13`$) and
+`c(0, 20)` for `"gaussian"` and `"epanechikov"` (22 knots, $`m = 22`$
+and $`23`$).
+
+The figure below deliberately uses far fewer: `n.knots = c(0, 6)`,
+i.e. 8 widely spaced knots and $`m = 7`$ to $`9`$ basis functions per
+panel. At the default resolution the curves overlap into a dense,
+unreadable thicket, and on this right-skewed dataset the quantile knots
+crowd so tightly near $`t = 0`$ that the first basis function spikes and
+flattens all the others. Fewer knots do not change the shape of an
+individual basis function, only how many there are and how wide each one
+is.
+
 ![](basis-comparison_files/figure-html/basis-vis-1.png)
 
-Dashed vertical lines mark the internal knots $`\boldsymbol{\alpha}`$.
+Colour runs with the basis index: $`\psi_1`$ (blue) is left-most in
+time, $`\psi_m`$ (red) right-most. Dotted vertical lines mark the knots
+$`\boldsymbol{\alpha}`$.
 
 ------------------------------------------------------------------------
 
@@ -144,29 +163,40 @@ substantially. Here we fit the same interval-censored model with all
 four bases using the bundled pseudo-melanoma data (time to first local
 recurrence, $`n = 300`$, true baseline $`h_0(t) = t^{-1/2}`$).
 
-[`data`](https://rdrr.io/r/utils/data.html)`(``melanoma``)`` ``formula_mel`` ``<-`` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``t_L``, ``t_R``, type ``=`` ``"interval2"``)`` ``~`` `` ``Arm`` ``+`` ``Leg`` ``+`` ``Trunk`` ``+`` ``mm1to2`` ``+`` ``mm2to4`` ``+`` ``mm4plus`` ``+`` ``Female`` ``+`` ``Age_centred`` ``n_obs`` ``<-`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``melanoma``$``t_L`` ``==`` ``melanoma``$``t_R`` ``&`` `[`is.finite`](https://rdrr.io/r/base/is.finite.html)`(``melanoma``$``t_R``)``)`` ``base_ctrl`` ``<-`` `[`list`](https://rdrr.io/r/base/list.html)`(``n.obs ``=`` ``n_obs``,`` `` smooth ``=`` ``0``,`` `` max.iter ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``40``, ``2e4``, ``5e4``)``)`
+All four fits share the same knot specification, `n.knots = c(8, 2)`, so
+that the comparison is between *basis shapes* and not between different
+numbers of parameters. (The defaults differ by basis: `"uniform"` and
+`"msplines"` use `c(8, 2)`, while `"gaussian"` and `"epanechikov"` use
+`c(0, 20)`.)
+
+[`data`](https://rdrr.io/r/utils/data.html)`(``melanoma``)`` ``formula_mel`` ``<-`` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``t_L``, ``t_R``, type ``=`` ``"interval2"``)`` ``~`` `` ``Arm`` ``+`` ``Leg`` ``+`` ``Trunk`` ``+`` ``mm1to2`` ``+`` ``mm2to4`` ``+`` ``mm4plus`` ``+`` ``Female`` ``+`` ``Age_centred`` ``n_obs`` ``<-`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``melanoma``$``t_L`` ``==`` ``melanoma``$``t_R`` ``&`` `[`is.finite`](https://rdrr.io/r/base/is.finite.html)`(``melanoma``$``t_R``)``)`` ``base_ctrl`` ``<-`` `[`list`](https://rdrr.io/r/base/list.html)`(``n.obs ``=`` ``n_obs``,`` `` smooth ``=`` ``0``,`` `` n.knots ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``8``, ``2``)``,`` `` max.iter ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``40``, ``2e4``, ``5e4``)``)`
 
 `fit_u`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``formula_mel``, data ``=`` ``melanoma``,`` `` control ``=`` `[`do.call`](https://rdrr.io/r/base/do.call.html)`(``coxph_mpl.control``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``base_ctrl``, `[`list`](https://rdrr.io/r/base/list.html)`(``basis ``=`` ``"uniform"``)``)``)``)`` `` ``fit_g`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``formula_mel``, data ``=`` ``melanoma``,`` `` control ``=`` `[`do.call`](https://rdrr.io/r/base/do.call.html)`(``coxph_mpl.control``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``base_ctrl``, `[`list`](https://rdrr.io/r/base/list.html)`(``basis ``=`` ``"gaussian"``)``)``)``)`` `` ``fit_m`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``formula_mel``, data ``=`` ``melanoma``,`` `` control ``=`` `[`do.call`](https://rdrr.io/r/base/do.call.html)`(``coxph_mpl.control``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``base_ctrl``, `[`list`](https://rdrr.io/r/base/list.html)`(``basis ``=`` ``"msplines"``)``)``)``)`` `` ``fit_e`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``formula_mel``, data ``=`` ``melanoma``,`` `` control ``=`` `[`do.call`](https://rdrr.io/r/base/do.call.html)`(``coxph_mpl.control``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``base_ctrl``, `[`list`](https://rdrr.io/r/base/list.html)`(``basis ``=`` ``"epanechikov"``)``)``)``)`
 
 ### Regression coefficients
 
-`coef_mat`` ``<-`` `[`cbind`](https://rdrr.io/r/base/cbind.html)`(`` `` Uniform ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_u``)``,`` `` Gaussian ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_g``)``,`` ```  `M-Splines`  ```=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_m``)``,`` `` Epanechnikov ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_e``)`` ``)`` `[`round`](https://rdrr.io/r/base/Round.html)`(``coef_mat``, ``3``)`` ``#> Uniform Gaussian M-Splines Epanechnikov`` ``#> Arm -0.596 -0.636 -0.562 -0.632`` ``#> Leg -0.112 -0.118 -0.087 -0.097`` ``#> Trunk -0.241 -0.266 -0.239 -0.278`` ``#> mm1to2 0.036 0.023 0.029 0.003`` ``#> mm2to4 0.614 0.734 0.625 0.795`` ``#> mm4plus 1.472 1.850 1.436 2.037`` ``#> Female -0.090 -0.110 -0.089 -0.121`` ``#> Age_centred 0.117 0.132 0.111 0.138`
+`coef_mat`` ``<-`` `[`cbind`](https://rdrr.io/r/base/cbind.html)`(`` `` Uniform ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_u``)``,`` `` Gaussian ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_g``)``,`` ```  `M-Splines`  ```=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_m``)``,`` `` Epanechnikov ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_e``)`` ``)`` `[`round`](https://rdrr.io/r/base/Round.html)`(``coef_mat``, ``3``)`` ``#> Uniform Gaussian M-Splines Epanechnikov`` ``#> Arm -0.596 -0.583 -0.562 -0.620`` ``#> Leg -0.112 -0.085 -0.087 -0.111`` ``#> Trunk -0.241 -0.243 -0.239 -0.252`` ``#> mm1to2 0.036 0.053 0.029 0.056`` ``#> mm2to4 0.614 0.672 0.625 0.642`` ``#> mm4plus 1.472 1.468 1.436 1.454`` ``#> Female -0.090 -0.077 -0.089 -0.088`` ``#> Age_centred 0.117 0.114 0.111 0.119`
 
 ### Estimated baseline hazards
 
 ![](basis-comparison_files/figure-html/baseline-plot-1.png)
 
-All four bases agree on the broad shape (a hazard that is high early and
-decays over time) and on the implied survival curve. The smooth bases
-(Gaussian, M-Splines, Epanechnikov) produce continuous estimates; the
-uniform basis introduces visible step artefacts that diminish with more
-knots.
+All four bases agree on the broad picture: a hazard that falls steeply
+over the first few weeks and then levels off, and survival curves that
+are nearly identical. The hazard estimates themselves are not nearly
+identical, and the log scale is what shows it. The uniform basis gives
+the expected step artefacts, while the three smooth bases oscillate, and
+disagree about where the peaks and troughs fall, because `smooth = 0`
+applies no roughness penalty at all. Penalised fits (`smooth > 0`, or
+`smooth.per = TRUE` for automatic selection) damp these oscillations.
+That the four disagree this much on $`\hat h_0`$ while agreeing on
+$`\hat S_0`$ is the usual picture: the survival curve integrates the
+hazard, and integration smooths the differences away.
 
-Note that these are predictions at the *mean* covariate vector, so each
-curve estimates $`h_0(t)\exp(\bar{\mathbf{x}}^T\boldsymbol{\beta})`$
-rather than $`h_0(t)`$ itself. The covariates are not centred, so this
-is not directly comparable to the Weibull baseline used to simulate the
-data.
+These are predictions at the *mean* covariate vector, so each curve
+estimates $`h_0(t)\exp(\bar{\mathbf{x}}^T\boldsymbol{\beta})`$ rather
+than $`h_0(t)`$ itself. The covariates are not centred, so the level of
+these curves is not the level of the baseline hazard.
 
 ------------------------------------------------------------------------
 
