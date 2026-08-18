@@ -27,7 +27,7 @@ home:
 
 navbar:
   structure:
-    left: [home, reference, tutorials, news]
+    left: [home, reference, tutorials, book, news]
   components:
     tutorials:
       text: Tutorials
@@ -46,10 +46,15 @@ navbar:
           href: articles/left-truncation.html
         - text: -------
         - text: Modelling choices
+        - text: Control Parameters
+          href: articles/control-parameters.html
         - text: Basis Functions for the Baseline Hazard
           href: articles/basis-comparison.html
         - text: Comparing coxph() and coxph_mpl()
           href: articles/coxph-comparison.html
+    book:
+      text: Book
+      href: articles/book.html
     news:
       text: News
       href: news/index.html
@@ -68,8 +73,14 @@ articles:
       - left-truncation
   - title: Modelling choices
     desc: >
-      How the baseline hazard is represented, and how MPL compares with the
-      partial likelihood.
+      How a fit is tuned, how the baseline hazard is represented, and how MPL
+      compares with the partial likelihood.
     contents:
+      - control-parameters
       - basis-comparison
       - coxph-comparison
+  - title: Background
+    desc: >
+      The book the methods in this package come from.
+    contents:
+      - articles/book

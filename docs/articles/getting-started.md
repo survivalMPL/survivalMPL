@@ -70,21 +70,33 @@ marks an unobserved endpoint:
 
 ### Tuning the fit
 
+Every fit runs with sensible defaults, so `control` can be omitted
+entirely. When it is supplied,
 [`coxph_mpl.control()`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)
 collects everything governing the baseline hazard and the optimiser. The
 arguments most often changed are:
 
 | Argument | Meaning |
 |----|----|
-| `basis` | Basis for $`h_0`$: `"uniform"`, `"gaussian"`, `"msplines"`, `"epanechikov"` |
+| `basis` | Basis for $`h_0`$: `"uniform"`, `"msplines"`, `"gaussian"`, `"epanechikov"` |
 | `n.knots` | Length-2 vector: numbers of quantile and equally spaced internal knots |
-| `smooth` | Smoothing parameter $`\lambda`$; `NULL` estimates it by REML |
+| `smooth` | Smoothing value $`\lambda`$; `NULL` selects it automatically by marginal likelihood, `0` fits by plain maximum likelihood |
 | `n.obs` | Number of exact events, used to set default knot counts |
 | `max.iter` | Iteration limits for the three optimisation stages |
+| `tol` | Convergence tolerance; `1e-5` is used throughout the book |
 
 The registered bases are:
 
-[`list_bases`](https://CRAN.R-project.org/package=survivalMPL/reference/list_bases.md)`(``)`` ``#> name label`` ``#> 1 bsplines B-Splines`` ``#> 2 epanechikov Epanechnikov`` ``#> 3 gaussian Gaussian`` ``#> 4 msplines M-Splines`` ``#> 5 uniform Uniform`
+- `"uniform"` (alias `"u"`) - piecewise-constant step functions
+- `"msplines"` (alias `"m"`) - M-splines of order $`o`$, cubic by
+  default
+- `"gaussian"` (alias `"g"`) - truncated Gaussian kernels
+- `"epanechikov"` (aliases `"e"`, `"epanechnikov"`) - Epanechnikov
+  kernels
+
+**Control Parameters** works through these arguments one at a time, and
+**Basis Functions for the Baseline Hazard** gives the mathematical
+definition of each basis.
 
 ### Methods
 
@@ -97,14 +109,15 @@ A fitted `coxph_mpl` object supports the usual generics:
 | `predict(fit, type = "risk")` | Estimated hazard $`\hat h(t)`$ |
 | `predict(fit, type = "survival")` | Estimated survival $`\hat S(t)`$ |
 | `plot(fit)` | Baseline hazard and survival with confidence bands |
-| `residuals(fit)` | Martingale residuals |
+| `residuals(fit)` | Martingale and Cox-Snell residuals |
 
 ## Where to go next
 
 The tutorials work through one censoring scheme at a time (**Right
-Censoring**, **Left Censoring**, **Interval Censoring**), each with a
-complete worked example. Two further articles cover the modelling
-choices: **Basis Functions for the Baseline Hazard**, and **Comparing
+Censoring**, **Left Censoring**, **Interval Censoring**, **Left
+Truncation**), each with a complete worked example. Three further
+articles cover the modelling choices: **Control Parameters** on tuning a
+fit, **Basis Functions for the Baseline Hazard**, and **Comparing
 [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) and
 [`coxph_mpl()`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)**
 on the same data.

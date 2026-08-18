@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,10 +51,12 @@
     <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
+    <li><a class="dropdown-item" href="../articles/control-parameters.html">Control Parameters</a></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
     <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../articles/book.html">Book</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -167,14 +169,14 @@ cancer, right-censored overall survival to compare:</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">tab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  Covariate   <span class="op">=</span> <span class="va">row_labels</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">beta_pl</span><span class="op">)</span><span class="op">]</span>,</span>
-<span>  `PL β`      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">beta_pl</span>,  <span class="fl">4</span><span class="op">)</span>,</span>
-<span>  `PL SE`     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">se_pl</span>,    <span class="fl">4</span><span class="op">)</span>,</span>
-<span>  `MPL β`     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">beta_mpl</span>, <span class="fl">4</span><span class="op">)</span>,</span>
-<span>  `MPL SE`    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">se_mpl</span>,   <span class="fl">4</span><span class="op">)</span>,</span>
-<span>  `Δβ`        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">beta_mpl</span> <span class="op">-</span> <span class="va">beta_pl</span>, <span class="fl">4</span><span class="op">)</span>,</span>
-<span>  check.names <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  row.names   <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  Covariate    <span class="op">=</span> <span class="va">row_labels</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">beta_pl</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>  `PL est.`    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">beta_pl</span>,  <span class="fl">4</span><span class="op">)</span>,</span>
+<span>  `PL SE`      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">se_pl</span>,    <span class="fl">4</span><span class="op">)</span>,</span>
+<span>  `MPL est.`   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">beta_mpl</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>  `MPL SE`     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">se_mpl</span>,   <span class="fl">4</span><span class="op">)</span>,</span>
+<span>  `Difference` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">beta_mpl</span> <span class="op">-</span> <span class="va">beta_pl</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>  check.names  <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  row.names    <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">tab</span>, align <span class="op">=</span> <span class="st">"lrrrrr"</span>,</span>
 <span>             caption <span class="op">=</span> <span class="st">"^a^ The forest plot rescales these covariates to per-10-unit changes."</span><span class="op">)</span></span></code></pre></div>
@@ -183,20 +185,20 @@ cancer, right-censored overall survival to compare:</p>
 <sup>a</sup> The forest plot rescales these covariates to
 per-10-unit changes.</caption>
 <colgroup>
-<col width="44%">
-<col width="11%">
+<col width="42%">
 <col width="10%">
-<col width="11%">
-<col width="10%">
-<col width="11%">
+<col width="9%">
+<col width="12%">
+<col width="9%">
+<col width="15%">
 </colgroup>
 <thead><tr class="header">
 <th align="left">Covariate</th>
-<th align="right">PL β</th>
+<th align="right">PL est.</th>
 <th align="right">PL SE</th>
-<th align="right">MPL β</th>
+<th align="right">MPL est.</th>
 <th align="right">MPL SE</th>
-<th align="right">Δβ</th>
+<th align="right">Difference</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -278,6 +280,56 @@ arise from tied or sparse event times. The Kaplan-Meier curve sits above
 both because it is not adjusted for covariates - in particular it does
 not account for the protective effect of female sex and higher Karnofsky
 score at the mean covariate profile.</p>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="instantaneous-hazard-comparison">Instantaneous hazard comparison<a class="anchor" aria-label="anchor" href="#instantaneous-hazard-comparison"></a>
+</h2>
+<p>Survival curves are the forgiving comparison: integration smooths
+away differences in the hazard. The instantaneous hazard
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>h</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\hat h(t)</annotation></semantics></math>
+is where the two approaches genuinely differ, and it is the quantity
+<code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code> does not estimate at all.</p>
+<p>The partial likelihood gives a cumulative hazard that jumps at each
+event time, so its “hazard” is a set of point masses. To draw it as a
+rate it has to be binned: the increments of the Breslow cumulative
+hazard are accumulated over equal-width intervals and divided by the
+interval width, which is the piecewise-constant hazard estimate implied
+by <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code> at that resolution. <code><a href="../reference/coxph_mpl.html">coxph_mpl()</a></code>
+needs no such post-processing -
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>h</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\hat h(t)</annotation></semantics></math>
+is part of the fitted object.</p>
+<p><img src="coxph-comparison_files/figure-html/hazard-comparison-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
+<p>Over the bulk of follow-up the two agree: a hazard of roughly
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1.3</mn><mo>×</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>3</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1.3 \times
+10^{-3}</annotation></semantics></math> per day early on, rising to
+around
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>3</mn></mrow></msup></mrow><annotation encoding="application/x-tex">3 \times 10^{-3}</annotation></semantics></math>
+by day 500. The disagreement is in the character of the two estimates
+rather than their level.</p>
+<p>The binned Breslow estimate jumps from bin to bin - its fourth bin
+sits below its third - and the whole picture depends on a bin width
+nobody chose on statistical grounds: eight bins give this, sixteen would
+give something visibly rougher, four something visibly flatter. Its last
+bin is exactly zero, because no death is recorded after day 894, which
+is a statement about this sample rather than about the hazard. The
+M-spline estimate is smooth by construction, with the roughness penalty
+rather than an arbitrary bin width deciding how much structure survives,
+and every point of it carries a standard error - which the binned
+version does not.</p>
+<p>Past about 900 days the two part company completely: the smooth
+estimate goes on rising while the binned one collapses to zero. Neither
+is informative there. Three patients are still at risk and none of them
+dies, so the data contain almost nothing about the hazard at that point,
+and each method fills the vacuum in its own way - one by extrapolating
+its trend, the other by reporting the empty bin as a zero rate.</p>
+<p>That difference is the practical argument for the penalised full
+likelihood: when the target is a hazard ratio, <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code> and
+<code><a href="../reference/coxph_mpl.html">coxph_mpl()</a></code> agree, and the partial likelihood is the
+cheaper route; when the target is absolute risk - a hazard, a survival
+probability, a predicted event time for a given covariate profile - the
+baseline has to be estimated, and <code><a href="../reference/coxph_mpl.html">coxph_mpl()</a></code> estimates it
+as part of the model.</p>
 <hr>
 </div>
 <div class="section level2 unnumbered">

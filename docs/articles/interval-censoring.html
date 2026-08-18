@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,10 +51,12 @@
     <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
+    <li><a class="dropdown-item" href="../articles/control-parameters.html">Control Parameters</a></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
     <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../articles/book.html">Book</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -94,196 +96,164 @@
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>Survival times are <em>interval-censored</em> when the event is known
+<p>Survival times are <em>interval censored</em> when the event is known
 to have occurred in an interval
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>L</mi></msub><mo>,</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">(t_L, t_R]</annotation></semantics></math>
-rather than at an exact time. This is common in clinical studies where
-patients are examined only periodically (e.g. follow-up visits).</p>
-<p><code>survivalMPL</code> handles partly interval-censored data:
-datasets that may contain a mix of exact event times and left-, right-,
-and interval-censored observations. The censoring type is communicated
-through <code>survival::Surv(..., type = "interval2")</code>.</p>
-<p>This tutorial presents two examples from <span class="citation">Ma et
-al. (2024)</span>.</p>
+rather than at an exact time. This is the normal state of affairs in
+clinical studies where patients are examined only periodically: a
+recurrence found at a follow-up visit happened at some point since the
+previous visit, and nothing narrower is known.</p>
+<p>The likelihood contribution is a difference of survivor
+functions,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>L</mi></msub><mo>&lt;</mo><mi>T</mi><mo>≤</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>S</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>L</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>S</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">P(t_L &lt; T \leq t_R) = S(t_L) - S(t_R),</annotation></semantics></math></p>
+<p>which requires
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mn>0</mn></msub><annotation encoding="application/x-tex">H_0</annotation></semantics></math>
+at both endpoints and so cannot be written as a partial likelihood.
+<code>survivalMPL</code> handles <em>partly</em> interval-censored data:
+a dataset may mix exact event times with left-, right- and
+interval-censored observations, all in one fit. The censoring type is
+communicated through
+<code>survival::Surv(..., type = "interval2")</code>, which infers it
+from the pair of endpoints:</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Data</th>
+<th>Response</th>
+<th>Status code</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Exact event at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+</td>
+<td><code>Surv(t, t, type = "interval2")</code></td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>Interval censored on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>L</mi></msub><mo>,</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">(t_L, t_R]</annotation></semantics></math>
+</td>
+<td><code>Surv(t_L, t_R, type = "interval2")</code></td>
+<td>3</td>
+</tr>
+<tr class="odd">
+<td>Left censored at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>R</mi></msub><annotation encoding="application/x-tex">t_R</annotation></semantics></math>
+</td>
+<td><code>Surv(NA, t_R, type = "interval2")</code></td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td>Right censored at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>L</mi></msub><annotation encoding="application/x-tex">t_L</annotation></semantics></math>
+</td>
+<td><code>Surv(t_L, NA, type = "interval2")</code></td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p><code>melanoma</code> stores an unknown lower endpoint as
+<code>0</code> rather than <code>NA</code>, and an unknown upper
+endpoint as <code>Inf</code> rather than <code>NA</code>.
+<code>Inf</code> is read as right censoring exactly like
+<code>NA</code>; <code>0</code> is read as an interval starting at zero,
+which is the same statement as left censoring since
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">S(0) = 1</annotation></semantics></math>
+makes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>S</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">S(0) - S(t_R)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mi>S</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1 - S(t_R)</annotation></semantics></math>
+identical. The likelihood is unaffected; only the status code
+<code><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv()</a></code> reports differs.</p>
+<p>This tutorial follows the pseudo-melanoma example of <span class="citation">Ma et al. (2024)</span> (Section 2.11).</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="example-simulation-study">Example: simulation study<a class="anchor" aria-label="anchor" href="#example-simulation-study"></a>
+<h2 id="the-melanoma-data">The <code>melanoma</code> data<a class="anchor" aria-label="anchor" href="#the-melanoma-data"></a>
 </h2>
-<p>We compare the MPL M-spline method against partial likelihood (PL)
-with midpoint imputation. The true model is a Cox model with Weibull
-baseline hazard
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">h_0(t) = 3t^2</annotation></semantics></math>,
-covariates
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mn>1</mn></msub><mo>∼</mo><mtext mathvariant="normal">Unif</mtext><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">X_1 \sim \text{Unif}(0,1)</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mn>2</mn></msub><mo>∼</mo><mtext mathvariant="normal">Unif</mtext><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>5</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">X_2 \sim \text{Unif}(0,5)</annotation></semantics></math>,
-and true coefficients
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mo stretchy="false" form="prefix">[</mo><mn>0.75</mn><mo>,</mo><mspace width="0.167em"></mspace><mo>−</mo><mn>0.50</mn><msup><mo stretchy="false" form="postfix">]</mo><mi>T</mi></msup></mrow><annotation encoding="application/x-tex">\beta = [0.75,\,-0.50]^T</annotation></semantics></math>.</p>
-<div class="section level3">
-<h3 id="simulate-function">
-<code>simulate()</code> function<a class="anchor" aria-label="anchor" href="#simulate-function"></a>
-</h3>
+<p><code>melanoma</code> is a pseudo dataset of time to first local
+recurrence for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>300</mn></mrow><annotation encoding="application/x-tex">n = 300</annotation></semantics></math>
+melanoma patients, simulated from the design in <span class="citation">Ma et al. (2024)</span> with a Weibull baseline hazard
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mi>t</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h_0(t) = t^{-1/2}</annotation></semantics></math>.
+Recurrence times are interval censored because they are detected at
+clinic visits. Covariates are the melanoma <strong>location</strong> at
+first diagnosis (reference: head and neck), Breslow
+<strong>thickness</strong> (reference:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>&lt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">&lt; 1</annotation></semantics></math>
+mm), <strong>gender</strong> (reference: male), and centred
+<strong>age</strong> in decades.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://CRAN.R-project.org/package=survivalMPL">survivalMPL</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading required package: survival</span></span>
 <span><span class="co">#&gt; Loading required package: MASS</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/therneau/survival" class="external-link">survival</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Write simulate() function to repeatedly generate a sample</span></span>
-<span><span class="va">simulate</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span>, <span class="va">pi_E</span>, <span class="va">g1</span>, <span class="va">g2</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">)</span></span>
 <span></span>
-<span>  <span class="co"># Simulate covariates</span></span>
-<span>  <span class="va">x1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span>  <span class="va">x2</span> <span class="op">&lt;-</span> <span class="fl">5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span>  <span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">x1</span>, <span class="va">x2</span><span class="op">)</span></span>
-<span>  <span class="va">beta_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.75</span>, <span class="op">-</span><span class="fl">0.5</span><span class="op">)</span></span>
-<span>  <span class="va">eXtB</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">X</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">beta_true</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="co"># Simulate true event times</span></span>
-<span>  <span class="va">neg.log.u</span> <span class="op">&lt;-</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="va">y_i</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">neg.log.u</span><span class="op">/</span><span class="op">(</span><span class="va">eXtB</span><span class="op">)</span><span class="op">)</span><span class="op">^</span><span class="op">(</span><span class="fl">1</span><span class="op">/</span><span class="fl">3</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="co"># Simulate censoring types &amp; times</span></span>
-<span>  <span class="va">u_E</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span>  <span class="va">u_L</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span>  <span class="va">u_R</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">u_L</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="va">t_L</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">y_i</span><span class="op">^</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">u_E</span> <span class="op">&lt;</span> <span class="va">pi_E</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span></span>
-<span>    <span class="op">(</span><span class="va">g1</span> <span class="op">*</span> <span class="va">u_L</span><span class="op">)</span><span class="op">^</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">pi_E</span> <span class="op">&lt;</span> <span class="va">u_E</span> <span class="op">&amp;</span> <span class="va">g1</span><span class="op">*</span><span class="va">u_L</span> <span class="op">&lt;=</span> <span class="va">y_i</span> <span class="op">&amp;</span> <span class="va">y_i</span> <span class="op">&lt;=</span> <span class="va">g2</span><span class="op">*</span><span class="va">u_R</span><span class="op">)</span> <span class="op">*</span></span>
-<span>    <span class="op">(</span><span class="va">g2</span> <span class="op">*</span> <span class="va">u_R</span><span class="op">)</span><span class="op">^</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">pi_E</span> <span class="op">&lt;</span> <span class="va">u_E</span> <span class="op">&amp;</span> <span class="va">g2</span><span class="op">*</span><span class="va">u_R</span> <span class="op">&lt;</span> <span class="va">y_i</span><span class="op">)</span> <span class="op">*</span></span>
-<span>    <span class="fl">0</span><span class="op">^</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">pi_E</span> <span class="op">&lt;</span> <span class="va">u_E</span> <span class="op">&amp;</span> <span class="va">y_i</span> <span class="op">&lt;</span> <span class="va">g1</span><span class="op">*</span><span class="va">u_L</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="va">t_R</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">y_i</span><span class="op">^</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">u_E</span> <span class="op">&lt;</span> <span class="va">pi_E</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span></span>
-<span>    <span class="op">(</span><span class="va">g1</span> <span class="op">*</span> <span class="va">u_L</span><span class="op">)</span><span class="op">^</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">pi_E</span> <span class="op">&lt;</span> <span class="va">u_E</span> <span class="op">&amp;</span> <span class="va">y_i</span> <span class="op">&lt;</span> <span class="va">g1</span><span class="op">*</span><span class="va">u_L</span><span class="op">)</span> <span class="op">*</span></span>
-<span>    <span class="op">(</span><span class="va">g2</span> <span class="op">*</span> <span class="va">u_R</span><span class="op">)</span><span class="op">^</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">pi_E</span> <span class="op">&lt;</span> <span class="va">u_E</span> <span class="op">&amp;</span> <span class="va">g1</span><span class="op">*</span><span class="va">u_L</span> <span class="op">&lt;=</span> <span class="va">y_i</span> <span class="op">&amp;</span> <span class="va">y_i</span> <span class="op">&lt;=</span> <span class="va">g2</span><span class="op">*</span><span class="va">u_R</span><span class="op">)</span> <span class="op">*</span></span>
-<span>    <span class="cn">Inf</span><span class="op">^</span><span class="op">(</span><span class="va">pi_E</span> <span class="op">&lt;</span> <span class="va">u_E</span> <span class="op">&amp;</span> <span class="va">g2</span><span class="op">*</span><span class="va">u_R</span> <span class="op">&lt;</span> <span class="va">y_i</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="co"># Compute midpoint and censoring type for midpoint imputation</span></span>
-<span>  <span class="va">midpoint</span> <span class="op">&lt;-</span> <span class="va">t_L</span> <span class="op">+</span> <span class="op">(</span><span class="va">t_R</span> <span class="op">-</span> <span class="va">t_L</span><span class="op">)</span><span class="op">/</span><span class="fl">2</span></span>
-<span>  <span class="va">event</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">n</span><span class="op">)</span></span>
-<span>  <span class="va">event</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.infinite</a></span><span class="op">(</span><span class="va">midpoint</span><span class="op">)</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
-<span>  <span class="va">midpoint</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.infinite</a></span><span class="op">(</span><span class="va">midpoint</span><span class="op">)</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">t_L</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.infinite</a></span><span class="op">(</span><span class="va">midpoint</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
-<span></span>
-<span>  <span class="va">df</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">t_L</span>, <span class="va">t_R</span>, <span class="va">x1</span>, <span class="va">x2</span>, <span class="va">midpoint</span>, <span class="va">event</span><span class="op">)</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="simulation-loop">Simulation loop<a class="anchor" aria-label="anchor" href="#simulation-loop"></a>
-</h3>
-<p>The loop runs 100 replicates and is not evaluated during vignette
-build due to computation time.</p>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 'data.frame':    300 obs. of  10 variables:</span></span>
+<span><span class="co">#&gt;  $ t_L        : num  0.070765 0.314938 0.040158 0.000193 0.643887 ...</span></span>
+<span><span class="co">#&gt;  $ t_R        : num  0.070765 0.314938 0.040158 0.000193 0.643887 ...</span></span>
+<span><span class="co">#&gt;  $ Arm        : num  0 0 0 0 0 1 0 0 0 0 ...</span></span>
+<span><span class="co">#&gt;  $ Leg        : num  0 0 1 1 1 0 0 0 0 1 ...</span></span>
+<span><span class="co">#&gt;  $ Trunk      : num  0 1 0 0 0 0 1 0 1 0 ...</span></span>
+<span><span class="co">#&gt;  $ mm1to2     : num  0 0 1 0 0 0 1 1 0 1 ...</span></span>
+<span><span class="co">#&gt;  $ mm2to4     : num  0 0 0 0 0 0 0 0 0 0 ...</span></span>
+<span><span class="co">#&gt;  $ mm4plus    : num  1 0 0 1 0 0 0 0 0 0 ...</span></span>
+<span><span class="co">#&gt;  $ Female     : int  1 1 0 0 0 0 0 0 0 0 ...</span></span>
+<span><span class="co">#&gt;  $ Age_centred: num  -0.3336 1.8786 0.7097 0.7263 -0.0883 ...</span></span></code></pre></div>
+<p>Two thirds of the subjects have an exactly observed recurrence time;
+the remaining third is censored, mostly by interval censoring:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Run a simulation study</span></span>
-<span><span class="va">ch2_ex26_save</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>, nrow <span class="op">=</span> <span class="fl">100</span>, ncol <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
-<span><span class="va">baseline_h0</span> <span class="op">=</span> <span class="cn">NULL</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">melanoma</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  exact    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">t_L</span> <span class="op">==</span> <span class="va">t_R</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">t_R</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  interval <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">t_L</span> <span class="op">&gt;</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="va">t_L</span> <span class="op">&lt;</span> <span class="va">t_R</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">t_R</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  right    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.infinite</a></span><span class="op">(</span><span class="va">t_R</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  left     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">t_L</span> <span class="op">==</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">t_R</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    exact interval    right     left </span></span>
+<span><span class="co">#&gt;      200       58       23       19</span></span>
 <span></span>
-<span><span class="kw">for</span><span class="op">(</span><span class="va">s</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span><span class="op">{</span></span>
-<span></span>
-<span>  <span class="co"># Generate data set</span></span>
-<span>  <span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/simulate.html" class="external-link">simulate</a></span><span class="op">(</span>n<span class="op">=</span><span class="fl">500</span>, pi_E <span class="op">=</span> <span class="fl">0.5</span>, g1 <span class="op">=</span> <span class="fl">0.9</span>, g2 <span class="op">=</span> <span class="fl">1.3</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="co"># Fit MPL model</span></span>
-<span>  <span class="va">fit.mpl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">t_L</span>, <span class="va">t_R</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span> <span class="op">~</span></span>
-<span>    <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span>, data <span class="op">=</span> <span class="va">dat</span>, basis <span class="op">=</span> <span class="st">"m"</span>, n.knots <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="co"># Save coefficient estimates &amp; SE</span></span>
-<span>  <span class="va">ch2_ex26_save</span><span class="op">[</span><span class="va">s</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">fit.mpl</span><span class="op">$</span><span class="va">coef</span><span class="op">$</span><span class="va">Beta</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
-<span>  <span class="va">ch2_ex26_save</span><span class="op">[</span><span class="va">s</span>,<span class="fl">2</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">fit.mpl</span><span class="op">$</span><span class="va">coef</span><span class="op">$</span><span class="va">Beta</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
-<span>  <span class="va">ch2_ex26_save</span><span class="op">[</span><span class="va">s</span>,<span class="fl">3</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">fit.mpl</span><span class="op">$</span><span class="va">se</span><span class="op">$</span><span class="va">Beta</span><span class="op">$</span><span class="va">M2HM2</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
-<span>  <span class="va">ch2_ex26_save</span><span class="op">[</span><span class="va">s</span>,<span class="fl">4</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">fit.mpl</span><span class="op">$</span><span class="va">se</span><span class="op">$</span><span class="va">Beta</span><span class="op">$</span><span class="va">M2HM2</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
-<span></span>
-<span>  <span class="co"># Fit PH model</span></span>
-<span>  <span class="va">fit.ph</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">midpoint</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span>, data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="co"># Save coefficient estimates &amp; SE</span></span>
-<span>  <span class="va">ch2_ex26_save</span><span class="op">[</span><span class="va">s</span>,<span class="fl">5</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">fit.ph</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
-<span>  <span class="va">ch2_ex26_save</span><span class="op">[</span><span class="va">s</span>,<span class="fl">6</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">fit.ph</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
-<span>  <span class="va">ch2_ex26_save</span><span class="op">[</span><span class="va">s</span>,<span class="fl">7</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">fit.ph</span><span class="op">$</span><span class="va">var</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
-<span>  <span class="va">ch2_ex26_save</span><span class="op">[</span><span class="va">s</span>,<span class="fl">8</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">fit.ph</span><span class="op">$</span><span class="va">var</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span>status <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">$</span><span class="va">t_L</span>, <span class="va">melanoma</span><span class="op">$</span><span class="va">t_R</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span><span class="op">[</span>, <span class="fl">3</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; status</span></span>
+<span><span class="co">#&gt;   0   1   3 </span></span>
+<span><span class="co">#&gt;  23 200  77</span></span></code></pre></div>
+<p>The status table counts 77 interval-censored observations rather than
+58, because the 19 left-censored rows are stored as intervals
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">(0, t_R]</annotation></semantics></math>
+and <code><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv()</a></code> reports them as such.</p>
+<p>The recurrence times are strongly right skewed: 95% of the observed
+endpoints fall below one year, but a few reach four.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">endpoints</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">$</span><span class="va">t_L</span><span class="op">[</span><span class="va">melanoma</span><span class="op">$</span><span class="va">t_L</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">]</span>,</span>
+<span>               <span class="va">melanoma</span><span class="op">$</span><span class="va">t_R</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">$</span><span class="va">t_R</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">endpoints</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">0.9</span>, <span class="fl">0.95</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   50%   90%   95%  100% </span></span>
+<span><span class="co">#&gt; 0.071 0.653 0.938 4.017</span></span></code></pre></div>
 <hr>
 </div>
-</div>
 <div class="section level2">
-<h2 id="example-pseudo-melanoma-data">Example: pseudo-melanoma data<a class="anchor" aria-label="anchor" href="#example-pseudo-melanoma-data"></a>
+<h2 id="model-fit">Model fit<a class="anchor" aria-label="anchor" href="#model-fit"></a>
 </h2>
-<p>We fit the MPL Cox model to a pseudo melanoma dataset: time to first
-local recurrence for
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>300</mn></mrow><annotation encoding="application/x-tex">n = 300</annotation></semantics></math>
-patients. Recurrence times are typically interval-censored, occurring
-between patient visits to the doctor.</p>
-<p>Covariates: melanoma <strong>location</strong> at first diagnosis
-(reference: Head &amp; neck), Breslow <strong>thickness</strong>
-(reference:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>&lt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">&lt;1</annotation></semantics></math>
-mm), <strong>gender</strong> (reference: Male), and centred
-<strong>age</strong> in decades.</p>
-<div class="section level3">
-<h3 id="simulate_mel-function">
-<code>simulate_mel()</code> function<a class="anchor" aria-label="anchor" href="#simulate_mel-function"></a>
-</h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">simulate_mel</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span>, <span class="va">pi_E</span>, <span class="va">a1</span>, <span class="va">a2</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">neglogU</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="va">location</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.2</span>, <span class="fl">0.15</span>, <span class="fl">0.3</span>, <span class="fl">0.35</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="va">Arm</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">location</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span></span>
-<span>  <span class="va">Leg</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">location</span> <span class="op">==</span> <span class="fl">3</span><span class="op">)</span></span>
-<span>  <span class="va">Trunk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">location</span> <span class="op">==</span> <span class="fl">4</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="va">thickness</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.15</span>, <span class="fl">0.4</span>, <span class="fl">0.3</span>, <span class="fl">0.15</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="va">mm1to2</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">thickness</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span></span>
-<span>  <span class="va">mm2to4</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">thickness</span> <span class="op">==</span> <span class="fl">3</span><span class="op">)</span></span>
-<span>  <span class="va">mm4plus</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">thickness</span> <span class="op">==</span> <span class="fl">4</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="va">Female</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, <span class="fl">0.4</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="va">x8</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">56</span>, <span class="fl">12</span><span class="op">)</span></span>
-<span>  <span class="va">x8</span> <span class="op">&lt;-</span> <span class="va">x8</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">x8</span><span class="op">)</span></span>
-<span>  <span class="va">Age_centred</span> <span class="op">&lt;-</span> <span class="va">x8</span><span class="op">/</span><span class="fl">10</span></span>
-<span></span>
-<span>  <span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">Arm</span>, <span class="va">Leg</span>, <span class="va">Trunk</span>, <span class="va">mm1to2</span>, <span class="va">mm2to4</span>, <span class="va">mm4plus</span>, <span class="va">Female</span>, <span class="va">Age_centred</span><span class="op">)</span></span>
-<span>  <span class="va">beta_true</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.56</span>, <span class="fl">0.01</span>, <span class="op">-</span><span class="fl">0.22</span>, <span class="fl">0.22</span>, <span class="fl">0.87</span>, <span class="fl">1.13</span>, <span class="op">-</span><span class="fl">0.17</span>, <span class="fl">0.14</span><span class="op">)</span></span>
-<span>  <span class="va">eXtB</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">X</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">beta_true</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="op">(</span><span class="va">neglogU</span><span class="op">/</span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">eXtB</span><span class="op">)</span><span class="op">)</span><span class="op">^</span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="co"># uniform variables</span></span>
-<span>  <span class="va">U_E</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span>  <span class="va">U_L</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span>  <span class="va">U_R</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">U_L</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="va">t_L</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">^</span><span class="op">(</span><span class="op">(</span><span class="va">U_E</span> <span class="op">&lt;</span> <span class="va">pi_E</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span></span>
-<span>    <span class="op">(</span><span class="va">a1</span> <span class="op">*</span> <span class="va">U_L</span><span class="op">)</span><span class="op">^</span><span class="op">(</span><span class="op">(</span><span class="va">pi_E</span> <span class="op">&lt;=</span> <span class="va">U_E</span> <span class="op">&amp;</span> <span class="va">a1</span> <span class="op">*</span> <span class="va">U_L</span> <span class="op">&lt;=</span> <span class="va">y</span> <span class="op">&amp;</span> <span class="va">y</span> <span class="op">&lt;=</span> <span class="va">a2</span> <span class="op">*</span> <span class="va">U_R</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span></span>
-<span>    <span class="op">(</span><span class="va">a2</span> <span class="op">*</span> <span class="va">U_R</span><span class="op">)</span><span class="op">^</span><span class="op">(</span><span class="op">(</span><span class="va">pi_E</span> <span class="op">&lt;=</span> <span class="va">U_E</span> <span class="op">&amp;</span> <span class="va">a2</span> <span class="op">*</span> <span class="va">U_R</span> <span class="op">&lt;</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span></span>
-<span>    <span class="op">(</span><span class="fl">0</span><span class="op">)</span><span class="op">^</span><span class="op">(</span><span class="op">(</span><span class="va">pi_E</span> <span class="op">&lt;=</span> <span class="va">U_E</span> <span class="op">&amp;</span> <span class="va">y</span> <span class="op">&lt;</span> <span class="va">a1</span> <span class="op">*</span> <span class="va">U_L</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="va">t_R</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">^</span><span class="op">(</span><span class="op">(</span><span class="va">U_E</span> <span class="op">&lt;</span> <span class="va">pi_E</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span></span>
-<span>    <span class="op">(</span><span class="va">a1</span> <span class="op">*</span> <span class="va">U_L</span><span class="op">)</span><span class="op">^</span><span class="op">(</span><span class="op">(</span><span class="va">pi_E</span> <span class="op">&lt;=</span> <span class="va">U_E</span> <span class="op">&amp;</span> <span class="va">y</span> <span class="op">&lt;</span> <span class="va">a1</span> <span class="op">*</span> <span class="va">U_L</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span></span>
-<span>    <span class="op">(</span><span class="va">a2</span> <span class="op">*</span> <span class="va">U_R</span><span class="op">)</span><span class="op">^</span><span class="op">(</span><span class="op">(</span><span class="va">pi_E</span> <span class="op">&lt;=</span> <span class="va">U_E</span> <span class="op">&amp;</span> <span class="va">a1</span> <span class="op">*</span> <span class="va">U_L</span> <span class="op">&lt;=</span> <span class="va">y</span> <span class="op">&amp;</span> <span class="va">y</span> <span class="op">&lt;=</span> <span class="va">a2</span> <span class="op">*</span> <span class="va">U_R</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span></span>
-<span>    <span class="cn">Inf</span><span class="op">^</span><span class="op">(</span><span class="op">(</span><span class="va">pi_E</span> <span class="op">&lt;=</span> <span class="va">U_E</span> <span class="op">&amp;</span> <span class="va">a2</span> <span class="op">*</span> <span class="va">U_R</span> <span class="op">&lt;</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="va">df</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">t_L</span>, <span class="va">t_R</span>, <span class="va">X</span><span class="op">)</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="model-fit">Model fit<a class="anchor" aria-label="anchor" href="#model-fit"></a>
-</h3>
+<p>The call below is the one used in the book: cubic M-splines
+(<code>basis = "m"</code>) for the baseline hazard, seven quantile
+knots, a convergence tolerance of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>5</mn></mrow></msup><annotation encoding="application/x-tex">10^{-5}</annotation></semantics></math>
+and generous iteration caps. The smoothing value is not set, which
+leaves it to the automatic smoothing parameter selection the package
+performs by default - the marginal likelihood method of <span class="citation">Ma et al. (2024)</span> (Section 2.10), which they
+single out as the package’s default behaviour.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">ch2_mel_dat</span> <span class="op">&lt;-</span> <span class="fu">simulate_mel</span><span class="op">(</span><span class="fl">300</span>, <span class="fl">0.37</span>, <span class="fl">0.6</span>, <span class="fl">1.2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">ch2_mel_dat</span><span class="op">$</span><span class="va">t_L</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 4.016705</span></span>
-<span></span>
-<span><span class="va">mela_fit</span> <span class="op">=</span> <span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">mela_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span></span>
 <span>  formula <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">t_L</span>, <span class="va">t_R</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span> <span class="op">~</span></span>
 <span>    <span class="va">Arm</span> <span class="op">+</span> <span class="va">Leg</span> <span class="op">+</span> <span class="va">Trunk</span> <span class="op">+</span> <span class="va">mm1to2</span> <span class="op">+</span> <span class="va">mm2to4</span> <span class="op">+</span> <span class="va">mm4plus</span> <span class="op">+</span> <span class="va">Female</span> <span class="op">+</span> <span class="va">Age_centred</span>,</span>
-<span>  data <span class="op">=</span> <span class="va">ch2_mel_dat</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">melanoma</span>,</span>
 <span>  basis <span class="op">=</span> <span class="st">"m"</span>, tol <span class="op">=</span> <span class="fl">1e-05</span>, n.knots <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">7</span>, <span class="fl">0</span><span class="op">)</span>,</span>
 <span>  max.iter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">5000</span>, <span class="fl">1e+05</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
@@ -292,7 +262,7 @@ mm), <strong>gender</strong> (reference: Male), and centred
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; coxph_mpl(formula = Surv(t_L, t_R, type = "interval2") ~ Arm + </span></span>
 <span><span class="co">#&gt;     Leg + Trunk + mm1to2 + mm2to4 + mm4plus + Female + Age_centred, </span></span>
-<span><span class="co">#&gt;     data = ch2_mel_dat, basis = "m", tol = 1e-05, n.knots = c(7, </span></span>
+<span><span class="co">#&gt;     data = melanoma, basis = "m", tol = 1e-05, n.knots = c(7, </span></span>
 <span><span class="co">#&gt;         0), max.iter = c(1000, 5000, 1e+05))</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -----</span></span>
@@ -300,42 +270,198 @@ mm), <strong>gender</strong> (reference: Male), and centred
 <span><span class="co">#&gt; Cox Proportional Hazards Model Fit Using MPL </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Penalized log-likelihood  :  -37.23549</span></span>
-<span><span class="co">#&gt; Estimated smoothing value :  4.137759e-07</span></span>
-<span><span class="co">#&gt; Convergence               :  Yes (20 + 1901 iter.) </span></span>
+<span><span class="co">#&gt; Penalized log-likelihood  :  56.93461</span></span>
+<span><span class="co">#&gt; Estimated smoothing value :  7.636295e-08</span></span>
+<span><span class="co">#&gt; Convergence               :  Yes (17 + 1456 iter.) </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Data             : ch2_mel_dat</span></span>
+<span><span class="co">#&gt; Data             : melanoma</span></span>
 <span><span class="co">#&gt; Number of obs.   : 300</span></span>
-<span><span class="co">#&gt; Number of events : 117 (39%)</span></span>
-<span><span class="co">#&gt; Number of cens.  : 183 (61%)</span></span>
+<span><span class="co">#&gt; Number of events : 200 (66.66667%)</span></span>
+<span><span class="co">#&gt; Number of cens.  : 100 (33.33333%)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Regression parameters : Surv(t_L, t_R, type = "interval2") ~ Arm + Leg + Trunk + mm1to2 +     mm2to4 + mm4plus + Female + Age_centred</span></span>
-<span><span class="co">#&gt;              Estimate Std. Error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">#&gt; Arm         -0.576251   0.193797 -2.9735 0.002944 ** </span></span>
-<span><span class="co">#&gt; Leg         -0.095405   0.171915 -0.5550 0.578926    </span></span>
-<span><span class="co">#&gt; Trunk       -0.239612   0.157056 -1.5256 0.127098    </span></span>
-<span><span class="co">#&gt; mm1to2       0.035224   0.185525  0.1899 0.849419    </span></span>
-<span><span class="co">#&gt; mm2to4       0.622750   0.198764  3.1331 0.001730 ** </span></span>
-<span><span class="co">#&gt; mm4plus      1.407233   0.240071  5.8617 4.58e-09 ***</span></span>
-<span><span class="co">#&gt; Female      -0.081978   0.130046 -0.6304 0.528448    </span></span>
-<span><span class="co">#&gt; Age_centred  0.110890   0.048859  2.2696 0.023233 *  </span></span>
+<span><span class="co">#&gt;              Estimate Std. Error z-value  Pr(&gt;|z|)    </span></span>
+<span><span class="co">#&gt; Arm         -0.478653   0.183003 -2.6155 0.0089086 ** </span></span>
+<span><span class="co">#&gt; Leg         -0.016230   0.174265 -0.0931 0.9257983    </span></span>
+<span><span class="co">#&gt; Trunk       -0.215401   0.152142 -1.4158 0.1568376    </span></span>
+<span><span class="co">#&gt; mm1to2      -0.031239   0.176290 -0.1772 0.8593476    </span></span>
+<span><span class="co">#&gt; mm2to4       0.616606   0.181449  3.3982 0.0006782 ***</span></span>
+<span><span class="co">#&gt; mm4plus      1.254158   0.214963  5.8343 5.402e-09 ***</span></span>
+<span><span class="co">#&gt; Female      -0.167439   0.127052 -1.3179 0.1875449    </span></span>
+<span><span class="co">#&gt; Age_centred  0.097888   0.049517  1.9769 0.0480573 *  </span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Baseline hasard parameters approximated using M-Splines :</span></span>
 <span><span class="co">#&gt;  (2 (min/max) + 7 quantile knots + 0 equally spaced knots + 3 (order) - 2 = 10 parameters) </span></span>
 <span><span class="co">#&gt;            1            2            3            4            5            6 </span></span>
-<span><span class="co">#&gt; 0.0047662649 0.0092674078 0.1389014558 0.2456441428 0.3929454262 0.4106269481 </span></span>
+<span><span class="co">#&gt; 2.072435e-02 7.548640e-02 1.158956e-01 1.301883e-01 3.630589e-01 2.323992e-01 </span></span>
 <span><span class="co">#&gt;            7            8            9           10 </span></span>
-<span><span class="co">#&gt; 0.4531022223 2.6360689731 0.0006310205 3.9909769509 </span></span>
+<span><span class="co">#&gt; 5.112513e-01 2.932270e+00 5.372501e-10 3.423429e+00 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -----</span></span></code></pre></div>
+<p>The summary reports the fit on the log-hazard-ratio scale, together
+with the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">m = 10</annotation></semantics></math>
+baseline hazard coefficients
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi mathvariant="bold-italic">𝜽</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{\boldsymbol{\theta}}</annotation></semantics></math>
+and the selected smoothing value. Convergence is reached well inside the
+iteration caps.</p>
+<div class="section level3">
+<h3 id="hazard-ratios">Hazard ratios<a class="anchor" aria-label="anchor" href="#hazard-ratios"></a>
+</h3>
+<p>The book presents the same fit as hazard ratios with confidence
+intervals and tests (its Table 2.6), which is the form a clinical reader
+expects:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mela_fit</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, which <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">4</span>, cex.main <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></code></pre></div>
-<p><img src="interval-censoring_files/figure-html/melanoma-plot-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
-<hr>
+<code class="sourceCode R"><span><span class="va">b</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">mela_fit</span><span class="op">)</span></span>
+<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="va">mela_fit</span><span class="op">$</span><span class="va">se</span><span class="op">$</span><span class="va">Beta</span><span class="op">$</span><span class="va">M2QM2</span></span>
+<span><span class="va">z</span>  <span class="op">&lt;-</span> <span class="va">b</span> <span class="op">/</span> <span class="va">se</span></span>
+<span></span>
+<span><span class="va">hr_tab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Covariate      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Arm"</span>, <span class="st">"Leg"</span>, <span class="st">"Trunk"</span>, <span class="st">"1 to 2 mm"</span>, <span class="st">"2 to 4 mm"</span>,</span>
+<span>                     <span class="st">"4 mm and more"</span>, <span class="st">"Female"</span>, <span class="st">"Age (per 10 years)"</span><span class="op">)</span>,</span>
+<span>  `HR estimate`  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">b</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>  `95% CI lower` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">b</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm</a></span><span class="op">(</span><span class="fl">0.975</span><span class="op">)</span> <span class="op">*</span> <span class="va">se</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>  `95% CI upper` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">b</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm</a></span><span class="op">(</span><span class="fl">0.975</span><span class="op">)</span> <span class="op">*</span> <span class="va">se</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>  `p-value`      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/format.pval.html" class="external-link">format.pval</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">pnorm</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span><span class="op">)</span>, digits <span class="op">=</span> <span class="fl">3</span>, eps <span class="op">=</span> <span class="fl">1e-4</span><span class="op">)</span>,</span>
+<span>  check.names    <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  row.names      <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">hr_tab</span>, align <span class="op">=</span> <span class="st">"lrrrr"</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="left">Covariate</th>
+<th align="right">HR estimate</th>
+<th align="right">95% CI lower</th>
+<th align="right">95% CI upper</th>
+<th align="right">p-value</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">Arm</td>
+<td align="right">0.620</td>
+<td align="right">0.433</td>
+<td align="right">0.887</td>
+<td align="right">0.008909</td>
+</tr>
+<tr class="even">
+<td align="left">Leg</td>
+<td align="right">0.984</td>
+<td align="right">0.699</td>
+<td align="right">1.384</td>
+<td align="right">0.925798</td>
+</tr>
+<tr class="odd">
+<td align="left">Trunk</td>
+<td align="right">0.806</td>
+<td align="right">0.598</td>
+<td align="right">1.086</td>
+<td align="right">0.156838</td>
+</tr>
+<tr class="even">
+<td align="left">1 to 2 mm</td>
+<td align="right">0.969</td>
+<td align="right">0.686</td>
+<td align="right">1.369</td>
+<td align="right">0.859348</td>
+</tr>
+<tr class="odd">
+<td align="left">2 to 4 mm</td>
+<td align="right">1.853</td>
+<td align="right">1.298</td>
+<td align="right">2.644</td>
+<td align="right">0.000678</td>
+</tr>
+<tr class="even">
+<td align="left">4 mm and more</td>
+<td align="right">3.505</td>
+<td align="right">2.300</td>
+<td align="right">5.341</td>
+<td align="right">&lt; 1e-04</td>
+</tr>
+<tr class="odd">
+<td align="left">Female</td>
+<td align="right">0.846</td>
+<td align="right">0.659</td>
+<td align="right">1.085</td>
+<td align="right">0.187545</td>
+</tr>
+<tr class="even">
+<td align="left">Age (per 10 years)</td>
+<td align="right">1.103</td>
+<td align="right">1.001</td>
+<td align="right">1.215</td>
+<td align="right">0.048057</td>
+</tr>
+</tbody>
+</table>
+<p>Read against the head-and-neck reference, a melanoma first diagnosed
+on the arm carries a significantly lower risk of recurrence, while the
+leg and trunk categories are not distinguishable from the reference.
+Breslow thickness is the dominant risk factor: relative to tumours under
+1 mm, the hazard is about 1.9 times higher at 2-4 mm and 3.5 times
+higher above 4 mm, both with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>&lt;</mo><mn>0.001</mn></mrow><annotation encoding="application/x-tex">p &lt; 0.001</annotation></semantics></math>.
+A 10-year increase in age raises the recurrence hazard by about 10%,
+marginally significant here. Gender points the same way as in the book -
+women at lower risk - but does not reach significance in this
+sample.</p>
+<p>The book’s Table 2.6 reports similar hazard ratios from its own
+simulated sample, in which 37% of the recurrence times are exactly
+observed. The bundled <code>melanoma</code> is generated with two thirds
+exact events, so the point estimates are comparable but the confidence
+intervals differ, and the trunk and gender effects that are borderline
+in the book do not reach significance here. The coefficients used to
+generate the data are documented in <code><a href="../reference/melanoma.html">?melanoma</a></code>.</p>
 </div>
+</div>
+<div class="section level2">
+<h2 id="baseline-hazard-and-survival">Baseline hazard and survival<a class="anchor" aria-label="anchor" href="#baseline-hazard-and-survival"></a>
+</h2>
+<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> on the fitted object gives the basis functions,
+the baseline hazard, the cumulative baseline hazard and the baseline
+survival - the book’s Figure 2.5 is the second of these:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mela_fit</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, cex.main <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></code></pre></div>
+<p><img src="interval-censoring_files/figure-html/plot-all-1.png" class="r-plt" alt="" width="768" style="display: block; margin: auto;"></p>
+<p>At baseline covariate values the estimated hazard of recurrence falls
+steeply and monotonically away from the origin and then flattens close
+to a constant, which is the behaviour the true
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mi>t</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h_0(t) = t^{-1/2}</annotation></semantics></math>
+has. The slight lift at the extreme right, past four years, rests on a
+handful of observations and is not supported by the confidence band.</p>
+<p>Because the recurrence times are so skewed, everything of interest is
+squeezed into the left-hand tenth of the panel. <code>xlim</code>
+narrows the displayed range; the fit itself, and the knots, are
+unchanged:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mela_fit</span>, which <span class="op">=</span> <span class="fl">2</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, cex.main <span class="op">=</span> <span class="fl">0.9</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1.2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="interval-censoring_files/figure-html/plot-hazard-1.png" class="r-plt" alt="" width="624" style="display: block; margin: auto;"></p>
+<p>Beyond the book’s example, <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> turns the same fit
+into absolute survival for a named covariate profile. Contrasting the
+thinnest and thickest tumours shows the size of the thickness effect on
+that scale:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">i_thin</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">$</span><span class="va">mm1to2</span> <span class="op">==</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="va">melanoma</span><span class="op">$</span><span class="va">mm2to4</span> <span class="op">==</span> <span class="fl">0</span> <span class="op">&amp;</span></span>
+<span>                 <span class="va">melanoma</span><span class="op">$</span><span class="va">mm4plus</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">i_thick</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">$</span><span class="va">mm4plus</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">p_thin</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">mela_fit</span>, type <span class="op">=</span> <span class="st">"survival"</span>, i <span class="op">=</span> <span class="va">i_thin</span><span class="op">)</span></span>
+<span><span class="va">p_thick</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">mela_fit</span>, type <span class="op">=</span> <span class="st">"survival"</span>, i <span class="op">=</span> <span class="va">i_thick</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4.2</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">p_thin</span><span class="op">$</span><span class="va">time</span>, <span class="va">p_thin</span><span class="op">$</span><span class="va">survival</span>, type <span class="op">=</span> <span class="st">"l"</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, lwd <span class="op">=</span> <span class="fl">2.4</span>,</span>
+<span>     xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1.2</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, las <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>     xlab <span class="op">=</span> <span class="st">"Years since diagnosis"</span>, ylab <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/influence.measures.html" class="external-link">hat</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span><span class="op">(</span><span class="va">t</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>     main <span class="op">=</span> <span class="st">"Predicted recurrence-free survival"</span>, cex.main <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">p_thick</span><span class="op">$</span><span class="va">time</span>, <span class="va">p_thick</span><span class="op">$</span><span class="va">survival</span>, col <span class="op">=</span> <span class="st">"tomato"</span>, lwd <span class="op">=</span> <span class="fl">2.4</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topright"</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Breslow thickness &lt; 1 mm"</span>, <span class="st">"Breslow thickness &gt; 4 mm"</span><span class="op">)</span>,</span>
+<span>       col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"steelblue"</span>, <span class="st">"tomato"</span><span class="op">)</span>, lwd <span class="op">=</span> <span class="fl">2.4</span>, bty <span class="op">=</span> <span class="st">"n"</span>, cex <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span></span></code></pre></div>
+<p><img src="interval-censoring_files/figure-html/plot-predict-1.png" class="r-plt" alt="" width="624" style="display: block; margin: auto;"></p>
+<hr>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
@@ -343,15 +469,15 @@ mm), <strong>gender</strong> (reference: Male), and centred
 <ul>
 <li>
 <strong>Left Censoring</strong> covers the boundary case of interval
-censoring, where the lower endpoint is unknown, and shows that recording
-an observation as
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">(0, t_R]</annotation></semantics></math>
-and as left censored at
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>R</mi></msub><annotation encoding="application/x-tex">t_R</annotation></semantics></math>
-give the same fit.</li>
+censoring, where the lower endpoint is unknown, on a dataset with no
+interval-censored observations at all.</li>
 <li>
 <strong>Right Censoring</strong> covers the standard scheme and the
 <code>Surv(time, status)</code> response.</li>
+<li>
+<strong>Control Parameters</strong> explains <code>basis</code>,
+<code>n.knots</code>, <code>tol</code> and <code>max.iter</code>, the
+settings the fit above changes from their defaults.</li>
 <li>
 <strong>Basis Functions for the Baseline Hazard</strong> explains
 the four choices for

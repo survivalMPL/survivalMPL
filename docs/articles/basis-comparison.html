@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,10 +51,12 @@
     <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
+    <li><a class="dropdown-item" href="../articles/control-parameters.html">Control Parameters</a></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
     <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../articles/book.html">Book</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -346,14 +348,14 @@ true baseline
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">coef_mat</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;             Uniform Gaussian M-Splines Epanechnikov</span></span>
-<span><span class="co">#&gt; Arm          -0.596   -0.583    -0.562       -0.620</span></span>
-<span><span class="co">#&gt; Leg          -0.112   -0.085    -0.087       -0.111</span></span>
-<span><span class="co">#&gt; Trunk        -0.241   -0.243    -0.239       -0.252</span></span>
-<span><span class="co">#&gt; mm1to2        0.036    0.053     0.029        0.056</span></span>
-<span><span class="co">#&gt; mm2to4        0.614    0.672     0.625        0.642</span></span>
-<span><span class="co">#&gt; mm4plus       1.472    1.468     1.436        1.454</span></span>
-<span><span class="co">#&gt; Female       -0.090   -0.077    -0.089       -0.088</span></span>
-<span><span class="co">#&gt; Age_centred   0.117    0.114     0.111        0.119</span></span></code></pre></div>
+<span><span class="co">#&gt; Arm          -0.491   -0.467    -0.491       -0.495</span></span>
+<span><span class="co">#&gt; Leg          -0.032    0.006    -0.014       -0.016</span></span>
+<span><span class="co">#&gt; Trunk        -0.221   -0.204    -0.214       -0.213</span></span>
+<span><span class="co">#&gt; mm1to2       -0.037   -0.011    -0.013       -0.026</span></span>
+<span><span class="co">#&gt; mm2to4        0.613    0.629     0.630        0.624</span></span>
+<span><span class="co">#&gt; mm4plus       1.255    1.270     1.267        1.264</span></span>
+<span><span class="co">#&gt; Female       -0.171   -0.160    -0.161       -0.164</span></span>
+<span><span class="co">#&gt; Age_centred   0.099    0.093     0.098        0.099</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="estimated-baseline-hazards">Estimated baseline hazards<a class="anchor" aria-label="anchor" href="#estimated-baseline-hazards"></a>
@@ -408,12 +410,14 @@ second-order penalty is supported.</p></li>
 <h2 id="extensibility">Extensibility<a class="anchor" aria-label="anchor" href="#extensibility"></a>
 </h2>
 <p>The basis registry (<code>R/basis.R</code>) allows new basis types to
-be added without modifying existing code. The file
-<code>R/basis-bsplines.R</code> includes a skeleton showing how to
-implement the three required functions (<code>knots_fn</code>,
-<code>matrix_fn</code>, <code>penalty_fn</code>) and how to call
-<code><a href="../reference/register_basis.html">register_basis()</a></code>.<br>
-See <code><a href="../reference/list_bases.html">?list_bases</a></code> for the full list of registered bases.</p>
+be added without modifying existing code. Each basis lives in its own
+<code>R/basis-*.R</code> file, which implements the three required
+functions - <code>knots_fn</code>, <code>matrix_fn</code> and
+<code>penalty_fn</code> - collects them in a spec list, and is
+registered by a call to <code><a href="../reference/register_basis.html">register_basis()</a></code> in
+<code>zzz.R</code>. Any of the four files is a working template for a
+fifth basis. See <code><a href="../reference/list_bases.html">?list_bases</a></code> for the bases currently
+registered.</p>
 <hr>
 </div>
 <div class="section level2 unnumbered">

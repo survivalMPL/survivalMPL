@@ -368,11 +368,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <li><a href="#encoding-left-truncated-observations" id="toc-encoding-left-truncated-observations">Encoding left-truncated
 observations</a></li>
 <li><a href="#example-atomic-bomb-survivors" id="toc-example-atomic-bomb-survivors">Example: atomic bomb
-survivors</a>
-<ul>
-<li><a href="#what-ignoring-the-truncation-costs" id="toc-what-ignoring-the-truncation-costs">What ignoring the truncation
-costs</a></li>
-</ul></li>
+survivors</a></li>
 <li><a href="#limitations" id="toc-limitations">Limitations</a></li>
 <li><a href="#references" id="toc-references">References</a></li>
 </ul>
@@ -404,23 +400,21 @@ event or censoring time, the event indicator, and the covariates, with
 <h2>Encoding left-truncated observations</h2>
 <p>Truncation times are not part of the <code>Surv()</code> response.
 Pass them through the <code>entry</code> argument instead:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">coxph_mpl</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> x, <span class="at">data =</span> df, <span class="at">entry =</span> start,</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>          <span class="at">control =</span> <span class="fu">coxph_mpl.control</span>(<span class="at">basis =</span> <span class="st">&quot;uniform&quot;</span>,</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>                                      <span class="at">n.obs =</span> <span class="fu">sum</span>(df<span class="sc">$</span>status)))</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">coxph_mpl</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> x, <span class="at">data =</span> df, <span class="at">entry =</span> start)</span></code></pre></div>
 <p>Three things to know:</p>
 <ul>
 <li><strong><code>entry</code> requires
-<code>basis = &quot;uniform&quot;</code>.</strong> Left truncation is implemented
-by differencing the cumulative basis, <span class="math inline">\(H_0(a_i, y_i) = H_0(y_i) - H_0(a_i)\)</span>,
-which the package supports for the piecewise-constant basis. This is not
-a limitation of the method so much as its natural setting: with
-indicator basis functions <span class="math inline">\(\psi_u(t) = I(t
-\in B_u)\)</span> over bins <span class="math inline">\(B_u = (w_u,
-w_{u+1}]\)</span>, each <span class="math inline">\(\hat\theta_u\)</span> has a closed form given
+<code>basis = &quot;uniform&quot;</code></strong>, which is the default, so
+nothing else has to be set. Left truncation is implemented by
+differencing the cumulative basis, <span class="math inline">\(H_0(a_i,
+y_i) = H_0(y_i) - H_0(a_i)\)</span>, which the package supports for the
+piecewise-constant basis. This is not a limitation of the method so much
+as its natural setting: with indicator basis functions <span class="math inline">\(\psi_u(t) = I(t \in B_u)\)</span> over bins <span class="math inline">\(B_u = (w_u, w_{u+1}]\)</span>, each <span class="math inline">\(\hat\theta_u\)</span> has a closed form given
 <span class="math inline">\(\boldsymbol{\beta}\)</span>, which is what
 makes the profile likelihood of <span class="citation">Bhaskaran et al.
-(n.d.)</span> possible. Any other basis raises an error rather than
-returning a silently wrong fit.</li>
+(n.d.)</span> possible. Asking for any other basis together with
+<code>entry</code> gets you a uniform fit and a warning saying so,
+rather than a silently wrong fit or a refusal.</li>
 <li><strong>Entry times must strictly precede the event or censoring
 time.</strong> A violation is an error, not a warning.</li>
 <li><strong>Truncated and untruncated subjects may be mixed</strong> in
@@ -437,103 +431,80 @@ at the age they had reached by that date, and anyone who died in between
 is absent from the cohort. <code>entry</code> is that attained age, and
 <code>time</code> is attained age at death or at end of follow-up.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(survivalMPL)</span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="co">#&gt; Loading required package: survival</span></span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="co">#&gt; Loading required package: MASS</span></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="fu">library</span>(survival)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">library</span>(survival)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="fu">data</span>(hiroshima)</span>
 <span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="fu">data</span>(hiroshima)</span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a></span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="fu">c</span>(<span class="at">subjects =</span> <span class="fu">nrow</span>(hiroshima), <span class="at">deaths =</span> <span class="fu">sum</span>(hiroshima<span class="sc">$</span>status))</span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt; subjects   deaths </span></span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt;    86611    50620</span></span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">range</span>(hiroshima<span class="sc">$</span>entry), <span class="dv">1</span>)</span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt; [1]  5.2 93.8</span></span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">range</span>(hiroshima<span class="sc">$</span>time), <span class="dv">1</span>)</span>
-<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt; [1]   7.0 114.9</span></span></code></pre></div>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="fu">c</span>(<span class="at">subjects =</span> <span class="fu">nrow</span>(hiroshima), <span class="at">deaths =</span> <span class="fu">sum</span>(hiroshima<span class="sc">$</span>status))</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt; subjects   deaths </span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt;    86611    50620</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">range</span>(hiroshima<span class="sc">$</span>entry), <span class="dv">1</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt; [1]  5.2 93.8</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">range</span>(hiroshima<span class="sc">$</span>time), <span class="dv">1</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt; [1]   7.0 114.9</span></span></code></pre></div>
 <p>Entry ages run from 5 to 94 years, so the truncation is substantial
 rather than incidental: at any attained age, the subjects at risk are
 only those who had already reached that age by late 1950.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>fit_entry <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="fu">Surv</span>(time, status) <span class="sc">~</span> dose <span class="sc">+</span> sex <span class="sc">+</span> city,</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">data    =</span> hiroshima,</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">entry   =</span> entry,</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">control =</span> <span class="fu">coxph_mpl.control</span>(</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>    <span class="at">basis =</span> <span class="st">&quot;uniform&quot;</span>,</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>    <span class="at">n.obs =</span> <span class="fu">sum</span>(hiroshima<span class="sc">$</span>status)</span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  )</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>)</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a></span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="fu">summary</span>(fit_entry)</span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; coxph_mpl(formula = Surv(time, status) ~ dose + sex + city, data = hiroshima, </span></span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt;     control = coxph_mpl.control(basis = &quot;uniform&quot;, n.obs = sum(hiroshima$status)), </span></span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt;     entry = entry)</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">data  =</span> hiroshima,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">entry =</span> entry</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="fu">summary</span>(fit_entry)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt; coxph_mpl(formula = Surv(time, status) ~ dose + sex + city, data = hiroshima, </span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;     entry = entry)</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; -----</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; Cox Proportional Hazards Model Fit Using MPL </span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; -----</span></span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; Cox Proportional Hazards Model Fit Using MPL </span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; Penalized log-likelihood  :  -218085.3</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; Estimated smoothing value :  486.6378</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; Convergence               :  Yes (12 + 292 iter.) </span></span>
 <span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; Penalized log-likelihood  :  -218085.3</span></span>
-<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; Estimated smoothing value :  486.6378</span></span>
-<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; Convergence               :  Yes (12 + 292 iter.) </span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; Data             : hiroshima</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; Number of obs.   : 86611</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; Number of events : 50620 (58.44523%)</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; Number of cens.  : 35991 (41.55477%)</span></span>
 <span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt; Data             : hiroshima</span></span>
-<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt; Number of obs.   : 86611</span></span>
-<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt; Number of events : 50620 (58.44523%)</span></span>
-<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt; Number of cens.  : 35991 (41.55477%)</span></span>
-<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt; Regression parameters : Surv(time, status) ~ dose + sex + city</span></span>
-<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt;                Estimate Std. Error  z-value  Pr(&gt;|z|)    </span></span>
-<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt; dose          0.1635084  0.0151308  10.8063 &lt; 2.2e-16 ***</span></span>
-<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt; sexFemale    -0.5518858  0.0092909 -59.4005 &lt; 2.2e-16 ***</span></span>
-<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt; cityNagasaki  0.0515481  0.0098435   5.2368 1.634e-07 ***</span></span>
-<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
-<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span>
-<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt; Baseline hasard parameters approximated using Uniform :</span></span>
-<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt;  (11 equal events bins)</span></span>
-<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt;           1           2           3           4           5           6 </span></span>
-<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="co">#&gt; 0.001058039 0.002478473 0.004673498 0.009799451 0.019100936 0.033959813 </span></span>
-<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="co">#&gt;           7           8           9          10          11 </span></span>
-<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a><span class="co">#&gt; 0.062309691 0.111161804 0.214221247 0.340579097 0.348117394 </span></span>
-<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a><span class="co">#&gt; -----</span></span></code></pre></div>
-<div id="what-ignoring-the-truncation-costs" class="section level3">
-<h3>What ignoring the truncation costs</h3>
-<p>Dropping <code>entry</code> treats every subject as if followed from
-birth, which attributes to each one a stretch of person-time during
-which they were in fact not observable:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>fit_naive <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="fu">Surv</span>(time, status) <span class="sc">~</span> dose <span class="sc">+</span> sex <span class="sc">+</span> city,</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">data    =</span> hiroshima,</span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">control =</span> <span class="fu">coxph_mpl.control</span>(</span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>    <span class="at">basis =</span> <span class="st">&quot;uniform&quot;</span>,</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>    <span class="at">n.obs =</span> <span class="fu">sum</span>(hiroshima<span class="sc">$</span>status)</span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  )</span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>)</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a></span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>comparison <span class="ot">&lt;-</span> <span class="fu">cbind</span>(</span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>  <span class="st">`</span><span class="at">with entry</span><span class="st">`</span>    <span class="ot">=</span> <span class="fu">coef</span>(fit_entry, <span class="st">&quot;Beta&quot;</span>),</span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>  <span class="at">SE              =</span> fit_entry<span class="sc">$</span>se<span class="sc">$</span>Beta<span class="sc">$</span>M2QM2,</span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>  <span class="st">`</span><span class="at">ignoring entry</span><span class="st">`</span><span class="ot">=</span> <span class="fu">coef</span>(fit_naive, <span class="st">&quot;Beta&quot;</span>),</span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>  <span class="st">`</span><span class="at">shift, in SE</span><span class="st">`</span>  <span class="ot">=</span> (<span class="fu">coef</span>(fit_naive, <span class="st">&quot;Beta&quot;</span>) <span class="sc">-</span> <span class="fu">coef</span>(fit_entry, <span class="st">&quot;Beta&quot;</span>)) <span class="sc">/</span></span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>                     fit_entry<span class="sc">$</span>se<span class="sc">$</span>Beta<span class="sc">$</span>M2QM2</span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>)</span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="fu">round</span>(comparison, <span class="dv">4</span>)</span>
-<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt;              with entry     SE ignoring entry shift, in SE</span></span>
-<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt; dose             0.1635 0.0151         0.1836       1.3282</span></span>
-<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt; sexFemale       -0.5519 0.0093        -0.5456       0.6816</span></span>
-<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt; cityNagasaki     0.0515 0.0098         0.0726       2.1397</span></span></code></pre></div>
-<p>The shift is systematic rather than random. Both <code>dose</code>
-and <code>city</code> are biased upwards, by roughly 1.3 and 2.1
-standard errors, while <code>sex</code> moves very little. That pattern
-is what one would expect: entry age is unrelated to sex, so
-mis-specifying the time at risk does not distort that coefficient,
-whereas dose and city are both associated with the age distribution of
-the survivors who were still alive in 1950. A shift of two standard
-errors is more than enough to change how a coefficient is read.</p>
-</div>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt; Regression parameters : Surv(time, status) ~ dose + sex + city</span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt;                Estimate Std. Error  z-value  Pr(&gt;|z|)    </span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt; dose          0.1635084  0.0151308  10.8063 &lt; 2.2e-16 ***</span></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt; sexFemale    -0.5518858  0.0092909 -59.4005 &lt; 2.2e-16 ***</span></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt; cityNagasaki  0.0515481  0.0098435   5.2368 1.634e-07 ***</span></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt; Baseline hasard parameters approximated using Uniform :</span></span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt;  (11 equal events bins)</span></span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt;           1           2           3           4           5           6 </span></span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt; 0.001058039 0.002478473 0.004673498 0.009799451 0.019100936 0.033959813 </span></span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt;           7           8           9          10          11 </span></span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt; 0.062309691 0.111161804 0.214221247 0.340579097 0.348117394 </span></span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt; -----</span></span></code></pre></div>
+<p>The estimated baseline hazard is a hazard by <em>attained age</em>,
+and because the risk set at each age contains only subjects who had
+already reached that age by late 1950, it is the truncation-corrected
+one:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">plot</span>(fit_entry, <span class="at">which =</span> <span class="dv">2</span>, <span class="at">ask =</span> <span class="cn">FALSE</span>, <span class="at">cex.main =</span> <span class="fl">0.9</span>)</span></code></pre></div>
+<p><img role="img" aria-label src="data:image/png;base64,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" alt style="display: block; margin: auto;" /></p>
+<p>Requesting a different basis alongside <code>entry</code> does not
+fail; the fit falls back to <code>&quot;uniform&quot;</code> and says so:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>fallback <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">Surv</span>(time, status) <span class="sc">~</span> dose <span class="sc">+</span> sex <span class="sc">+</span> city,</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">data  =</span> hiroshima,</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="at">entry =</span> entry,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">basis =</span> <span class="st">&quot;msplines&quot;</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; Warning: entry= (left truncation) is only implemented for basis = &quot;uniform&quot;;</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; basis &quot;msplines&quot; was replaced by &quot;uniform&quot;.</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>fallback<span class="sc">$</span>control<span class="sc">$</span>basis</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; [1] &quot;uniform&quot;</span></span></code></pre></div>
 </div>
 <div id="limitations" class="section level2">
 <h2>Limitations</h2>

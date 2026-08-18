@@ -372,6 +372,8 @@ coefficients and standard errors</a></li>
 <li><a href="#forest-plot" id="toc-forest-plot">Forest plot</a></li>
 <li><a href="#baseline-survival-comparison" id="toc-baseline-survival-comparison">Baseline survival
 comparison</a></li>
+<li><a href="#instantaneous-hazard-comparison" id="toc-instantaneous-hazard-comparison">Instantaneous hazard
+comparison</a></li>
 <li><a href="#references" id="toc-references">References</a></li>
 </ul>
 </div>
@@ -403,24 +405,22 @@ cancer, right-censored overall survival to compare:</p>
 <div id="data-and-model-fits" class="section level2">
 <h2>Data and model fits</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(survivalMPL)</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="co">#&gt; Loading required package: survival</span></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co">#&gt; Loading required package: MASS</span></span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(survival)</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>lung <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(lung[, <span class="fu">c</span>(<span class="st">&quot;time&quot;</span>, <span class="st">&quot;status&quot;</span>, <span class="st">&quot;age&quot;</span>, <span class="st">&quot;sex&quot;</span>, <span class="st">&quot;ph.karno&quot;</span>, <span class="st">&quot;wt.loss&quot;</span>)])</span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>f    <span class="ot">&lt;-</span> <span class="fu">Surv</span>(time, status <span class="sc">==</span> <span class="dv">2</span>) <span class="sc">~</span> age <span class="sc">+</span> sex <span class="sc">+</span> ph.karno <span class="sc">+</span> wt.loss</span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="co"># --- partial likelihood (coxph) ---</span></span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>fit_pl <span class="ot">&lt;-</span> <span class="fu">coxph</span>(f, <span class="at">data =</span> lung, <span class="at">x =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="co"># --- penalised full likelihood, M-splines (coxph_mpl) ---</span></span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>fit_mpl <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(f, <span class="at">data =</span> lung,</span>
-<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>  <span class="at">control =</span> <span class="fu">coxph_mpl.control</span>(</span>
-<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>    <span class="at">basis    =</span> <span class="st">&quot;msplines&quot;</span>,</span>
-<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>    <span class="at">n.obs    =</span> <span class="fu">sum</span>(lung<span class="sc">$</span>status <span class="sc">==</span> <span class="dv">2</span>),</span>
-<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>    <span class="at">max.iter =</span> <span class="fu">c</span>(<span class="dv">150</span>, <span class="fl">7.5e4</span>, <span class="fl">1e6</span>)</span>
-<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>  )</span>
-<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>)</span></code></pre></div>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(survival)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>lung <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(lung[, <span class="fu">c</span>(<span class="st">&quot;time&quot;</span>, <span class="st">&quot;status&quot;</span>, <span class="st">&quot;age&quot;</span>, <span class="st">&quot;sex&quot;</span>, <span class="st">&quot;ph.karno&quot;</span>, <span class="st">&quot;wt.loss&quot;</span>)])</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>f    <span class="ot">&lt;-</span> <span class="fu">Surv</span>(time, status <span class="sc">==</span> <span class="dv">2</span>) <span class="sc">~</span> age <span class="sc">+</span> sex <span class="sc">+</span> ph.karno <span class="sc">+</span> wt.loss</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co"># --- partial likelihood (coxph) ---</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>fit_pl <span class="ot">&lt;-</span> <span class="fu">coxph</span>(f, <span class="at">data =</span> lung, <span class="at">x =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="co"># --- penalised full likelihood, M-splines (coxph_mpl) ---</span></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>fit_mpl <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(f, <span class="at">data =</span> lung,</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>  <span class="at">control =</span> <span class="fu">coxph_mpl.control</span>(</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>    <span class="at">basis    =</span> <span class="st">&quot;msplines&quot;</span>,</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>    <span class="at">n.obs    =</span> <span class="fu">sum</span>(lung<span class="sc">$</span>status <span class="sc">==</span> <span class="dv">2</span>),</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>    <span class="at">max.iter =</span> <span class="fu">c</span>(<span class="dv">150</span>, <span class="fl">7.5e4</span>, <span class="fl">1e6</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>  )</span>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>)</span></code></pre></div>
 <hr />
 </div>
 <div id="regression-coefficients-and-standard-errors" class="section level2">
@@ -439,14 +439,14 @@ cancer, right-censored overall survival to compare:</p>
 <span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>)</span>
 <span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a></span>
 <span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>tab <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>  <span class="at">Covariate   =</span> row_labels[<span class="fu">names</span>(beta_pl)],</span>
-<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>  <span class="st">`</span><span class="at">PL β</span><span class="st">`</span>      <span class="ot">=</span> <span class="fu">round</span>(beta_pl,  <span class="dv">4</span>),</span>
-<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>  <span class="st">`</span><span class="at">PL SE</span><span class="st">`</span>     <span class="ot">=</span> <span class="fu">round</span>(se_pl,    <span class="dv">4</span>),</span>
-<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>  <span class="st">`</span><span class="at">MPL β</span><span class="st">`</span>     <span class="ot">=</span> <span class="fu">round</span>(beta_mpl, <span class="dv">4</span>),</span>
-<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>  <span class="st">`</span><span class="at">MPL SE</span><span class="st">`</span>    <span class="ot">=</span> <span class="fu">round</span>(se_mpl,   <span class="dv">4</span>),</span>
-<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>  <span class="st">`</span><span class="at">Δβ</span><span class="st">`</span>        <span class="ot">=</span> <span class="fu">round</span>(beta_mpl <span class="sc">-</span> beta_pl, <span class="dv">4</span>),</span>
-<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>  <span class="at">row.names   =</span> <span class="cn">NULL</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>  <span class="at">Covariate    =</span> row_labels[<span class="fu">names</span>(beta_pl)],</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>  <span class="st">`</span><span class="at">PL est.</span><span class="st">`</span>    <span class="ot">=</span> <span class="fu">round</span>(beta_pl,  <span class="dv">4</span>),</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>  <span class="st">`</span><span class="at">PL SE</span><span class="st">`</span>      <span class="ot">=</span> <span class="fu">round</span>(se_pl,    <span class="dv">4</span>),</span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>  <span class="st">`</span><span class="at">MPL est.</span><span class="st">`</span>   <span class="ot">=</span> <span class="fu">round</span>(beta_mpl, <span class="dv">4</span>),</span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>  <span class="st">`</span><span class="at">MPL SE</span><span class="st">`</span>     <span class="ot">=</span> <span class="fu">round</span>(se_mpl,   <span class="dv">4</span>),</span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>  <span class="st">`</span><span class="at">Difference</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(beta_mpl <span class="sc">-</span> beta_pl, <span class="dv">4</span>),</span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>  <span class="at">check.names  =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>  <span class="at">row.names    =</span> <span class="cn">NULL</span></span>
 <span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>)</span>
 <span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(tab, <span class="at">align =</span> <span class="st">&quot;lrrrrr&quot;</span>,</span>
 <span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>             <span class="at">caption =</span> <span class="st">&quot;^a^ The forest plot rescales these covariates to per-10-unit changes.&quot;</span>)</span></code></pre></div>
@@ -454,21 +454,21 @@ cancer, right-censored overall survival to compare:</p>
 <caption><sup>a</sup> The forest plot rescales these covariates to
 per-10-unit changes.</caption>
 <colgroup>
-<col width="44%" />
-<col width="11%" />
+<col width="42%" />
 <col width="10%" />
-<col width="11%" />
-<col width="10%" />
-<col width="11%" />
+<col width="9%" />
+<col width="12%" />
+<col width="9%" />
+<col width="15%" />
 </colgroup>
 <thead>
 <tr class="header">
 <th align="left">Covariate</th>
-<th align="right">PL β</th>
+<th align="right">PL est.</th>
 <th align="right">PL SE</th>
-<th align="right">MPL β</th>
+<th align="right">MPL est.</th>
 <th align="right">MPL SE</th>
-<th align="right">Δβ</th>
+<th align="right">Difference</th>
 </tr>
 </thead>
 <tbody>
@@ -486,7 +486,7 @@ per-10-unit changes.</caption>
 <td align="right">0.1744</td>
 <td align="right">-0.4964</td>
 <td align="right">0.1735</td>
-<td align="right">0.0175</td>
+<td align="right">0.0176</td>
 </tr>
 <tr class="odd">
 <td align="left">Karnofsky score (per point)<sup>a</sup></td>
@@ -542,6 +542,50 @@ arise from tied or sparse event times. The Kaplan-Meier curve sits above
 both because it is not adjusted for covariates - in particular it does
 not account for the protective effect of female sex and higher Karnofsky
 score at the mean covariate profile.</p>
+<hr />
+</div>
+<div id="instantaneous-hazard-comparison" class="section level2">
+<h2>Instantaneous hazard comparison</h2>
+<p>Survival curves are the forgiving comparison: integration smooths
+away differences in the hazard. The instantaneous hazard <span class="math inline">\(\hat h(t)\)</span> is where the two approaches
+genuinely differ, and it is the quantity <code>coxph()</code> does not
+estimate at all.</p>
+<p>The partial likelihood gives a cumulative hazard that jumps at each
+event time, so its “hazard” is a set of point masses. To draw it as a
+rate it has to be binned: the increments of the Breslow cumulative
+hazard are accumulated over equal-width intervals and divided by the
+interval width, which is the piecewise-constant hazard estimate implied
+by <code>coxph()</code> at that resolution. <code>coxph_mpl()</code>
+needs no such post-processing - <span class="math inline">\(\hat
+h(t)\)</span> is part of the fitted object.</p>
+<p><img role="img" aria-label src="data:image/png;base64,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" alt width="90%" style="display: block; margin: auto;" /></p>
+<p>Over the bulk of follow-up the two agree: a hazard of roughly <span class="math inline">\(1.3 \times
+10^{-3}\)</span> per day early on, rising to around <span class="math inline">\(3 \times 10^{-3}\)</span> by day 500. The
+disagreement is in the character of the two estimates rather than their
+level.</p>
+<p>The binned Breslow estimate jumps from bin to bin - its fourth bin
+sits below its third - and the whole picture depends on a bin width
+nobody chose on statistical grounds: eight bins give this, sixteen would
+give something visibly rougher, four something visibly flatter. Its last
+bin is exactly zero, because no death is recorded after day 894, which
+is a statement about this sample rather than about the hazard. The
+M-spline estimate is smooth by construction, with the roughness penalty
+rather than an arbitrary bin width deciding how much structure survives,
+and every point of it carries a standard error - which the binned
+version does not.</p>
+<p>Past about 900 days the two part company completely: the smooth
+estimate goes on rising while the binned one collapses to zero. Neither
+is informative there. Three patients are still at risk and none of them
+dies, so the data contain almost nothing about the hazard at that point,
+and each method fills the vacuum in its own way - one by extrapolating
+its trend, the other by reporting the empty bin as a zero rate.</p>
+<p>That difference is the practical argument for the penalised full
+likelihood: when the target is a hazard ratio, <code>coxph()</code> and
+<code>coxph_mpl()</code> agree, and the partial likelihood is the
+cheaper route; when the target is absolute risk - a hazard, a survival
+probability, a predicted event time for a given covariate profile - the
+baseline has to be estimated, and <code>coxph_mpl()</code> estimates it
+as part of the model.</p>
 <hr />
 </div>
 <div id="references" class="section level2 unnumbered">

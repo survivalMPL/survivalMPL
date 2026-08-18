@@ -29,7 +29,8 @@
 #'   Every value must be strictly less than that subject's event/interval
 #'   lower bound; violations raise an error. Left-truncated and
 #'   non-left-truncated subjects may be mixed in the same call. Requires
-#'   \code{basis = "uniform"}; any other basis raises an error. Defaults to
+#'   \code{basis = "uniform"}; any other basis is replaced by \code{"uniform"}
+#'   with a warning. Defaults to
 #'   \code{NULL} (no truncation), which reproduces prior behaviour exactly.
 #' @param ... Additional arguments passed to [coxph_mpl.control()].
 #'
@@ -37,7 +38,8 @@
 #'   components.
 #'
 #' @section Limitations: \code{entry} is only supported for
-#'   \code{basis = "uniform"}. Also, [residuals.coxph_mpl()] and
+#'   \code{basis = "uniform"}; another basis is downgraded to it with a
+#'   warning. Also, [residuals.coxph_mpl()] and
 #'   [predict.coxph_mpl()] do not yet account for \code{entry} — they compute
 #'   cumulative hazard and survival from time 0 rather than from each subject's
 #'   entry time. Both are known follow-ups, not yet implemented.
@@ -48,7 +50,7 @@
 #' ## Right-censored example: survival::lung
 #' data(lung, package = "survival")
 #' fit_mpl <- coxph_mpl(Surv(time, status == 2) ~ age + sex + ph.karno +
-#'  wt.loss, data = lung)
+#'  wt.loss, data = lung, tol = 1e-05)
 #' summary(fit_mpl)
 #'
 #' ## Interval-censored example: bcos2
@@ -140,13 +142,23 @@ coxph_mpl <- function(formula, data, subset, na.action, control, entry, ...) {
   if (missing(control)) control <- coxph_mpl.control(n.obs, ...)
 
   # Left truncation is implemented by differencing the cumulative basis,
-  # H(t) - H(entry), and is only supported for the piecewise-constant "uniform"
-  # basis. Fail loudly rather than returning a silently wrong fit.
+  # H(t) - H(entry), which the package supports for the piecewise-constant
+  # "uniform" basis only.  Rather than refusing the fit, fall back to
+  # "uniform" and say so.
   if (!is.null(entry) && control$basis != "uniform") {
-    stop(gettextf(
-      'entry= (left truncation) requires basis = "uniform", not "%s"',
-      control$basis
+    dropped.basis <- control$basis
+    warning(gettextf(
+      'entry= (left truncation) is only implemented for basis = "uniform"; basis "%s" was replaced by "uniform".',
+      dropped.basis
     ), domain = NA, call. = FALSE)
+    # c(0, 20) is the coxph_mpl.control() default for the kernel bases, never a
+    # knot count chosen for a step function: revert it to the uniform default.
+    if (identical(as.numeric(control$n.knots), c(0, 20))) {
+      control$n.knots <- c(8, 2)
+    }
+    control$basis   <- "uniform"
+    control$penalty <- compute_penalty_order("uniform", control$penalty,
+                                             control$order)
   }
 
   # ties

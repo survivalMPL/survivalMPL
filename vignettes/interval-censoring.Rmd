@@ -18,185 +18,109 @@ knitr::opts_chunk$set(
   fig.width  = 7,
   fig.height = 4.5
 )
+set.seed(1)
 ```
 
 ## Overview
 
-Survival times are *interval-censored* when the event is known to have occurred in an
-interval $(t_L, t_R]$ rather than at an exact time. This is common in clinical studies
-where patients are examined only periodically (e.g. follow-up visits).
+Survival times are *interval censored* when the event is known to have occurred
+in an interval $(t_L, t_R]$ rather than at an exact time.  This is the normal
+state of affairs in clinical studies where patients are examined only
+periodically: a recurrence found at a follow-up visit happened at some point
+since the previous visit, and nothing narrower is known.
 
-`survivalMPL` handles partly interval-censored data: datasets that may contain a mix
-of exact event times and left-, right-, and interval-censored observations. The censoring
-type is communicated through `survival::Surv(..., type = "interval2")`.
+The likelihood contribution is a difference of survivor functions,
 
-This tutorial presents two examples from @MaWebbHudson2024.
+$$P(t_L < T \leq t_R) = S(t_L) - S(t_R),$$
+
+which requires $H_0$ at both endpoints and so cannot be written as a partial
+likelihood.  `survivalMPL` handles *partly* interval-censored data: a dataset
+may mix exact event times with left-, right- and interval-censored
+observations, all in one fit.  The censoring type is communicated through
+`survival::Surv(..., type = "interval2")`, which infers it from the pair of
+endpoints:
+
+| Data | Response | Status code |
+|---|---|---|
+| Exact event at $t$ | `Surv(t, t, type = "interval2")` | 1 |
+| Interval censored on $(t_L, t_R]$ | `Surv(t_L, t_R, type = "interval2")` | 3 |
+| Left censored at $t_R$ | `Surv(NA, t_R, type = "interval2")` | 2 |
+| Right censored at $t_L$ | `Surv(t_L, NA, type = "interval2")` | 0 |
+
+`melanoma` stores an unknown lower endpoint as `0` rather than `NA`, and an
+unknown upper endpoint as `Inf` rather than `NA`.  `Inf` is read as right
+censoring exactly like `NA`; `0` is read as an interval starting at zero, which
+is the same statement as left censoring since $S(0) = 1$ makes
+$S(0) - S(t_R)$ and $1 - S(t_R)$ identical.  The likelihood is unaffected; only
+the status code `Surv()` reports differs.
+
+This tutorial follows the pseudo-melanoma example of @MaWebbHudson2024
+(Section 2.11).
 
 ---
 
-## Example: simulation study
+## The `melanoma` data
 
-We compare the MPL M-spline method against partial likelihood (PL) with midpoint
-imputation. The true model is a Cox model with Weibull baseline hazard
-$h_0(t) = 3t^2$, covariates $X_1 \sim \text{Unif}(0,1)$ and
-$X_2 \sim \text{Unif}(0,5)$, and true coefficients $\beta = [0.75,\,-0.50]^T$.
+`melanoma` is a pseudo dataset of time to first local recurrence for $n = 300$
+melanoma patients, simulated from the design in @MaWebbHudson2024 with a
+Weibull baseline hazard $h_0(t) = t^{-1/2}$.  Recurrence times are interval
+censored because they are detected at clinic visits.  Covariates are the
+melanoma **location** at first diagnosis (reference: head and neck), Breslow
+**thickness** (reference: $< 1$ mm), **gender** (reference: male), and centred
+**age** in decades.
 
-
-### `simulate()` function
-
-```{r simulate-fn}
+```{r data}
 library(survivalMPL)
 library(survival)
 
-# Write simulate() function to repeatedly generate a sample
-simulate <- function(n, pi_E, g1, g2){
+data(melanoma)
 
-  # Simulate covariates
-  x1 <- runif(n, 0, 1)
-  x2 <- 5 * runif(n, 0, 1)
-  X <- cbind(x1, x2)
-  beta_true <- c(0.75, -0.5)
-  eXtB <- exp(X %*% beta_true)
-
-  # Simulate true event times
-  neg.log.u <- - log(runif(n, 0, 1))
-  y_i <- (neg.log.u/(eXtB))^(1/3)
-
-  # Simulate censoring types & times
-  u_E <- runif(n, 0, 1)
-  u_L <- runif(n, 0, 1)
-  u_R <- runif(n, u_L, 1)
-
-  t_L <- (y_i^as.numeric(u_E < pi_E)) *
-    (g1 * u_L)^as.numeric(pi_E < u_E & g1*u_L <= y_i & y_i <= g2*u_R) *
-    (g2 * u_R)^as.numeric(pi_E < u_E & g2*u_R < y_i) *
-    0^as.numeric(pi_E < u_E & y_i < g1*u_L)
-
-  t_R <- (y_i^as.numeric(u_E < pi_E)) *
-    (g1 * u_L)^as.numeric(pi_E < u_E & y_i < g1*u_L) *
-    (g2 * u_R)^as.numeric(pi_E < u_E & g1*u_L <= y_i & y_i <= g2*u_R) *
-    Inf^(pi_E < u_E & g2*u_R < y_i)
-
-  # Compute midpoint and censoring type for midpoint imputation
-  midpoint <- t_L + (t_R - t_L)/2
-  event <- rep(1, n)
-  event[which(is.infinite(midpoint))] <- 0
-  midpoint[which(is.infinite(midpoint))] <- t_L[which(is.infinite(midpoint))]
-
-  df = data.frame(t_L, t_R, x1, x2, midpoint, event)
-  return(df)
-}
+str(melanoma)
 ```
 
-### Simulation loop
+Two thirds of the subjects have an exactly observed recurrence time; the
+remaining third is censored, mostly by interval censoring:
 
-The loop runs 100 replicates and is not evaluated during vignette build due to
-computation time.
+```{r composition}
+with(melanoma, c(
+  exact    = sum(t_L == t_R & is.finite(t_R)),
+  interval = sum(t_L > 0 & t_L < t_R & is.finite(t_R)),
+  right    = sum(is.infinite(t_R)),
+  left     = sum(t_L == 0 & is.finite(t_R))
+))
 
-```{r sim-loop, eval=FALSE}
-# Run a simulation study
-ch2_ex26_save = matrix(0, nrow = 100, ncol = 8)
-baseline_h0 = NULL
+table(status = Surv(melanoma$t_L, melanoma$t_R, type = "interval2")[, 3])
+```
 
-for(s in 1:100){
+The status table counts 77 interval-censored observations rather than 58,
+because the 19 left-censored rows are stored as intervals $(0, t_R]$ and
+`Surv()` reports them as such.
 
-  # Generate data set
-  dat <- simulate(n=500, pi_E = 0.5, g1 = 0.9, g2 = 1.3)
+The recurrence times are strongly right skewed: 95% of the observed endpoints
+fall below one year, but a few reach four.
 
-  # Fit MPL model
-  fit.mpl <- coxph_mpl(Surv(t_L, t_R, type = "interval2") ~
-    x1 + x2, data = dat, basis = "m", n.knots = c(5,0))
-
-  # Save coefficient estimates & SE
-  ch2_ex26_save[s,1] <- fit.mpl$coef$Beta[1]
-  ch2_ex26_save[s,2] <- fit.mpl$coef$Beta[2]
-  ch2_ex26_save[s,3] <- fit.mpl$se$Beta$M2HM2[1]
-  ch2_ex26_save[s,4] <- fit.mpl$se$Beta$M2HM2[2]
-
-  # Fit PH model
-  fit.ph <- coxph(Surv(midpoint, event) ~ x1 + x2, data = dat)
-
-  # Save coefficient estimates & SE
-  ch2_ex26_save[s,5] <- fit.ph$coefficients[1]
-  ch2_ex26_save[s,6] <- fit.ph$coefficients[2]
-  ch2_ex26_save[s,7] <- sqrt(diag(fit.ph$var))[1]
-  ch2_ex26_save[s,8] <- sqrt(diag(fit.ph$var))[2]
-}
+```{r skew}
+endpoints <- c(melanoma$t_L[melanoma$t_L > 0],
+               melanoma$t_R[is.finite(melanoma$t_R)])
+round(quantile(endpoints, c(0.5, 0.9, 0.95, 1)), 3)
 ```
 
 ---
 
-## Example: pseudo-melanoma data
+## Model fit
 
-We fit the MPL Cox model to a pseudo melanoma dataset: time to first local recurrence
-for $n = 300$ patients. Recurrence times are typically interval-censored, occurring
-between patient visits to the doctor.
+The call below is the one used in the book: cubic M-splines (`basis = "m"`) for
+the baseline hazard, seven quantile knots, a convergence tolerance of $10^{-5}$
+and generous iteration caps.  The smoothing value is not set, which leaves it to
+the automatic smoothing parameter selection the package performs by default -
+the marginal likelihood method of @MaWebbHudson2024 (Section 2.10), which they
+single out as the package's default behaviour.
 
-Covariates: melanoma **location** at first diagnosis (reference: Head & neck), Breslow
-**thickness** (reference: $<1$ mm), **gender** (reference: Male), and centred
-**age** in decades.
-
-### `simulate_mel()` function
-
-```{r simulate-mel-fn}
-simulate_mel <- function(n, pi_E, a1, a2) {
-  neglogU <- -log(runif(n))
-
-  location <- sample(c(1, 2, 3, 4), n, replace = TRUE,
-    prob = c(0.2, 0.15, 0.3, 0.35))
-  Arm   <- as.numeric(location == 2)
-  Leg   <- as.numeric(location == 3)
-  Trunk <- as.numeric(location == 4)
-
-  thickness <- sample(c(1, 2, 3, 4), n, replace = TRUE,
-    prob = c(0.15, 0.4, 0.3, 0.15))
-  mm1to2  <- as.numeric(thickness == 2)
-  mm2to4  <- as.numeric(thickness == 3)
-  mm4plus <- as.numeric(thickness == 4)
-
-  Female <- rbinom(n, 1, 0.4)
-
-  x8 <- rnorm(n, 56, 12)
-  x8 <- x8 - mean(x8)
-  Age_centred <- x8/10
-
-  X <- cbind(Arm, Leg, Trunk, mm1to2, mm2to4, mm4plus, Female, Age_centred)
-  beta_true = c(-0.56, 0.01, -0.22, 0.22, 0.87, 1.13, -0.17, 0.14)
-  eXtB = exp(X %*% beta_true)
-
-  y <- as.numeric((neglogU/(2 * eXtB))^(2))
-
-  # uniform variables
-  U_E <- runif(n)
-  U_L <- runif(n, 0, 1)
-  U_R <- runif(n, U_L, 1)
-
-  t_L <- y^((U_E < pi_E)) *
-    (a1 * U_L)^((pi_E <= U_E & a1 * U_L <= y & y <= a2 * U_R)) *
-    (a2 * U_R)^((pi_E <= U_E & a2 * U_R < y)) *
-    (0)^((pi_E <= U_E & y < a1 * U_L))
-
-  t_R <- y^((U_E < pi_E)) *
-    (a1 * U_L)^((pi_E <= U_E & y < a1 * U_L)) *
-    (a2 * U_R)^((pi_E <= U_E & a1 * U_L <= y & y <= a2 * U_R)) *
-    Inf^((pi_E <= U_E & a2 * U_R < y))
-
-  df = data.frame(t_L, t_R, X)
-  return(df)
-}
-```
-
-### Model fit
-
-```{r melanoma-fit}
-set.seed(1)
-ch2_mel_dat <- simulate_mel(300, 0.37, 0.6, 1.2)
-max(ch2_mel_dat$t_L)
-
-mela_fit = coxph_mpl(
+```{r fit}
+mela_fit <- coxph_mpl(
   formula = Surv(t_L, t_R, type = "interval2") ~
     Arm + Leg + Trunk + mm1to2 + mm2to4 + mm4plus + Female + Age_centred,
-  data = ch2_mel_dat,
+  data = melanoma,
   basis = "m", tol = 1e-05, n.knots = c(7, 0),
   max.iter = c(1000, 5000, 1e+05)
 )
@@ -204,9 +128,96 @@ mela_fit = coxph_mpl(
 summary(mela_fit)
 ```
 
-```{r melanoma-plot, fig.width=9, fig.height=7, out.width="100%"}
+The summary reports the fit on the log-hazard-ratio scale, together with the
+$m = 10$ baseline hazard coefficients $\hat{\boldsymbol{\theta}}$ and the
+selected smoothing value.  Convergence is reached well inside the iteration
+caps.
+
+### Hazard ratios
+
+The book presents the same fit as hazard ratios with confidence intervals and
+tests (its Table 2.6), which is the form a clinical reader expects:
+
+```{r hazard-ratios}
+b  <- coef(mela_fit)
+se <- mela_fit$se$Beta$M2QM2
+z  <- b / se
+
+hr_tab <- data.frame(
+  Covariate      = c("Arm", "Leg", "Trunk", "1 to 2 mm", "2 to 4 mm",
+                     "4 mm and more", "Female", "Age (per 10 years)"),
+  `HR estimate`  = round(exp(b), 3),
+  `95% CI lower` = round(exp(b - qnorm(0.975) * se), 3),
+  `95% CI upper` = round(exp(b + qnorm(0.975) * se), 3),
+  `p-value`      = format.pval(2 * pnorm(-abs(z)), digits = 3, eps = 1e-4),
+  check.names    = FALSE,
+  row.names      = NULL
+)
+
+knitr::kable(hr_tab, align = "lrrrr")
+```
+
+Read against the head-and-neck reference, a melanoma first diagnosed on the arm
+carries a significantly lower risk of recurrence, while the leg and trunk
+categories are not distinguishable from the reference.  Breslow thickness is the
+dominant risk factor: relative to tumours under 1 mm, the hazard is about 1.9
+times higher at 2-4 mm and 3.5 times higher above 4 mm, both with $p < 0.001$.
+A 10-year increase in age raises the recurrence hazard by about 10%, marginally
+significant here.  Gender points the same way as in the book - women at lower
+risk - but does not reach significance in this sample.
+
+The book's Table 2.6 reports similar hazard ratios from its own simulated
+sample, in which 37% of the recurrence times are exactly observed.  The bundled
+`melanoma` is generated with two thirds exact events, so the point estimates are
+comparable but the confidence intervals differ, and the trunk and gender effects
+that are borderline in the book do not reach significance here.  The
+coefficients used to generate the data are documented in `?melanoma`.
+
+## Baseline hazard and survival
+
+`plot()` on the fitted object gives the basis functions, the baseline hazard,
+the cumulative baseline hazard and the baseline survival - the book's Figure 2.5
+is the second of these:
+
+```{r plot-all, fig.width=8, fig.height=7}
 par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
-plot(mela_fit, ask = FALSE, which = 2:4, cex.main = 0.8)
+plot(mela_fit, ask = FALSE, cex.main = 0.8)
+```
+
+At baseline covariate values the estimated hazard of recurrence falls steeply
+and monotonically away from the origin and then flattens close to a constant,
+which is the behaviour the true $h_0(t) = t^{-1/2}$ has.  The slight lift at the
+extreme right, past four years, rests on a handful of observations and is not
+supported by the confidence band.
+
+Because the recurrence times are so skewed, everything of interest is squeezed
+into the left-hand tenth of the panel.  `xlim` narrows the displayed range;
+the fit itself, and the knots, are unchanged:
+
+```{r plot-hazard, fig.width=6.5, fig.height=4.5}
+plot(mela_fit, which = 2, ask = FALSE, cex.main = 0.9, xlim = c(0, 1.2))
+```
+
+Beyond the book's example, `predict()` turns the same fit into absolute survival
+for a named covariate profile.  Contrasting the thinnest and thickest tumours
+shows the size of the thickness effect on that scale:
+
+```{r plot-predict, fig.width=6.5, fig.height=4.5}
+i_thin  <- which(melanoma$mm1to2 == 0 & melanoma$mm2to4 == 0 &
+                 melanoma$mm4plus == 0)[1]
+i_thick <- which(melanoma$mm4plus == 1)[1]
+
+p_thin  <- predict(mela_fit, type = "survival", i = i_thin)
+p_thick <- predict(mela_fit, type = "survival", i = i_thick)
+
+par(mar = c(4, 4.2, 3, 1))
+plot(p_thin$time, p_thin$survival, type = "l", col = "steelblue", lwd = 2.4,
+     xlim = c(0, 1.2), ylim = c(0, 1), las = 1,
+     xlab = "Years since diagnosis", ylab = expression(hat(S)(t)),
+     main = "Predicted recurrence-free survival", cex.main = 0.95)
+lines(p_thick$time, p_thick$survival, col = "tomato", lwd = 2.4)
+legend("topright", legend = c("Breslow thickness < 1 mm", "Breslow thickness > 4 mm"),
+       col = c("steelblue", "tomato"), lwd = 2.4, bty = "n", cex = 0.85)
 ```
 
 ---
@@ -214,10 +225,12 @@ plot(mela_fit, ask = FALSE, which = 2:4, cex.main = 0.8)
 ## Next steps
 
 - **Left Censoring** covers the boundary case of interval censoring, where the
-  lower endpoint is unknown, and shows that recording an observation as
-  $(0, t_R]$ and as left censored at $t_R$ give the same fit.
+  lower endpoint is unknown, on a dataset with no interval-censored
+  observations at all.
 - **Right Censoring** covers the standard scheme and the `Surv(time, status)`
   response.
+- **Control Parameters** explains `basis`, `n.knots`, `tol` and `max.iter`, the
+  settings the fit above changes from their defaults.
 - **Basis Functions for the Baseline Hazard** explains the four choices for
   $\psi_u$, including the `"msplines"` basis used above.
 

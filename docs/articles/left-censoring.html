@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,10 +51,12 @@
     <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
+    <li><a class="dropdown-item" href="../articles/control-parameters.html">Control Parameters</a></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
     <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../articles/book.html">Book</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -101,18 +103,19 @@ when. All that is recorded is an upper bound
 the event occurred somewhere in
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">(0, t_R]</annotation></semantics></math>.
 This arises whenever the outcome is detected by inspection rather than
-observed as it happens: a tumour already present at the first scan,
+observed as it happens - a tumour already present at the first scan,
 seroconversion already complete at enrolment, a milestone already
 reached at the first assessment.</p>
 <p>The likelihood contribution is the distribution function rather than
 the survivor function,</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mi>T</mi><mo>≤</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mi>S</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">{</mo><mo>−</mo><msub><mi>H</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">)</mo><msup><mi>e</mi><mrow><msup><mi mathvariant="bold-italic">𝒙</mi><mi>T</mi></msup><mi mathvariant="bold-italic">𝜷</mi></mrow></msup><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">}</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">P(T \leq t_R) = 1 - S(t_R) = 1 - \exp\bigl\{-H_0(t_R)e^{\mathbf{x}^T\boldsymbol{\beta}}\bigr\},</annotation></semantics></math></p>
-<p>which the partial likelihood cannot accommodate. Because
-<code><a href="../reference/coxph_mpl.html">coxph_mpl()</a></code> estimates
+<p>which the partial likelihood cannot accommodate: it needs a risk set
+at a known event time, and a left-censored subject supplies neither.
+Because <code><a href="../reference/coxph_mpl.html">coxph_mpl()</a></code> estimates
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mn>0</mn></msub><annotation encoding="application/x-tex">H_0</annotation></semantics></math>
-explicitly, left-censored observations are handled directly, and may be
-mixed freely with exact events and right- and interval-censored
-observations in the same fit.</p>
+explicitly, left-censored observations enter the likelihood directly,
+and may be mixed freely with exact events and right- and
+interval-censored observations in the same fit.</p>
 </div>
 <div class="section level2">
 <h2 id="encoding-left-censored-observations">Encoding left-censored observations<a class="anchor" aria-label="anchor" href="#encoding-left-censored-observations"></a>
@@ -146,248 +149,199 @@ right censored at 3 (<code>3+</code>), and an exact event at 5.
 <p>Note that <code>NA</code> here is <em>information</em>, not
 missingness: these rows are kept, not dropped by
 <code>na.action</code>.</p>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="example-pseudo-melanoma-data">Example: pseudo-melanoma data<a class="anchor" aria-label="anchor" href="#example-pseudo-melanoma-data"></a>
-</h2>
-<p>The bundled <code>melanoma</code> data (time to first local
-recurrence,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>300</mn></mrow><annotation encoding="application/x-tex">n = 300</annotation></semantics></math>,
-simulated) is partly interval censored and contains all four observation
-types. Recurrences already present at the first assessment are recorded
-with a lower endpoint of zero:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">melanoma</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  exact    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">t_L</span> <span class="op">==</span> <span class="va">t_R</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">t_R</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  left     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">t_L</span> <span class="op">==</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">t_R</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  interval <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">t_L</span> <span class="op">&gt;</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="va">t_L</span> <span class="op">&lt;</span> <span class="va">t_R</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">t_R</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  right    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.infinite</a></span><span class="op">(</span><span class="va">t_R</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    exact     left interval    right </span></span>
-<span><span class="co">#&gt;      117      132       35       16</span></span></code></pre></div>
-<p>So 132 of the 300 subjects (44%) are left censored.</p>
-<div class="section level3">
-<h3 id="two-equivalent-encodings">Two equivalent encodings<a class="anchor" aria-label="anchor" href="#two-equivalent-encodings"></a>
-</h3>
-<p>Recording a left-censored observation as the interval
+<p>Recording a left-censored observation as <code>NA</code> and
+recording it as the interval
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">(0, t_R]</annotation></semantics></math>
-and recording it as left censored at
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>R</mi></msub><annotation encoding="application/x-tex">t_R</annotation></semantics></math>
 describe the same event, since
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">S(0) = 1</annotation></semantics></math>
 makes
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>S</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">S(0) - S(t_R)</annotation></semantics></math>
-and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mi>S</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1 - S(t_R)</annotation></semantics></math>
-identical. The data ship in the first form; the second is obtained by
-replacing the zero lower endpoints with <code>NA</code>:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">mel</span> <span class="op">&lt;-</span> <span class="va">melanoma</span></span>
-<span><span class="va">mel</span><span class="op">$</span><span class="va">t_L2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">$</span><span class="va">t_L</span> <span class="op">==</span> <span class="fl">0</span>, <span class="cn">NA</span>, <span class="va">melanoma</span><span class="op">$</span><span class="va">t_L</span><span class="op">)</span></span>
-<span><span class="va">mel</span><span class="op">$</span><span class="va">t_R2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">$</span><span class="va">t_R</span><span class="op">)</span>, <span class="va">melanoma</span><span class="op">$</span><span class="va">t_R</span>, <span class="cn">NA</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
-<span>  `as interval (0, t_R]` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">$</span><span class="va">t_L</span>, <span class="va">melanoma</span><span class="op">$</span><span class="va">t_R</span>,</span>
-<span>                                            type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span><span class="op">[</span>, <span class="fl">3</span><span class="op">]</span>,</span>
-<span>                                        levels <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  `as left censored`     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">mel</span><span class="op">$</span><span class="va">t_L2</span>, <span class="va">mel</span><span class="op">$</span><span class="va">t_R2</span>,</span>
-<span>                                            type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span><span class="op">[</span>, <span class="fl">3</span><span class="op">]</span>,</span>
-<span>                                        levels <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt;                       0   1   2   3</span></span>
-<span><span class="co">#&gt; as interval (0, t_R] 16 117   0 167</span></span>
-<span><span class="co">#&gt; as left censored     16 117 132  35</span></span></code></pre></div>
-<p>The 132 observations move from status <code>3</code> (interval) to
-status <code>2</code> (left), and fitting either version gives the same
-answer:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ctrl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_mpl.control.html">coxph_mpl.control</a></span><span class="op">(</span></span>
-<span>  basis    <span class="op">=</span> <span class="st">"msplines"</span>,</span>
-<span>  n.obs    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">$</span><span class="va">t_L</span> <span class="op">==</span> <span class="va">melanoma</span><span class="op">$</span><span class="va">t_R</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">$</span><span class="va">t_R</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  smooth   <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  max.iter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">2e4</span>, <span class="fl">5e4</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">fit_interval</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">t_L</span>, <span class="va">t_R</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span> <span class="op">~</span></span>
-<span>    <span class="va">Arm</span> <span class="op">+</span> <span class="va">Leg</span> <span class="op">+</span> <span class="va">Trunk</span> <span class="op">+</span> <span class="va">mm1to2</span> <span class="op">+</span> <span class="va">mm2to4</span> <span class="op">+</span> <span class="va">mm4plus</span> <span class="op">+</span> <span class="va">Female</span> <span class="op">+</span> <span class="va">Age_centred</span>,</span>
-<span>  data <span class="op">=</span> <span class="va">melanoma</span>, control <span class="op">=</span> <span class="va">ctrl</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">fit_left</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">t_L2</span>, <span class="va">t_R2</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span> <span class="op">~</span></span>
-<span>    <span class="va">Arm</span> <span class="op">+</span> <span class="va">Leg</span> <span class="op">+</span> <span class="va">Trunk</span> <span class="op">+</span> <span class="va">mm1to2</span> <span class="op">+</span> <span class="va">mm2to4</span> <span class="op">+</span> <span class="va">mm4plus</span> <span class="op">+</span> <span class="va">Female</span> <span class="op">+</span> <span class="va">Age_centred</span>,</span>
-<span>  data <span class="op">=</span> <span class="va">mel</span>, control <span class="op">=</span> <span class="va">ctrl</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>`interval (0, t_R]` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_interval</span><span class="op">)</span>,</span>
-<span>            `left censored`     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_left</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt;             interval (0, t_R] left censored</span></span>
-<span><span class="co">#&gt; Arm                    -0.562        -0.576</span></span>
-<span><span class="co">#&gt; Leg                    -0.087        -0.107</span></span>
-<span><span class="co">#&gt; Trunk                  -0.239        -0.247</span></span>
-<span><span class="co">#&gt; mm1to2                  0.029         0.035</span></span>
-<span><span class="co">#&gt; mm2to4                  0.625         0.625</span></span>
-<span><span class="co">#&gt; mm4plus                 1.436         1.417</span></span>
-<span><span class="co">#&gt; Female                 -0.089        -0.091</span></span>
-<span><span class="co">#&gt; Age_centred             0.111         0.113</span></span></code></pre></div>
-<p>The two columns agree to about 0.02. They are not bit-identical
-because the knot positions are quantiles of the observed endpoint times,
-and the two encodings present slightly different sets of endpoints, not
-because the likelihoods differ.</p>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>S</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">S(0) - S(t_R)</annotation></semantics></math>
+identical. Both encodings are accepted; the <code>NA</code> form is the
+one that states the intent.</p>
+<hr>
 </div>
+<div class="section level2">
+<h2 id="example-hiv-seroconversion">Example: HIV seroconversion<a class="anchor" aria-label="anchor" href="#example-hiv-seroconversion"></a>
+</h2>
+<p>The bundled <code>hiv</code> data are entirely synthetic - there is
+no real cohort behind them, and the coefficients are chosen for
+illustration rather than estimated from any study. The design imitates a
+cohort of people who inject drugs, followed for HIV seroconversion, with
+time measured in years from the start of injecting drug use. The
+observation scheme is what makes it useful here: each subject has a
+first HIV test some time after that origin, and</p>
+<ul>
+<li>a subject already seropositive at the first test seroconverted
+somewhere in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">(0, t_R]</annotation></semantics></math>
+- <strong>left censored</strong>;</li>
+<li>a subject negative at the first test is retested frequently, so a
+later seroconversion is recorded as an <strong>exact
+event</strong>;</li>
+<li>a subject still negative when follow-up ends is <strong>right
+censored</strong>.</li>
+</ul>
+<p>No subject is interval censored, so this is left censoring on its own
+rather than as a special case of something more general.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">hiv</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">hiv</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 'data.frame':    300 obs. of  6 variables:</span></span>
+<span><span class="co">#&gt;  $ t_L        : num  3.74 5.76 NA 3.15 4.48 ...</span></span>
+<span><span class="co">#&gt;  $ t_R        : num  3.74 NA 5.01 3.15 NA ...</span></span>
+<span><span class="co">#&gt;  $ Sharing    : int  0 0 0 0 0 1 0 0 1 0 ...</span></span>
+<span><span class="co">#&gt;  $ Prison     : int  0 0 1 0 0 0 1 0 0 0 ...</span></span>
+<span><span class="co">#&gt;  $ Female     : int  0 1 0 0 0 0 1 1 1 1 ...</span></span>
+<span><span class="co">#&gt;  $ Age_centred: num  -1.156 1.354 -0.963 1.361 1.009 ...</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span>status <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">hiv</span><span class="op">$</span><span class="va">t_L</span>, <span class="va">hiv</span><span class="op">$</span><span class="va">t_R</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span><span class="op">[</span>, <span class="fl">3</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; status</span></span>
+<span><span class="co">#&gt;   0   1   2 </span></span>
+<span><span class="co">#&gt;  87 117  96</span></span></code></pre></div>
+<p>Status <code>2</code> marks the left-censored rows (96 subjects, just
+under a third of the sample), status <code>1</code> the exact events and
+status <code>0</code> the right-censored rows. The left-censored
+subjects are the ones with no lower bound at all:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">hiv</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">hiv</span><span class="op">$</span><span class="va">t_L</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    t_L      t_R Sharing Prison Female Age_centred</span></span>
+<span><span class="co">#&gt; 3   NA 5.013339       0      1      0 -0.96307722</span></span>
+<span><span class="co">#&gt; 7   NA 1.502960       0      1      1 -0.10064946</span></span>
+<span><span class="co">#&gt; 9   NA 6.955977       1      0      1 -1.30025951</span></span>
+<span><span class="co">#&gt; 10  NA 3.800657       0      0      1 -1.46512156</span></span>
+<span><span class="co">#&gt; 12  NA 4.214666       0      0      1 -0.07477049</span></span>
+<span><span class="co">#&gt; 14  NA 2.999568       1      0      0  0.13789375</span></span></code></pre></div>
 <div class="section level3">
-<h3 id="inspecting-the-fit">Inspecting the fit<a class="anchor" aria-label="anchor" href="#inspecting-the-fit"></a>
+<h3 id="model-fit">Model fit<a class="anchor" aria-label="anchor" href="#model-fit"></a>
 </h3>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_left</span><span class="op">)</span></span>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mn>0</mn></msub><annotation encoding="application/x-tex">H_0</annotation></semantics></math>
+is evaluated at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>R</mi></msub><annotation encoding="application/x-tex">t_R</annotation></semantics></math>
+for every left-censored subject, so the shape of the baseline matters
+more here than it does for right-censored data, where the likelihood
+only ever looks at the hazard at the event times. That argues for a
+smooth basis: <code>basis = "msplines"</code>. The knot count is set
+with <code>n.knots</code>: a third of this sample contributes only an
+upper bound, which is not enough information to support the default knot
+sequence, so six quantile knots are used instead. Everything else,
+including the automatic selection of the smoothing value, is left at its
+default - see <strong>Control Parameters</strong>.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_hiv</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">t_L</span>, <span class="va">t_R</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span> <span class="op">~</span> <span class="va">Sharing</span> <span class="op">+</span> <span class="va">Prison</span> <span class="op">+</span> <span class="va">Female</span> <span class="op">+</span> <span class="va">Age_centred</span>,</span>
+<span>  data    <span class="op">=</span> <span class="va">hiv</span>,</span>
+<span>  basis   <span class="op">=</span> <span class="st">"msplines"</span>,</span>
+<span>  n.knots <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_hiv</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; coxph_mpl(formula = Surv(t_L2, t_R2, type = "interval2") ~ Arm + </span></span>
-<span><span class="co">#&gt;     Leg + Trunk + mm1to2 + mm2to4 + mm4plus + Female + Age_centred, </span></span>
-<span><span class="co">#&gt;     data = mel, control = ctrl)</span></span>
+<span><span class="co">#&gt; coxph_mpl(formula = Surv(t_L, t_R, type = "interval2") ~ Sharing + </span></span>
+<span><span class="co">#&gt;     Prison + Female + Age_centred, data = hiv, basis = "msplines", </span></span>
+<span><span class="co">#&gt;     n.knots = c(5, 0))</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -----</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Cox Proportional Hazards Model Fit Using MPL </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Penalized log-likelihood  :  -18.53554</span></span>
-<span><span class="co">#&gt; Fixed smoothing value     :  0</span></span>
-<span><span class="co">#&gt; Convergence               :  Yes (233 iter.) </span></span>
+<span><span class="co">#&gt; Penalized log-likelihood  :  -367.2072</span></span>
+<span><span class="co">#&gt; Estimated smoothing value :  73126132793</span></span>
+<span><span class="co">#&gt; Convergence               :  Yes (10 + 9835 iter.) </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Data             : mel</span></span>
+<span><span class="co">#&gt; Data             : hiv</span></span>
 <span><span class="co">#&gt; Number of obs.   : 300</span></span>
 <span><span class="co">#&gt; Number of events : 117 (39%)</span></span>
 <span><span class="co">#&gt; Number of cens.  : 183 (61%)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Regression parameters : Surv(t_L2, t_R2, type = "interval2") ~ Arm + Leg + Trunk + mm1to2 +     mm2to4 + mm4plus + Female + Age_centred</span></span>
+<span><span class="co">#&gt; Regression parameters : Surv(t_L, t_R, type = "interval2") ~ Sharing + Prison + Female +     Age_centred</span></span>
 <span><span class="co">#&gt;              Estimate Std. Error z-value  Pr(&gt;|z|)    </span></span>
-<span><span class="co">#&gt; Arm         -0.575622   0.195228 -2.9485  0.003194 ** </span></span>
-<span><span class="co">#&gt; Leg         -0.107484   0.171015 -0.6285  0.529670    </span></span>
-<span><span class="co">#&gt; Trunk       -0.247131   0.155375 -1.5906  0.111710    </span></span>
-<span><span class="co">#&gt; mm1to2       0.034775   0.189120  0.1839  0.854108    </span></span>
-<span><span class="co">#&gt; mm2to4       0.624525   0.203372  3.0709  0.002135 ** </span></span>
-<span><span class="co">#&gt; mm4plus      1.416740   0.243783  5.8115 6.192e-09 ***</span></span>
-<span><span class="co">#&gt; Female      -0.090508   0.131017 -0.6908  0.489684    </span></span>
-<span><span class="co">#&gt; Age_centred  0.113420   0.048858  2.3214  0.020263 *  </span></span>
+<span><span class="co">#&gt; Sharing      0.745158   0.137083  5.4358 5.455e-08 ***</span></span>
+<span><span class="co">#&gt; Prison       0.415050   0.150917  2.7502  0.005956 ** </span></span>
+<span><span class="co">#&gt; Female      -0.195567   0.143116 -1.3665  0.171785    </span></span>
+<span><span class="co">#&gt; Age_centred -0.049964   0.093632 -0.5336  0.593605    </span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Baseline hasard parameters approximated using M-Splines :</span></span>
-<span><span class="co">#&gt;  (2 (min/max) + 8 quantile knots + 2 equally spaced knots + 3 (order) - 2 = 13 parameters) </span></span>
-<span><span class="co">#&gt;            1            2            3            4            5            6 </span></span>
-<span><span class="co">#&gt; 1.436162e-01 9.825969e-03 2.966489e-01 2.336807e-01 3.805598e-01 1.736077e-01 </span></span>
-<span><span class="co">#&gt;            7            8            9           11           13 </span></span>
-<span><span class="co">#&gt; 5.493765e-01 1.773562e-09 1.817603e+00 2.486888e+00 2.037200e+00 </span></span>
+<span><span class="co">#&gt;  (2 (min/max) + 5 quantile knots + 0 equally spaced knots + 3 (order) - 2 = 8 parameters) </span></span>
+<span><span class="co">#&gt;          1          2          3          4          5          6          7 </span></span>
+<span><span class="co">#&gt; 0.03215103 0.08667359 0.19381915 0.20894848 0.27941727 0.86836519 1.22610399 </span></span>
+<span><span class="co">#&gt;          8 </span></span>
+<span><span class="co">#&gt; 1.29240590 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -----</span></span></code></pre></div>
-<p>The recurrence times are strongly right-skewed: 95% of the observed
-endpoints fall below 1.1 years, but a few reach 4. Over the full range
-every feature of the fit is squeezed into the left-hand tenth of the
-panel, so we narrow the displayed range with <code>xlim</code>. This
-affects only what is drawn; the fit itself, and the knots, are
-unchanged.</p>
+<p>The data were generated with true coefficients
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.90</mn><annotation encoding="application/x-tex">0.90</annotation></semantics></math>
+for <code>Sharing</code>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.45</mn><annotation encoding="application/x-tex">0.45</annotation></semantics></math>
+for <code>Prison</code>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.25</mn></mrow><annotation encoding="application/x-tex">-0.25</annotation></semantics></math>
+for <code>Female</code> and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.15</mn></mrow><annotation encoding="application/x-tex">-0.15</annotation></semantics></math>
+for <code>Age_centred</code>, so the fit can be checked against the
+truth:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">truth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Sharing <span class="op">=</span> <span class="fl">0.90</span>, Prison <span class="op">=</span> <span class="fl">0.45</span>, Female <span class="op">=</span> <span class="op">-</span><span class="fl">0.25</span>, Age_centred <span class="op">=</span> <span class="op">-</span><span class="fl">0.15</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_hiv</span><span class="op">)</span>,</span>
+<span>            SE       <span class="op">=</span> <span class="va">fit_hiv</span><span class="op">$</span><span class="va">se</span><span class="op">$</span><span class="va">Beta</span><span class="op">$</span><span class="va">M2HM2</span>,</span>
+<span>            true     <span class="op">=</span> <span class="va">truth</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;             estimate    SE  true</span></span>
+<span><span class="co">#&gt; Sharing        0.745 0.149  0.90</span></span>
+<span><span class="co">#&gt; Prison         0.415 0.159  0.45</span></span>
+<span><span class="co">#&gt; Female        -0.196 0.151 -0.25</span></span>
+<span><span class="co">#&gt; Age_centred   -0.050 0.093 -0.15</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="baseline-hazard-and-survival">Baseline hazard and survival<a class="anchor" aria-label="anchor" href="#baseline-hazard-and-survival"></a>
+</h3>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_left</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, cex.main <span class="op">=</span> <span class="fl">0.8</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1.2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="left-censoring_files/figure-html/plot-left-1.png" class="r-plt" alt="" width="768" style="display: block; margin: auto;"></p>
-<p>The M-spline basis places most of its knots where the events are, so
-the first panel is dense near zero. The wide confidence band on
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">S_0(t)</annotation></semantics></math>
-reflects how little information the left-censored observations carry
-individually: each one says only that the event happened at some point
-before
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>R</mi></msub><annotation encoding="application/x-tex">t_R</annotation></semantics></math>.</p>
-<hr>
-</div>
-</div>
-<div class="section level2">
-<h2 id="example-bcos2">Example: <code>bcos2</code><a class="anchor" aria-label="anchor" href="#example-bcos2"></a>
-</h2>
-<p>The breast cosmesis data are mostly interval censored, but include a
-handful of genuinely left-censored subjects, already coded with
-<code>NA</code>:</p>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_hiv</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, cex.main <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></code></pre></div>
+<p><img src="left-censoring_files/figure-html/hiv-plot-1.png" class="r-plt" alt="" width="768" style="display: block; margin: auto;"></p>
+<p>The four panels are the M-spline basis functions, then the estimated
+baseline hazard, cumulative hazard and survival. The hazard panel is the
+one to read first: the true baseline is Weibull with shape 1.5, an
+increasing hazard, and the estimate reproduces that rise. The confidence
+band is wide, which is honest - a left-censored subject contributes only
+the statement that the event happened at some point before
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>R</mi></msub><annotation encoding="application/x-tex">t_R</annotation></semantics></math>,
+so a third of this sample carries very little information about
+<em>when</em>.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">bcos2</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span>status <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">bcos2</span><span class="op">$</span><span class="va">left</span>, <span class="va">bcos2</span><span class="op">$</span><span class="va">right</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span><span class="op">[</span>, <span class="fl">3</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt; status</span></span>
-<span><span class="co">#&gt;  0  2  3 </span></span>
-<span><span class="co">#&gt; 38  5 51</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">bcos2</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">bcos2</span><span class="op">$</span><span class="va">left</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    left right treatment</span></span>
-<span><span class="co">#&gt; 3    NA     7       Rad</span></span>
-<span><span class="co">#&gt; 10   NA     8       Rad</span></span>
-<span><span class="co">#&gt; 33   NA     5       Rad</span></span>
-<span><span class="co">#&gt; 48   NA    22   RadChem</span></span>
-<span><span class="co">#&gt; 63   NA     5   RadChem</span></span></code></pre></div>
-<p>Status <code>2</code> marks the left-censored rows; no special
-handling is needed:</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_hiv</span>, which <span class="op">=</span> <span class="fl">2</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, cex.main <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span></code></pre></div>
+<p><img src="left-censoring_files/figure-html/hiv-hazard-1.png" class="r-plt" alt="" width="624" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level3">
+<h3 id="predicted-survival">Predicted survival<a class="anchor" aria-label="anchor" href="#predicted-survival"></a>
+</h3>
+<p>Because
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mn>0</mn></msub><annotation encoding="application/x-tex">H_0</annotation></semantics></math>
+is estimated, survival can be predicted for a named covariate profile
+rather than only compared between profiles. Here are two subjects who
+differ in the strongest covariate:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_bcos</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">left</span>, <span class="va">right</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span> <span class="op">~</span> <span class="va">treatment</span>,</span>
-<span>  data    <span class="op">=</span> <span class="va">bcos2</span>,</span>
-<span>  control <span class="op">=</span> <span class="fu"><a href="../reference/coxph_mpl.control.html">coxph_mpl.control</a></span><span class="op">(</span></span>
-<span>    basis    <span class="op">=</span> <span class="st">"msplines"</span>,</span>
-<span>    n.obs    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">bcos2</span><span class="op">)</span>,</span>
-<span>    max.iter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">2000</span>, <span class="fl">4000</span><span class="op">)</span>,</span>
-<span>    smooth   <span class="op">=</span> <span class="fl">0</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">i_share</span>    <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">hiv</span><span class="op">$</span><span class="va">Sharing</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">i_no_share</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">hiv</span><span class="op">$</span><span class="va">Sharing</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_bcos</span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; coxph_mpl(formula = Surv(left, right, type = "interval2") ~ treatment, </span></span>
-<span><span class="co">#&gt;     data = bcos2, control = coxph_mpl.control(basis = "msplines", </span></span>
-<span><span class="co">#&gt;         n.obs = nrow(bcos2), max.iter = c(40, 2000, 4000), smooth = 0))</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; -----</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Cox Proportional Hazards Model Fit Using MPL </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Penalized log-likelihood  :  -140.254</span></span>
-<span><span class="co">#&gt; Fixed smoothing value     :  0</span></span>
-<span><span class="co">#&gt; Convergence               :  NO </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Data             : bcos2</span></span>
-<span><span class="co">#&gt; Number of obs.   : 94</span></span>
-<span><span class="co">#&gt; Number of events :  0 (  0%)</span></span>
-<span><span class="co">#&gt; Number of cens.  : 94 (100%)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Regression parameters : Surv(left, right, type = "interval2") ~ treatment</span></span>
-<span><span class="co">#&gt;                  Estimate Std. Error z-value Pr(&gt;|z|)   </span></span>
-<span><span class="co">#&gt; treatmentRadChem  0.87311    0.33348  2.6181 0.008841 **</span></span>
-<span><span class="co">#&gt; ---</span></span>
-<span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Baseline hasard parameters approximated using M-Splines :</span></span>
-<span><span class="co">#&gt;  (2 (min/max) + 8 quantile knots + 2 equally spaced knots + 3 (order) - 2 = 13 parameters) </span></span>
-<span><span class="co">#&gt;            1            2            3            4            5            6 </span></span>
-<span><span class="co">#&gt; 4.284005e-02 1.608827e-02 5.030707e-02 3.116483e-02 1.317693e-01 1.213149e-01 </span></span>
-<span><span class="co">#&gt;            7            8            9           10           11           12 </span></span>
-<span><span class="co">#&gt; 2.396608e-02 2.067590e-01 2.068148e-01 6.402848e-10 4.310156e+00 6.628441e-01 </span></span>
-<span><span class="co">#&gt;           13 </span></span>
-<span><span class="co">#&gt; 6.628441e-01 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; -----</span></span></code></pre></div>
-<p>The same <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method applies. Here we show the basis
-functions and the estimated baseline survival:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_bcos</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, which <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">4</span><span class="op">)</span>, cex.main <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span></span></code></pre></div>
-<p><img src="left-censoring_files/figure-html/bcos2-plot-1.png" class="r-plt" alt="" width="768" style="display: block; margin: auto;"></p>
-<p>The hazard and cumulative hazard panels (<code>which = 2:3</code>)
-are omitted for this fit rather than shown: with no exact event times
-and very little information in the last knot interval, the delta-method
-standard error of the final
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>u</mi></msub><annotation encoding="application/x-tex">\hat\theta_u</annotation></semantics></math>
-is enormous, and the resulting confidence band dominates the vertical
-scale to the point where the estimate itself is invisible. The survival
-panel is unaffected because it is bounded in
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[0, 1]</annotation></semantics></math>.</p>
+<span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_hiv</span>, type <span class="op">=</span> <span class="st">"survival"</span>, i <span class="op">=</span> <span class="va">i_share</span><span class="op">)</span></span>
+<span><span class="va">p0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_hiv</span>, type <span class="op">=</span> <span class="st">"survival"</span>, i <span class="op">=</span> <span class="va">i_no_share</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4.2</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">p0</span><span class="op">$</span><span class="va">time</span>, <span class="va">p0</span><span class="op">$</span><span class="va">survival</span>, type <span class="op">=</span> <span class="st">"l"</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, lwd <span class="op">=</span> <span class="fl">2.4</span>,</span>
+<span>     ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, xlab <span class="op">=</span> <span class="st">"Years since first injecting drug use"</span>,</span>
+<span>     ylab <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/influence.measures.html" class="external-link">hat</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span><span class="op">(</span><span class="va">t</span><span class="op">)</span><span class="op">)</span>, las <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>     main <span class="op">=</span> <span class="st">"Predicted survival free of seroconversion"</span>, cex.main <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">p1</span><span class="op">$</span><span class="va">time</span>, <span class="va">p1</span><span class="op">$</span><span class="va">survival</span>, col <span class="op">=</span> <span class="st">"tomato"</span>, lwd <span class="op">=</span> <span class="fl">2.4</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"bottomleft"</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"no equipment sharing"</span>, <span class="st">"equipment sharing"</span><span class="op">)</span>,</span>
+<span>       col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"steelblue"</span>, <span class="st">"tomato"</span><span class="op">)</span>, lwd <span class="op">=</span> <span class="fl">2.4</span>, bty <span class="op">=</span> <span class="st">"n"</span>, cex <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span></span></code></pre></div>
+<p><img src="left-censoring_files/figure-html/hiv-predict-1.png" class="r-plt" alt="" width="624" style="display: block; margin: auto;"></p>
 <hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
@@ -396,10 +350,15 @@ panel is unaffected because it is bounded in
 <li>
 <strong>Interval Censoring</strong> covers the general partly
 interval-censored case, of which left censoring is the boundary
-instance.</li>
+instance, and uses a dataset containing all four observation types at
+once.</li>
 <li>
-<strong>Right Censoring</strong> covers the standard scheme and left
-truncation.</li>
+<strong>Right Censoring</strong> covers the standard scheme and the
+<code>Surv(time, status)</code> response.</li>
+<li>
+<strong>Control Parameters</strong> explains <code>n.knots</code>,
+<code>basis</code> and <code>smooth</code>, the settings that decide how
+much structure the baseline hazard is allowed to have.</li>
 <li>
 <strong>Basis Functions for the Baseline Hazard</strong> explains
 the choice of
@@ -409,6 +368,10 @@ because
 enters the left-censored likelihood directly, that choice matters more
 here than for right-censored data alone.</li>
 </ul>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

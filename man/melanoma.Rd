@@ -25,14 +25,16 @@ A data frame with 300 observations on 10 variables:
 Moore, D.K. (2016). \emph{Applied Survival Analysis Using R}. Springer.
 }
 \description{
-Simulated interval-censored survival data based on the design in Moore
-(2016, Examples 2.6--2.7).  The true baseline hazard is Weibull with
+Simulated partly interval-censored survival data based on the design in
+Moore (2016, Examples 2.6--2.7).  The true baseline hazard is Weibull with
 shape 0.5: \eqn{h_0(t) = t^{-1/2}}, \eqn{H_0(t) = 2\sqrt{t}}.
 }
 \details{
 Observations are classified as exact events (\code{t_L == t_R}), left-
 censored (\code{t_L == 0}), right-censored (\code{t_R == Inf}), or
-interval-censored otherwise.  Pass to \code{coxph_mpl} via
+interval-censored otherwise.  Two thirds of the sample (200 subjects) are
+exact events and one third is censored: 58 interval censored, 23 right
+censored and 19 left censored.  Pass to \code{coxph_mpl} via
 \code{Surv(t_L, t_R, type = "interval2")}.
 
 
@@ -47,7 +49,9 @@ True regression coefficients (\code{beta_true}) used in the simulation:
   \code{Female}      \tab -0.17 \cr
   \code{Age_centred} \tab  0.14 \cr
 }
-Generated with \code{set.seed(1)}; see
+Generated with \code{set.seed(1)} and simulation parameters
+\code{pi_E = 2/3} (probability of an exact event), \code{a1 = 0.02} and
+\code{a2 = 0.30} (inspection-window scales); see
 \code{dev/data-raw/melanoma.R} to reproduce.
 }
 \examples{

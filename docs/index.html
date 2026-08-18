@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -53,10 +53,12 @@
     <li><a class="dropdown-item" href="articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
+    <li><a class="dropdown-item" href="articles/control-parameters.html">Control Parameters</a></li>
     <li><a class="dropdown-item" href="articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
     <li><a class="dropdown-item" href="articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="articles/book.html">Book</a></li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">News</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -111,11 +113,7 @@
 <span><span class="va">fit_lung</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">sex</span> <span class="op">+</span> <span class="va">ph.karno</span> <span class="op">+</span> <span class="va">wt.loss</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">lung</span>,</span>
-<span>  control <span class="op">=</span> <span class="fu"><a href="reference/coxph_mpl.control.html">coxph_mpl.control</a></span><span class="op">(</span></span>
-<span>    n.obs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">lung</span><span class="op">$</span><span class="va">status</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span>,</span>
-<span>    max.iter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">2000</span>, <span class="fl">4000</span><span class="op">)</span>,</span>
-<span>    smooth <span class="op">=</span> <span class="fl">0</span></span>
-<span>  <span class="op">)</span></span>
+<span>  tol  <span class="op">=</span> <span class="fl">1e-05</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_lung</span><span class="op">)</span></span>

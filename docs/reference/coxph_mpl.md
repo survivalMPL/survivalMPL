@@ -48,8 +48,9 @@ print(x, ...)
   value must be strictly less than that subject's event/interval lower
   bound; violations raise an error. Left-truncated and
   non-left-truncated subjects may be mixed in the same call. Requires
-  `basis = "uniform"`; any other basis raises an error. Defaults to
-  `NULL` (no truncation), which reproduces prior behaviour exactly.
+  `basis = "uniform"`; any other basis is replaced by `"uniform"` with a
+  warning. Defaults to `NULL` (no truncation), which reproduces prior
+  behaviour exactly.
 
 - ...:
 
@@ -80,11 +81,11 @@ adjustment.
 
 ## Limitations
 
-`entry` is only supported for `basis = "uniform"`. Also,
-\[residuals.coxph_mpl()\] and \[predict.coxph_mpl()\] do not yet account
-for `entry` — they compute cumulative hazard and survival from time 0
-rather than from each subject's entry time. Both are known follow-ups,
-not yet implemented.
+`entry` is only supported for `basis = "uniform"`; another basis is
+downgraded to it with a warning. Also, \[residuals.coxph_mpl()\] and
+\[predict.coxph_mpl()\] do not yet account for `entry` — they compute
+cumulative hazard and survival from time 0 rather than from each
+subject's entry time. Both are known follow-ups, not yet implemented.
 
 ## See also
 
@@ -98,7 +99,7 @@ if (FALSE) { # \dontrun{
 ## Right-censored example: survival::lung
 data(lung, package = "survival")
 fit_mpl <- coxph_mpl(Surv(time, status == 2) ~ age + sex + ph.karno +
- wt.loss, data = lung)
+ wt.loss, data = lung, tol = 1e-05)
 summary(fit_mpl)
 
 ## Interval-censored example: bcos2

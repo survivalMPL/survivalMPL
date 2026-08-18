@@ -1,8 +1,12 @@
 ## Pseudo-melanoma dataset for survivalMPL
 ##
-## Simulates 300 interval-censored survival observations based on the design
-## in Moore (2016, Chapter 2 / Example 2.6-2.7).  True baseline hazard is
+## Simulates 300 partly interval-censored survival observations based on the
+## design in Moore (2016, Chapter 2 / Example 2.6-2.7).  True baseline hazard is
 ## Weibull with shape 0.5: H0(t) = 2*sqrt(t), h0(t) = 1/sqrt(t).
+##
+## pi_E = 2/3 makes two thirds of the sample exact events; the remaining third
+## is censored, split between left, interval and right censoring by the
+## inspection-window parameters a1 and a2.
 ##
 ## Run this script from the package root to regenerate data/melanoma.rda:
 ##   Rscript dev/data-raw/melanoma.R
@@ -53,7 +57,7 @@ simulate_mel <- function(n, pi_E, a1, a2) {
 }
 
 set.seed(1)
-melanoma <- simulate_mel(300, 0.37, 0.6, 1.2)
+melanoma <- simulate_mel(300, 2/3, 0.02, 0.30)
 
 save(melanoma, file = "data/melanoma.rda", compress = "bzip2")
 message("Saved data/melanoma.rda  (n = ", nrow(melanoma), " rows, ",

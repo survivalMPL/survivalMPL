@@ -31,7 +31,8 @@ missing, defaults are built from \code{...}.}
 Every value must be strictly less than that subject's event/interval
 lower bound; violations raise an error. Left-truncated and
 non-left-truncated subjects may be mixed in the same call. Requires
-\code{basis = "uniform"}; any other basis raises an error. Defaults to
+\code{basis = "uniform"}; any other basis is replaced by \code{"uniform"}
+with a warning. Defaults to
 \code{NULL} (no truncation), which reproduces prior behaviour exactly.}
 
 \item{...}{Additional arguments passed to [coxph_mpl.control()].}
@@ -61,7 +62,8 @@ corrected afterwards using a delta-method adjustment.
 }
 \section{Limitations}{
  \code{entry} is only supported for
-  \code{basis = "uniform"}. Also, [residuals.coxph_mpl()] and
+  \code{basis = "uniform"}; another basis is downgraded to it with a
+  warning. Also, [residuals.coxph_mpl()] and
   [predict.coxph_mpl()] do not yet account for \code{entry} — they compute
   cumulative hazard and survival from time 0 rather than from each subject's
   entry time. Both are known follow-ups, not yet implemented.
@@ -72,7 +74,7 @@ corrected afterwards using a delta-method adjustment.
 ## Right-censored example: survival::lung
 data(lung, package = "survival")
 fit_mpl <- coxph_mpl(Surv(time, status == 2) ~ age + sex + ph.karno +
- wt.loss, data = lung)
+ wt.loss, data = lung, tol = 1e-05)
 summary(fit_mpl)
 
 ## Interval-censored example: bcos2

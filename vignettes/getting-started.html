@@ -387,9 +387,7 @@ partial likelihood cannot handle.</p>
 <p>Then attach it alongside <code>survival</code>, which provides the
 <code>Surv()</code> response constructor:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(survivalMPL)</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; Loading required package: survival</span></span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt; Loading required package: MASS</span></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="fu">library</span>(survival)</span></code></pre></div>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">library</span>(survival)</span></code></pre></div>
 </div>
 <div id="the-main-function" class="section level2">
 <h2>The main function</h2>
@@ -454,9 +452,10 @@ everything else uses <code>type = &quot;interval2&quot;</code>, where
 </table>
 <div id="tuning-the-fit" class="section level3">
 <h3>Tuning the fit</h3>
-<p><code>coxph_mpl.control()</code> collects everything governing the
-baseline hazard and the optimiser. The arguments most often changed
-are:</p>
+<p>Every fit runs with sensible defaults, so <code>control</code> can be
+omitted entirely. When it is supplied, <code>coxph_mpl.control()</code>
+collects everything governing the baseline hazard and the optimiser. The
+arguments most often changed are:</p>
 <table>
 <colgroup>
 <col width="50%" />
@@ -472,8 +471,8 @@ are:</p>
 <tr class="odd">
 <td><code>basis</code></td>
 <td>Basis for <span class="math inline">\(h_0\)</span>:
-<code>&quot;uniform&quot;</code>, <code>&quot;gaussian&quot;</code>,
-<code>&quot;msplines&quot;</code>, <code>&quot;epanechikov&quot;</code></td>
+<code>&quot;uniform&quot;</code>, <code>&quot;msplines&quot;</code>,
+<code>&quot;gaussian&quot;</code>, <code>&quot;epanechikov&quot;</code></td>
 </tr>
 <tr class="even">
 <td><code>n.knots</code></td>
@@ -482,8 +481,9 @@ knots</td>
 </tr>
 <tr class="odd">
 <td><code>smooth</code></td>
-<td>Smoothing parameter <span class="math inline">\(\lambda\)</span>;
-<code>NULL</code> estimates it by REML</td>
+<td>Smoothing value <span class="math inline">\(\lambda\)</span>;
+<code>NULL</code> selects it automatically by marginal likelihood,
+<code>0</code> fits by plain maximum likelihood</td>
 </tr>
 <tr class="even">
 <td><code>n.obs</code></td>
@@ -493,16 +493,27 @@ knots</td>
 <td><code>max.iter</code></td>
 <td>Iteration limits for the three optimisation stages</td>
 </tr>
+<tr class="even">
+<td><code>tol</code></td>
+<td>Convergence tolerance; <code>1e-5</code> is used throughout the
+book</td>
+</tr>
 </tbody>
 </table>
 <p>The registered bases are:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">list_bases</span>()</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt;          name        label</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; 1    bsplines    B-Splines</span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; 2 epanechikov Epanechnikov</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; 3    gaussian     Gaussian</span></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; 4    msplines    M-Splines</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; 5     uniform      Uniform</span></span></code></pre></div>
+<ul>
+<li><code>&quot;uniform&quot;</code> (alias <code>&quot;u&quot;</code>) - piecewise-constant
+step functions</li>
+<li><code>&quot;msplines&quot;</code> (alias <code>&quot;m&quot;</code>) - M-splines of
+order <span class="math inline">\(o\)</span>, cubic by default</li>
+<li><code>&quot;gaussian&quot;</code> (alias <code>&quot;g&quot;</code>) - truncated
+Gaussian kernels</li>
+<li><code>&quot;epanechikov&quot;</code> (aliases <code>&quot;e&quot;</code>,
+<code>&quot;epanechnikov&quot;</code>) - Epanechnikov kernels</li>
+</ul>
+<p><strong>Control Parameters</strong> works through these arguments one
+at a time, and <strong>Basis Functions for the Baseline Hazard</strong>
+gives the mathematical definition of each basis.</p>
 </div>
 <div id="methods" class="section level3">
 <h3>Methods</h3>
@@ -543,7 +554,7 @@ S(t)\)</span></td>
 </tr>
 <tr class="even">
 <td><code>residuals(fit)</code></td>
-<td>Martingale residuals</td>
+<td>Martingale and Cox-Snell residuals</td>
 </tr>
 </tbody>
 </table>
@@ -553,11 +564,12 @@ S(t)\)</span></td>
 <h2>Where to go next</h2>
 <p>The tutorials work through one censoring scheme at a time
 (<strong>Right Censoring</strong>, <strong>Left Censoring</strong>,
-<strong>Interval Censoring</strong>), each with a complete worked
-example. Two further articles cover the modelling choices: <strong>Basis
-Functions for the Baseline Hazard</strong>, and <strong>Comparing
-<code>coxph()</code> and <code>coxph_mpl()</code></strong> on the same
-data.</p>
+<strong>Interval Censoring</strong>, <strong>Left Truncation</strong>),
+each with a complete worked example. Three further articles cover the
+modelling choices: <strong>Control Parameters</strong> on tuning a fit,
+<strong>Basis Functions for the Baseline Hazard</strong>, and
+<strong>Comparing <code>coxph()</code> and
+<code>coxph_mpl()</code></strong> on the same data.</p>
 <p>See <code>?coxph_mpl</code> and <code>?coxph_mpl.control</code> for
 the full argument lists.</p>
 </div>

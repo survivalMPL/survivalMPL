@@ -9,5 +9,4 @@
   register_basis(.msplines_spec)
   register_basis(.gaussian_spec)
   register_basis(.epanechnikov_spec)
-  register_basis(.bsplines_spec)
 }

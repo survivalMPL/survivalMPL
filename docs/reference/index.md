@@ -26,6 +26,9 @@
 - [`hiroshima`](https://CRAN.R-project.org/package=survivalMPL/reference/hiroshima.md)
   : Atomic Bomb Survivor Mortality Data (Life Span Study Report 14)
 
+- [`hiv`](https://CRAN.R-project.org/package=survivalMPL/reference/hiv.md)
+  : Pseudo-HIV Seroconversion Data
+
 - [`list_bases()`](https://CRAN.R-project.org/package=survivalMPL/reference/list_bases.md)
   : List All Registered Bases
 

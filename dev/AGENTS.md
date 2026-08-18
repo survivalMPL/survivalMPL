@@ -8,7 +8,7 @@ AI agent entry point. Read this first, then follow links for detail.
 
 `survivalMPL` fits Cox proportional hazards models with right, left, and interval censoring
 using maximum penalised likelihood. The baseline hazard is estimated non-parametrically via
-smooth basis functions (step, Gaussian, M-splines, Epanechnikov, B-splines).
+smooth basis functions (step, Gaussian, M-splines, Epanechnikov).
 
 ---
 

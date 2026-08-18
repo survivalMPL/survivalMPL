@@ -175,7 +175,7 @@ numbers of parameters. (The defaults differ by basis: `"uniform"` and
 
 ### Regression coefficients
 
-`coef_mat`` ``<-`` `[`cbind`](https://rdrr.io/r/base/cbind.html)`(`` `` Uniform ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_u``)``,`` `` Gaussian ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_g``)``,`` ```  `M-Splines`  ```=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_m``)``,`` `` Epanechnikov ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_e``)`` ``)`` `[`round`](https://rdrr.io/r/base/Round.html)`(``coef_mat``, ``3``)`` ``#> Uniform Gaussian M-Splines Epanechnikov`` ``#> Arm -0.596 -0.583 -0.562 -0.620`` ``#> Leg -0.112 -0.085 -0.087 -0.111`` ``#> Trunk -0.241 -0.243 -0.239 -0.252`` ``#> mm1to2 0.036 0.053 0.029 0.056`` ``#> mm2to4 0.614 0.672 0.625 0.642`` ``#> mm4plus 1.472 1.468 1.436 1.454`` ``#> Female -0.090 -0.077 -0.089 -0.088`` ``#> Age_centred 0.117 0.114 0.111 0.119`
+`coef_mat`` ``<-`` `[`cbind`](https://rdrr.io/r/base/cbind.html)`(`` `` Uniform ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_u``)``,`` `` Gaussian ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_g``)``,`` ```  `M-Splines`  ```=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_m``)``,`` `` Epanechnikov ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_e``)`` ``)`` `[`round`](https://rdrr.io/r/base/Round.html)`(``coef_mat``, ``3``)`` ``#> Uniform Gaussian M-Splines Epanechnikov`` ``#> Arm -0.491 -0.467 -0.491 -0.495`` ``#> Leg -0.032 0.006 -0.014 -0.016`` ``#> Trunk -0.221 -0.204 -0.214 -0.213`` ``#> mm1to2 -0.037 -0.011 -0.013 -0.026`` ``#> mm2to4 0.613 0.629 0.630 0.624`` ``#> mm4plus 1.255 1.270 1.267 1.264`` ``#> Female -0.171 -0.160 -0.161 -0.164`` ``#> Age_centred 0.099 0.093 0.098 0.099`
 
 ### Estimated baseline hazards
 
@@ -222,13 +222,15 @@ these curves is not the level of the baseline hazard.
 ## Extensibility
 
 The basis registry (`R/basis.R`) allows new basis types to be added
-without modifying existing code. The file `R/basis-bsplines.R` includes
-a skeleton showing how to implement the three required functions
-(`knots_fn`, `matrix_fn`, `penalty_fn`) and how to call
-[`register_basis()`](https://CRAN.R-project.org/package=survivalMPL/reference/register_basis.md).\
-See
+without modifying existing code. Each basis lives in its own
+`R/basis-*.R` file, which implements the three required functions -
+`knots_fn`, `matrix_fn` and `penalty_fn` - collects them in a spec list,
+and is registered by a call to
+[`register_basis()`](https://CRAN.R-project.org/package=survivalMPL/reference/register_basis.md)
+in `zzz.R`. Any of the four files is a working template for a fifth
+basis. See
 [`?list_bases`](https://CRAN.R-project.org/package=survivalMPL/reference/list_bases.md)
-for the full list of registered bases.
+for the bases currently registered.
 
 ------------------------------------------------------------------------
 

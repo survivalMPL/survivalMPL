@@ -30,11 +30,7 @@ lung <- na.omit(lung[, c("time", "status", "age", "sex", "ph.karno", "wt.loss")]
 fit_lung <- coxph_mpl(
   Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss,
   data = lung,
-  control = coxph_mpl.control(
-    n.obs = sum(lung$status == 2),
-    max.iter = c(40, 2000, 4000),
-    smooth = 0
-  )
+  tol  = 1e-05
 )
 
 summary(fit_lung)
@@ -47,13 +43,9 @@ data(bcos2)
 
 fit_bcos <- coxph_mpl(
   Surv(left, right, type = "interval2") ~ treatment,
-  data = bcos2,
-  control = coxph_mpl.control(
-    basis = "msplines",
-    n.obs = nrow(bcos2),
-    max.iter = c(40, 2000, 4000),
-    smooth = 0
-  )
+  data   = bcos2,
+  basis  = "msplines",
+  smooth = 0
 )
 
 summary(fit_bcos)

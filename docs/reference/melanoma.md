@@ -1,8 +1,8 @@
 # Pseudo-Melanoma Survival Data
 
-Simulated interval-censored survival data based on the design in Moore
-(2016, Examples 2.6–2.7). The true baseline hazard is Weibull with shape
-0.5: \\h_0(t) = t^{-1/2}\\, \\H_0(t) = 2\sqrt{t}\\.
+Simulated partly interval-censored survival data based on the design in
+Moore (2016, Examples 2.6–2.7). The true baseline hazard is Weibull with
+shape 0.5: \\h_0(t) = t^{-1/2}\\, \\H_0(t) = 2\sqrt{t}\\.
 
 ## Format
 
@@ -58,7 +58,9 @@ Moore, D.K. (2016). *Applied Survival Analysis Using R*. Springer.
 
 Observations are classified as exact events (`t_L == t_R`), left-
 censored (`t_L == 0`), right-censored (`t_R == Inf`), or
-interval-censored otherwise. Pass to `coxph_mpl` via
+interval-censored otherwise. Two thirds of the sample (200 subjects) are
+exact events and one third is censored: 58 interval censored, 23 right
+censored and 19 left censored. Pass to `coxph_mpl` via
 `Surv(t_L, t_R, type = "interval2")`.
 
 True regression coefficients (`beta_true`) used in the simulation:
@@ -74,8 +76,9 @@ True regression coefficients (`beta_true`) used in the simulation:
 | `Female`      | -0.17 |
 | `Age_centred` | 0.14  |
 
-Generated with `set.seed(1)`; see `dev/data-raw/melanoma.R` to
-reproduce.
+Generated with `set.seed(1)` and simulation parameters `pi_E = 2/3`
+(probability of an exact event), `a1 = 0.02` and `a2 = 0.30`
+(inspection-window scales); see `dev/data-raw/melanoma.R` to reproduce.
 
 ## Examples
 

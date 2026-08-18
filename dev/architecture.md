@@ -12,7 +12,6 @@ R/
 ├── basis-gaussian.R     # Gaussian basis
 ├── basis-msplines.R     # M-splines (most common; aliases: "m", "mspline")
 ├── basis-epanechnikov.R # Epanechnikov basis
-├── basis-bsplines.R     # B-splines (proof-of-concept, registered)
 ├── control.R            # coxph_mpl.control()
 ├── coxph.r              # Main fitting engine  ← lowercase .r, do not rename
 ├── plot.R / summary.R / print.R / coef.R / predict.R / residuals.R

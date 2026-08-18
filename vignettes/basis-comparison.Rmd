@@ -347,10 +347,11 @@ the baseline hazard.
 ## Extensibility
 
 The basis registry (`R/basis.R`) allows new basis types to be added without
-modifying existing code.  The file `R/basis-bsplines.R` includes a skeleton 
-showing how to implement the three required functions (`knots_fn`, `matrix_fn`, 
-`penalty_fn`) and how to call `register_basis()`.  
-See `?list_bases` for the full list of registered bases.
+modifying existing code.  Each basis lives in its own `R/basis-*.R` file, which
+implements the three required functions - `knots_fn`, `matrix_fn` and
+`penalty_fn` - collects them in a spec list, and is registered by a call to
+`register_basis()` in `zzz.R`.  Any of the four files is a working template for
+a fifth basis.  See `?list_bases` for the bases currently registered.
 
 ---
 
