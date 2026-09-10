@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,10 +51,12 @@
     <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
+    <li><a class="dropdown-item" href="../articles/control-parameters.html">Control Parameters</a></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
     <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../articles/book.html">Book</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -126,15 +128,14 @@ strictly less than
 <p>Truncation times are not part of the <code><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv()</a></code> response.
 Pass them through the <code>entry</code> argument instead:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">x</span>, data <span class="op">=</span> <span class="va">df</span>, entry <span class="op">=</span> <span class="va">start</span>,</span>
-<span>          control <span class="op">=</span> <span class="fu"><a href="../reference/coxph_mpl.control.html">coxph_mpl.control</a></span><span class="op">(</span>basis <span class="op">=</span> <span class="st">"uniform"</span>,</span>
-<span>                                      n.obs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">status</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">x</span>, data <span class="op">=</span> <span class="va">df</span>, entry <span class="op">=</span> <span class="va">start</span><span class="op">)</span></span></code></pre></div>
 <p>Three things to know:</p>
 <ul>
 <li>
 <strong><code>entry</code> requires
-<code>basis = "uniform"</code>.</strong> Left truncation is implemented
-by differencing the cumulative basis,
+<code>basis = "uniform"</code></strong>, which is the default, so
+nothing else has to be set. Left truncation is implemented by
+differencing the cumulative basis,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>a</mi><mi>i</mi></msub><mo>,</mo><msub><mi>y</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>H</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><msub><mi>H</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>a</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">H_0(a_i, y_i) = H_0(y_i) - H_0(a_i)</annotation></semantics></math>,
 which the package supports for the piecewise-constant basis. This is not
 a limitation of the method so much as its natural setting: with
@@ -146,8 +147,9 @@ each
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>u</mi></msub><annotation encoding="application/x-tex">\hat\theta_u</annotation></semantics></math>
 has a closed form given
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝜷</mi><annotation encoding="application/x-tex">\boldsymbol{\beta}</annotation></semantics></math>,
-which is what makes the profile likelihood of <span class="citation">Bhaskaran et al. (n.d.)</span> possible. Any other
-basis raises an error rather than returning a silently wrong fit.</li>
+which is what makes the profile likelihood of <span class="citation">Bhaskaran et al. (n.d.)</span> possible. Asking for any
+other basis together with <code>entry</code> gets you a uniform fit and
+a warning saying so, rather than a silently wrong fit or a refusal.</li>
 <li>
 <strong>Entry times must strictly precede the event or censoring
 time.</strong> A violation is an error, not a warning.</li>
@@ -187,18 +189,13 @@ only those who had already reached that age by late 1950.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_entry</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">dose</span> <span class="op">+</span> <span class="va">sex</span> <span class="op">+</span> <span class="va">city</span>,</span>
-<span>  data    <span class="op">=</span> <span class="va">hiroshima</span>,</span>
-<span>  entry   <span class="op">=</span> <span class="va">entry</span>,</span>
-<span>  control <span class="op">=</span> <span class="fu"><a href="../reference/coxph_mpl.control.html">coxph_mpl.control</a></span><span class="op">(</span></span>
-<span>    basis <span class="op">=</span> <span class="st">"uniform"</span>,</span>
-<span>    n.obs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">hiroshima</span><span class="op">$</span><span class="va">status</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
+<span>  data  <span class="op">=</span> <span class="va">hiroshima</span>,</span>
+<span>  entry <span class="op">=</span> <span class="va">entry</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_entry</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; coxph_mpl(formula = Surv(time, status) ~ dose + sex + city, data = hiroshima, </span></span>
-<span><span class="co">#&gt;     control = coxph_mpl.control(basis = "uniform", n.obs = sum(hiroshima$status)), </span></span>
 <span><span class="co">#&gt;     entry = entry)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -----</span></span>
@@ -231,43 +228,27 @@ only those who had already reached that age by late 1950.</p>
 <span><span class="co">#&gt; 0.062309691 0.111161804 0.214221247 0.340579097 0.348117394 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -----</span></span></code></pre></div>
-<div class="section level3">
-<h3 id="what-ignoring-the-truncation-costs">What ignoring the truncation costs<a class="anchor" aria-label="anchor" href="#what-ignoring-the-truncation-costs"></a>
-</h3>
-<p>Dropping <code>entry</code> treats every subject as if followed from
-birth, which attributes to each one a stretch of person-time during
-which they were in fact not observable:</p>
+<p>The estimated baseline hazard is a hazard by <em>attained age</em>,
+and because the risk set at each age contains only subjects who had
+already reached that age by late 1950, it is the truncation-corrected
+one:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_entry</span>, which <span class="op">=</span> <span class="fl">2</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, cex.main <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span></code></pre></div>
+<p><img src="left-truncation_files/figure-html/plot-entry-hazard-1.png" class="r-plt" alt="" width="624" style="display: block; margin: auto;"></p>
+<p>Requesting a different basis alongside <code>entry</code> does not
+fail; the fit falls back to <code>"uniform"</code> and says so:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fallback</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">dose</span> <span class="op">+</span> <span class="va">sex</span> <span class="op">+</span> <span class="va">city</span>,</span>
-<span>  data    <span class="op">=</span> <span class="va">hiroshima</span>,</span>
-<span>  control <span class="op">=</span> <span class="fu"><a href="../reference/coxph_mpl.control.html">coxph_mpl.control</a></span><span class="op">(</span></span>
-<span>    basis <span class="op">=</span> <span class="st">"uniform"</span>,</span>
-<span>    n.obs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">hiroshima</span><span class="op">$</span><span class="va">status</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
+<span>  data  <span class="op">=</span> <span class="va">hiroshima</span>,</span>
+<span>  entry <span class="op">=</span> <span class="va">entry</span>,</span>
+<span>  basis <span class="op">=</span> <span class="st">"msplines"</span></span>
 <span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: entry= (left truncation) is only implemented for basis = "uniform";</span></span>
+<span><span class="co">#&gt; basis "msplines" was replaced by "uniform".</span></span>
 <span></span>
-<span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span></span>
-<span>  `with entry`    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_entry</span>, <span class="st">"Beta"</span><span class="op">)</span>,</span>
-<span>  SE              <span class="op">=</span> <span class="va">fit_entry</span><span class="op">$</span><span class="va">se</span><span class="op">$</span><span class="va">Beta</span><span class="op">$</span><span class="va">M2QM2</span>,</span>
-<span>  `ignoring entry`<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_naive</span>, <span class="st">"Beta"</span><span class="op">)</span>,</span>
-<span>  `shift, in SE`  <span class="op">=</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_naive</span>, <span class="st">"Beta"</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_entry</span>, <span class="st">"Beta"</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span></span>
-<span>                     <span class="va">fit_entry</span><span class="op">$</span><span class="va">se</span><span class="op">$</span><span class="va">Beta</span><span class="op">$</span><span class="va">M2QM2</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">comparison</span>, <span class="fl">4</span><span class="op">)</span></span>
-<span><span class="co">#&gt;              with entry     SE ignoring entry shift, in SE</span></span>
-<span><span class="co">#&gt; dose             0.1635 0.0151         0.1836       1.3282</span></span>
-<span><span class="co">#&gt; sexFemale       -0.5519 0.0093        -0.5456       0.6816</span></span>
-<span><span class="co">#&gt; cityNagasaki     0.0515 0.0098         0.0726       2.1397</span></span></code></pre></div>
-<p>The shift is systematic rather than random. Both <code>dose</code>
-and <code>city</code> are biased upwards, by roughly 1.3 and 2.1
-standard errors, while <code>sex</code> moves very little. That pattern
-is what one would expect: entry age is unrelated to sex, so
-mis-specifying the time at risk does not distort that coefficient,
-whereas dose and city are both associated with the age distribution of
-the survivors who were still alive in 1950. A shift of two standard
-errors is more than enough to change how a coefficient is read.</p>
-</div>
+<span><span class="va">fallback</span><span class="op">$</span><span class="va">control</span><span class="op">$</span><span class="va">basis</span></span>
+<span><span class="co">#&gt; [1] "uniform"</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="limitations">Limitations<a class="anchor" aria-label="anchor" href="#limitations"></a>

@@ -29,20 +29,22 @@ Truncation times are not part of the
 [`Surv()`](https://rdrr.io/pkg/survival/man/Surv.html) response. Pass
 them through the `entry` argument instead:
 
-[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(`[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status``)`` ``~`` ``x``, data ``=`` ``df``, entry ``=`` ``start``,`` `` control ``=`` `[`coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)`(``basis ``=`` ``"uniform"``,`` `` n.obs ``=`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``df``$``status``)``)``)`
+[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(`[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status``)`` ``~`` ``x``, data ``=`` ``df``, entry ``=`` ``start``)`
 
 Three things to know:
 
-- **`entry` requires `basis = "uniform"`.** Left truncation is
-  implemented by differencing the cumulative basis,
+- **`entry` requires `basis = "uniform"`**, which is the default, so
+  nothing else has to be set. Left truncation is implemented by
+  differencing the cumulative basis,
   $`H_0(a_i, y_i) = H_0(y_i) - H_0(a_i)`$, which the package supports
   for the piecewise-constant basis. This is not a limitation of the
   method so much as its natural setting: with indicator basis functions
   $`\psi_u(t) = I(t \in B_u)`$ over bins $`B_u = (w_u, w_{u+1}]`$, each
   $`\hat\theta_u`$ has a closed form given $`\boldsymbol{\beta}`$, which
   is what makes the profile likelihood of Bhaskaran et al. (n.d.)
-  possible. Any other basis raises an error rather than returning a
-  silently wrong fit.
+  possible. Asking for any other basis together with `entry` gets you a
+  uniform fit and a warning saying so, rather than a silently wrong fit
+  or a refusal.
 - **Entry times must strictly precede the event or censoring time.** A
   violation is an error, not a warning.
 - **Truncated and untruncated subjects may be mixed** in one call. Use
@@ -64,24 +66,20 @@ Entry ages run from 5 to 94 years, so the truncation is substantial
 rather than incidental: at any attained age, the subjects at risk are
 only those who had already reached that age by late 1950.
 
-`fit_entry`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(`` `` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status``)`` ``~`` ``dose`` ``+`` ``sex`` ``+`` ``city``,`` `` data ``=`` ``hiroshima``,`` `` entry ``=`` ``entry``,`` `` control ``=`` `[`coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)`(`` `` basis ``=`` ``"uniform"``,`` `` n.obs ``=`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``hiroshima``$``status``)`` `` ``)`` ``)`` `` `[`summary`](https://rdrr.io/r/base/summary.html)`(``fit_entry``)`` ``#> `` ``#> coxph_mpl(formula = Surv(time, status) ~ dose + sex + city, data = hiroshima, `` ``#> control = coxph_mpl.control(basis = "uniform", n.obs = sum(hiroshima$status)), `` ``#> entry = entry)`` ``#> `` ``#> -----`` ``#> `` ``#> Cox Proportional Hazards Model Fit Using MPL `` ``#> `` ``#> `` ``#> Penalized log-likelihood : -218085.3`` ``#> Estimated smoothing value : 486.6378`` ``#> Convergence : Yes (12 + 292 iter.) `` ``#> `` ``#> Data : hiroshima`` ``#> Number of obs. : 86611`` ``#> Number of events : 50620 (58.44523%)`` ``#> Number of cens. : 35991 (41.55477%)`` ``#> `` ``#> Regression parameters : Surv(time, status) ~ dose + sex + city`` ``#> Estimate Std. Error z-value Pr(>|z|) `` ``#> dose 0.1635084 0.0151308 10.8063 < 2.2e-16 ***`` ``#> sexFemale -0.5518858 0.0092909 -59.4005 < 2.2e-16 ***`` ``#> cityNagasaki 0.0515481 0.0098435 5.2368 1.634e-07 ***`` ``#> ---`` ``#> Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1`` ``#> `` ``#> Baseline hasard parameters approximated using Uniform :`` ``#> (11 equal events bins)`` ``#> 1 2 3 4 5 6 `` ``#> 0.001058039 0.002478473 0.004673498 0.009799451 0.019100936 0.033959813 `` ``#> 7 8 9 10 11 `` ``#> 0.062309691 0.111161804 0.214221247 0.340579097 0.348117394 `` ``#> `` ``#> -----`
+`fit_entry`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(`` `` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status``)`` ``~`` ``dose`` ``+`` ``sex`` ``+`` ``city``,`` `` data ``=`` ``hiroshima``,`` `` entry ``=`` ``entry`` ``)`` `` `[`summary`](https://rdrr.io/r/base/summary.html)`(``fit_entry``)`` ``#> `` ``#> coxph_mpl(formula = Surv(time, status) ~ dose + sex + city, data = hiroshima, `` ``#> entry = entry)`` ``#> `` ``#> -----`` ``#> `` ``#> Cox Proportional Hazards Model Fit Using MPL `` ``#> `` ``#> `` ``#> Penalized log-likelihood : -218085.3`` ``#> Estimated smoothing value : 486.6378`` ``#> Convergence : Yes (12 + 292 iter.) `` ``#> `` ``#> Data : hiroshima`` ``#> Number of obs. : 86611`` ``#> Number of events : 50620 (58.44523%)`` ``#> Number of cens. : 35991 (41.55477%)`` ``#> `` ``#> Regression parameters : Surv(time, status) ~ dose + sex + city`` ``#> Estimate Std. Error z-value Pr(>|z|) `` ``#> dose 0.1635084 0.0151308 10.8063 < 2.2e-16 ***`` ``#> sexFemale -0.5518858 0.0092909 -59.4005 < 2.2e-16 ***`` ``#> cityNagasaki 0.0515481 0.0098435 5.2368 1.634e-07 ***`` ``#> ---`` ``#> Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1`` ``#> `` ``#> Baseline hasard parameters approximated using Uniform :`` ``#> (11 equal events bins)`` ``#> 1 2 3 4 5 6 `` ``#> 0.001058039 0.002478473 0.004673498 0.009799451 0.019100936 0.033959813 `` ``#> 7 8 9 10 11 `` ``#> 0.062309691 0.111161804 0.214221247 0.340579097 0.348117394 `` ``#> `` ``#> -----`
 
-### What ignoring the truncation costs
+The estimated baseline hazard is a hazard by *attained age*, and because
+the risk set at each age contains only subjects who had already reached
+that age by late 1950, it is the truncation-corrected one:
 
-Dropping `entry` treats every subject as if followed from birth, which
-attributes to each one a stretch of person-time during which they were
-in fact not observable:
+[`plot`](https://rdrr.io/r/graphics/plot.default.html)`(``fit_entry``, which ``=`` ``2``, ask ``=`` ``FALSE``, cex.main ``=`` ``0.9``)`
 
-`fit_naive`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(`` `` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status``)`` ``~`` ``dose`` ``+`` ``sex`` ``+`` ``city``,`` `` data ``=`` ``hiroshima``,`` `` control ``=`` `[`coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)`(`` `` basis ``=`` ``"uniform"``,`` `` n.obs ``=`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``hiroshima``$``status``)`` `` ``)`` ``)`` `` ``comparison`` ``<-`` `[`cbind`](https://rdrr.io/r/base/cbind.html)`(`` ```  `with entry`  ```=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_entry``, ``"Beta"``)``,`` `` SE ``=`` ``fit_entry``$``se``$``Beta``$``M2QM2``,`` ```  `ignoring entry` ```=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_naive``, ``"Beta"``)``,`` ```  `shift, in SE`  ```=`` ``(`[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_naive``, ``"Beta"``)`` ``-`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_entry``, ``"Beta"``)``)`` ``/`` `` ``fit_entry``$``se``$``Beta``$``M2QM2`` ``)`` `[`round`](https://rdrr.io/r/base/Round.html)`(``comparison``, ``4``)`` ``#> with entry SE ignoring entry shift, in SE`` ``#> dose 0.1635 0.0151 0.1836 1.3282`` ``#> sexFemale -0.5519 0.0093 -0.5456 0.6816`` ``#> cityNagasaki 0.0515 0.0098 0.0726 2.1397`
+![](left-truncation_files/figure-html/plot-entry-hazard-1.png)
 
-The shift is systematic rather than random. Both `dose` and `city` are
-biased upwards, by roughly 1.3 and 2.1 standard errors, while `sex`
-moves very little. That pattern is what one would expect: entry age is
-unrelated to sex, so mis-specifying the time at risk does not distort
-that coefficient, whereas dose and city are both associated with the age
-distribution of the survivors who were still alive in 1950. A shift of
-two standard errors is more than enough to change how a coefficient is
-read.
+Requesting a different basis alongside `entry` does not fail; the fit
+falls back to `"uniform"` and says so:
+
+`fallback`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(`` `` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status``)`` ``~`` ``dose`` ``+`` ``sex`` ``+`` ``city``,`` `` data ``=`` ``hiroshima``,`` `` entry ``=`` ``entry``,`` `` basis ``=`` ``"msplines"`` ``)`` ``#> Warning: entry= (left truncation) is only implemented for basis = "uniform";`` ``#> basis "msplines" was replaced by "uniform".`` `` ``fallback``$``control``$``basis`` ``#> [1] "uniform"`
 
 ## Limitations
 

@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Control Parameters</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">
+
+div.csl-bib-body { }
+div.csl-entry {
+clear: both;
+}
+.hanging div.csl-entry {
+margin-left:2em;
+text-indent:-2em;
+}
+div.csl-left-margin {
+min-width:2em;
+float:left;
+}
+div.csl-right-inline {
+margin-left:2em;
+padding-left:1em;
+}
+div.csl-indent {
+margin-left: 2em;
+}
+</style>
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Control Parameters</h1>
+
+
+<div id="TOC">
+<ul>
+<li><a href="#overview" id="toc-overview">Overview</a></li>
+<li><a href="#the-baseline-hazard" id="toc-the-baseline-hazard">The
+baseline hazard</a>
+<ul>
+<li><a href="#basis" id="toc-basis"><code>basis</code></a></li>
+<li><a href="#n.knots-and-range.quant" id="toc-n.knots-and-range.quant"><code>n.knots</code> and
+<code>range.quant</code></a></li>
+<li><a href="#order-and-penalty" id="toc-order-and-penalty"><code>order</code> and
+<code>penalty</code></a></li>
+</ul></li>
+<li><a href="#smoothing-smooth" id="toc-smoothing-smooth">Smoothing:
+<code>smooth</code></a>
+<ul>
+<li><a href="#choosing-lambda-by-hand" id="toc-choosing-lambda-by-hand">Choosing <span class="math inline">\(\lambda\)</span> by hand</a></li>
+</ul></li>
+<li><a href="#the-optimiser" id="toc-the-optimiser">The
+optimiser</a></li>
+<li><a href="#ties-ties-and-seed" id="toc-ties-ties-and-seed">Ties:
+<code>ties</code> and <code>seed</code></a></li>
+<li><a href="#full-argument-list" id="toc-full-argument-list">Full
+argument list</a></li>
+<li><a href="#practical-recipes" id="toc-practical-recipes">Practical
+recipes</a></li>
+<li><a href="#references" id="toc-references">References</a></li>
+</ul>
+</div>
+
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p><code>coxph_mpl()</code> runs with defaults that work for most
+datasets, so the tutorials call it with nothing but a formula and a data
+frame. When a fit needs tuning - a different baseline hazard basis, more
+or fewer knots, a fixed smoothing value, longer iteration limits - the
+settings live in <code>coxph_mpl.control()</code>.</p>
+<p>There are two equivalent ways to change them:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># 1. pass control arguments directly; coxph_mpl() forwards them</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">coxph_mpl</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> x, <span class="at">data =</span> df, <span class="at">basis =</span> <span class="st">&quot;msplines&quot;</span>, <span class="at">tol =</span> <span class="fl">1e-5</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co"># 2. build the control object explicitly</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">coxph_mpl</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> x, <span class="at">data =</span> df,</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>          <span class="at">control =</span> <span class="fu">coxph_mpl.control</span>(<span class="at">n.obs =</span> <span class="fu">sum</span>(df<span class="sc">$</span>status),</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>                                      <span class="at">basis =</span> <span class="st">&quot;msplines&quot;</span>, <span class="at">tol =</span> <span class="fl">1e-5</span>))</span></code></pre></div>
+<p>The first form is shorter and is what the other articles use. The
+second is needed when the same settings are reused across several fits.
+Note the <code>n.obs</code> argument in the second form:
+<code>coxph_mpl.control()</code> uses the number of fully observed
+events to set defaults, and cannot count them itself, so a hand-built
+control object must be told. Called through <code>...</code>,
+<code>coxph_mpl()</code> counts them for you.</p>
+<p>A control object is a plain list with validated entries:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(survivalMPL)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">library</span>(survival)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="fu">str</span>(<span class="fu">coxph_mpl.control</span>(<span class="at">n.obs =</span> <span class="dv">165</span>))</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt; List of 16</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt;  $ basis            : chr &quot;uniform&quot;</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt;  $ smooth           : num 0</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt;  $ max.iter         : int [1:3] 150 75000 1000000</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt;  $ tol              : num 1e-07</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt;  $ order            : int 3</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt;  $ penalty          : int 2</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt;  $ n.knots          : num [1:2] 8 2</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt;  $ range.quant      : num [1:2] 0.075 0.9</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt;  $ cover.sigma.quant: num 0.25</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt;  $ cover.sigma.fixed: num 0.25</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt;  $ n.events_basis   : int 10</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt;  $ min.theta        : num 1e-10</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#&gt;  $ ties             : chr &quot;epsilon&quot;</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="co">#&gt;  $ seed             : int(0) </span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="co">#&gt;  $ kappa            : num 1.67</span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="co">#&gt;  $ epsilon          : num [1:2] 1e-16 1e-10</span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;class&quot;)= chr &quot;coxph_mpl.control&quot;</span></span></code></pre></div>
+<p>Every argument is validated on the way in: values outside their
+admissible range are silently replaced by the default rather than passed
+on to the optimiser, so an impossible setting cannot produce a
+meaningless fit.</p>
+<hr />
+</div>
+<div id="the-baseline-hazard" class="section level2">
+<h2>The baseline hazard</h2>
+<div id="basis" class="section level3">
+<h3><code>basis</code></h3>
+<p>Which family of non-negative functions <span class="math inline">\(\psi_1,\ldots,\psi_m\)</span> is used to build
+<span class="math inline">\(h_0(t) = \sum_u \theta_u
+\psi_u(t)\)</span>:</p>
+<table>
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Value</th>
+<th>Aliases</th>
+<th>Shape</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>&quot;uniform&quot;</code></td>
+<td><code>&quot;u&quot;</code>, <code>&quot;uni&quot;</code></td>
+<td>Piecewise-constant step functions (default)</td>
+</tr>
+<tr class="even">
+<td><code>&quot;msplines&quot;</code></td>
+<td><code>&quot;m&quot;</code>, <code>&quot;ms&quot;</code></td>
+<td>M-splines of order <code>order</code></td>
+</tr>
+<tr class="odd">
+<td><code>&quot;gaussian&quot;</code></td>
+<td><code>&quot;g&quot;</code>, <code>&quot;gauss&quot;</code></td>
+<td>Truncated Gaussian kernels</td>
+</tr>
+<tr class="even">
+<td><code>&quot;epanechikov&quot;</code></td>
+<td><code>&quot;e&quot;</code>, <code>&quot;epa&quot;</code>,
+<code>&quot;epanechnikov&quot;</code></td>
+<td>Epanechnikov kernels</td>
+</tr>
+</tbody>
+</table>
+<p><code>&quot;uniform&quot;</code> is the fastest and gives coefficients <span class="math inline">\(\theta_u\)</span> that read directly as the hazard
+rate on knot interval <span class="math inline">\(u\)</span>.
+<code>&quot;msplines&quot;</code> is the usual choice when a smooth <span class="math inline">\(\hat h_0\)</span> matters, in particular for
+interval-censored data where <span class="math inline">\(H_0\)</span>
+enters the likelihood at both endpoints. <strong>Basis Functions for the
+Baseline Hazard</strong> defines each one and compares them on the same
+data.</p>
+</div>
+<div id="n.knots-and-range.quant" class="section level3">
+<h3><code>n.knots</code> and <code>range.quant</code></h3>
+<p><code>n.knots</code> is a length-2 vector <code>c(k1, k2)</code>. The
+first entry places <span class="math inline">\(k_1 + 1\)</span> knots at
+quantiles of the observed event times up to <code>range.quant[2]</code>
+(the 90th percentile by default); the second places <span class="math inline">\(k_2 + 1\)</span> equally spaced knots above that
+quantile. When <code>k2 = 0</code>, all knots are quantile-based over
+the whole range. Defaults are <code>c(8, 2)</code> for
+<code>&quot;uniform&quot;</code> and <code>&quot;msplines&quot;</code>, and
+<code>c(0, 20)</code> for the two kernel bases.</p>
+<p>More knots mean a more flexible <span class="math inline">\(\hat
+h_0\)</span> and a larger <span class="math inline">\(\boldsymbol{\theta}\)</span> to estimate; the
+penalty, not the knot count, is what should control smoothness, so a
+moderately generous knot count with automatic smoothing is usually
+better than a small one:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>lung <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(lung[, <span class="fu">c</span>(<span class="st">&quot;time&quot;</span>, <span class="st">&quot;status&quot;</span>, <span class="st">&quot;age&quot;</span>, <span class="st">&quot;sex&quot;</span>, <span class="st">&quot;ph.karno&quot;</span>, <span class="st">&quot;wt.loss&quot;</span>)])</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>f    <span class="ot">&lt;-</span> <span class="fu">Surv</span>(time, status <span class="sc">==</span> <span class="dv">2</span>) <span class="sc">~</span> age <span class="sc">+</span> sex <span class="sc">+</span> ph.karno <span class="sc">+</span> wt.loss</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>fit_coarse <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(f, <span class="at">data =</span> lung, <span class="at">n.knots =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">1</span>),  <span class="at">tol =</span> <span class="fl">1e-5</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>fit_fine   <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(f, <span class="at">data =</span> lung, <span class="at">n.knots =</span> <span class="fu">c</span>(<span class="dv">15</span>, <span class="dv">3</span>), <span class="at">tol =</span> <span class="fl">1e-5</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="fu">c</span>(<span class="at">coarse =</span> fit_coarse<span class="sc">$</span>knots<span class="sc">$</span>m, <span class="at">fine =</span> fit_fine<span class="sc">$</span>knots<span class="sc">$</span>m)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; coarse   fine </span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;      5     19</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">cbind</span>(<span class="at">coarse =</span> <span class="fu">coef</span>(fit_coarse), <span class="at">fine =</span> <span class="fu">coef</span>(fit_fine)), <span class="dv">4</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;           coarse    fine</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; age       0.0145  0.0142</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; sex      -0.5077 -0.5087</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; ph.karno -0.0116 -0.0119</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; wt.loss  -0.0016 -0.0018</span></span></code></pre></div>
+<p>The regression coefficients barely move; what changes is the
+resolution of the baseline hazard.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">4</span>, <span class="dv">3</span>, <span class="dv">1</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">plot</span>(fit_coarse, <span class="at">which =</span> <span class="dv">2</span>, <span class="at">ask =</span> <span class="cn">FALSE</span>, <span class="at">cex.main =</span> <span class="fl">0.85</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="fu">plot</span>(fit_fine,   <span class="at">which =</span> <span class="dv">2</span>, <span class="at">ask =</span> <span class="cn">FALSE</span>, <span class="at">cex.main =</span> <span class="fl">0.85</span>)</span></code></pre></div>
+<p><img role="img" aria-label src="data:image/png;base64,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" alt style="display: block; margin: auto;" /></p>
+</div>
+<div id="order-and-penalty" class="section level3">
+<h3><code>order</code> and <code>penalty</code></h3>
+<p><code>order</code> is the order of the M-spline or Epanechnikov basis
+(default 3, cubic M-splines). Order 1 M-splines coincide with the
+uniform basis and order 2 with a triangular basis.</p>
+<p><code>penalty</code> is the order of the roughness penalty: 1
+penalises the first differences of <span class="math inline">\(\boldsymbol{\theta}\)</span>, 2 the second
+differences. The uniform and Gaussian bases accept either; the
+Epanechnikov basis always uses second order, and M-splines use
+<code>order - 1</code>. The default is 2.</p>
+<hr />
+</div>
+</div>
+<div id="smoothing-smooth" class="section level2">
+<h2>Smoothing: <code>smooth</code></h2>
+<p>The penalised log-likelihood maximised by <code>coxph_mpl()</code>
+is</p>
+<p><span class="math display">\[\Phi(\boldsymbol{\beta},\boldsymbol{\theta}) =
+  \ell(\boldsymbol{\beta},\boldsymbol{\theta}) -
+  \lambda\,\boldsymbol{\theta}^T \mathbf{R}
+\boldsymbol{\theta},\]</span></p>
+<p>where <span class="math inline">\(\mathbf{R}\)</span> is the
+roughness matrix of the chosen basis and <span class="math inline">\(\lambda \ge 0\)</span> is the smoothing value
+<span class="citation">(Ma et al. 2014)</span>. <code>smooth</code> sets
+<span class="math inline">\(\lambda\)</span>:</p>
+<table>
+<thead>
+<tr class="header">
+<th><code>smooth</code></th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>NULL</code> (default)</td>
+<td><span class="math inline">\(\lambda\)</span> selected automatically
+from the data</td>
+</tr>
+<tr class="even">
+<td><code>0</code></td>
+<td>No penalty at all: plain maximum likelihood</td>
+</tr>
+<tr class="odd">
+<td>any <span class="math inline">\(\lambda &gt; 0\)</span></td>
+<td><span class="math inline">\(\lambda\)</span> held fixed at that
+value</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Automatic selection</strong> is the default, and is the
+marginal likelihood method of <span class="citation">Ma et al.
+(2024)</span> (Section 2.10). The quadratic penalty <span class="math inline">\(\boldsymbol{\theta}^T\mathbf{R}\boldsymbol{\theta}\)</span>
+is read as a normal prior <span class="math inline">\(\boldsymbol{\theta} \sim N(\mathbf{0},
+\sigma^2\mathbf{R}^{-1})\)</span> with <span class="math inline">\(\sigma^2 = 1/(2\lambda)\)</span>; <span class="math inline">\(\boldsymbol\beta\)</span> and <span class="math inline">\(\boldsymbol\theta\)</span> are integrated out, and
+a Laplace approximation to the resulting marginal likelihood gives the
+update <span class="math inline">\(\hat\sigma^2 =
+\hat{\boldsymbol\theta}^T\mathbf{R}\hat{\boldsymbol\theta}/\nu\)</span>,
+where <span class="math inline">\(\nu\)</span> is the model degrees of
+freedom. Since the estimates and <span class="math inline">\(\sigma^2\)</span> depend on each other, this
+alternates: <strong>inner iterations</strong> fit <span class="math inline">\(\boldsymbol\beta\)</span> and <span class="math inline">\(\boldsymbol\theta\)</span> at the current <span class="math inline">\(\sigma^2\)</span>, then an <strong>outer
+iteration</strong> updates <span class="math inline">\(\sigma^2\)</span>, until <span class="math inline">\(\nu\)</span> stabilises.</p>
+<p>Whether <span class="math inline">\(\lambda\)</span> was selected or
+fixed is visible in the fitted object: supplying <code>smooth</code>
+sets <code>max.iter[1]</code> to 1, which switches the outer iterations
+off, and <code>summary()</code> reports the value as <em>fixed</em>
+rather than <em>estimated</em>. The final <span class="math inline">\(\lambda\)</span> - selected or not - is stored in
+<code>fit$control$smooth</code>.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>fit_ml   <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(f, <span class="at">data =</span> lung, <span class="at">smooth =</span> <span class="dv">0</span>)      <span class="co"># unpenalised</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>fit_auto <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(f, <span class="at">data =</span> lung)                  <span class="co"># automatic smoothing value</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>fit_hard <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(f, <span class="at">data =</span> lung, <span class="at">smooth =</span> <span class="fl">1e8</span>)    <span class="co"># heavily penalised</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="fu">c</span>(<span class="at">ml =</span> fit_ml<span class="sc">$</span>control<span class="sc">$</span>smooth,</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="at">automatic =</span> fit_auto<span class="sc">$</span>control<span class="sc">$</span>smooth,</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="at">hard =</span> fit_hard<span class="sc">$</span>control<span class="sc">$</span>smooth)</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt;        ml automatic      hard </span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt;         0  19163433 100000000</span></span></code></pre></div>
+<div id="choosing-lambda-by-hand" class="section level3">
+<h3>Choosing <span class="math inline">\(\lambda\)</span> by hand</h3>
+<p><span class="math inline">\(\lambda\)</span> is not scale-free. It
+trades off against the size of <span class="math inline">\(\boldsymbol{\theta}\)</span>, which depends on the
+time units, the basis and the number of knots, so the value that
+oversmooths one dataset is negligible on another - the selected value
+above is of order <span class="math inline">\(10^7\)</span> only because
+<code>lung</code> measures time in days, making the hazard rates
+themselves of order <span class="math inline">\(10^{-3}\)</span>. There
+is no portable rule of thumb, which is the reason to leave
+<code>smooth = NULL</code> unless there is a specific reason not to. If
+a fixed value is needed, fit a small grid and inspect <span class="math inline">\(\hat h_0\)</span>, rather than transplanting a
+value from another analysis. Extremely large values eventually break the
+fit rather than flattening it: on <code>lung</code>, <span class="math inline">\(\lambda = 10^9\)</span> drives the estimate to a
+degenerate solution with an attenuated <code>sex</code> coefficient.</p>
+<hr />
+</div>
+</div>
+<div id="the-optimiser" class="section level2">
+<h2>The optimiser</h2>
+<table>
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Argument</th>
+<th>Meaning</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>max.iter</code></td>
+<td>Length-3 vector: (1) outer smoothing-parameter updates, (2) inner
+<span class="math inline">\(\boldsymbol\beta\)</span>/<span class="math inline">\(\boldsymbol\theta\)</span> updates, (3) total
+inner iterations</td>
+<td><code>c(150, 7.5e4, 1e6)</code></td>
+</tr>
+<tr class="even">
+<td><code>tol</code></td>
+<td>Convergence tolerance: on the parameter change between inner
+iterations, and, as <code>10 * tol</code>, on the change in the degrees
+of freedom <span class="math inline">\(\nu\)</span> between outer
+iterations</td>
+<td><code>1e-7</code></td>
+</tr>
+<tr class="odd">
+<td><code>kappa</code></td>
+<td>Step-size reduction factor (&gt; 1) applied when the penalised
+likelihood fails to increase</td>
+<td><code>1/0.6</code></td>
+</tr>
+<tr class="even">
+<td><code>min.theta</code></td>
+<td><span class="math inline">\(\hat\theta_u\)</span> below this are
+reported as zero, i.e. as active non-negativity constraints</td>
+<td><code>1e-10</code></td>
+</tr>
+<tr class="odd">
+<td><code>epsilon</code></td>
+<td>Length-2 floor on survival and baseline hazard values, guarding the
+logarithms</td>
+<td><code>c(1e-16, 1e-10)</code></td>
+</tr>
+</tbody>
+</table>
+<p>Setting <code>smooth</code> to a fixed value forces
+<code>max.iter[1]</code> to 1, since there is no outer loop left to run.
+<code>summary()</code> prints whether the algorithm converged and how
+many outer and inner iterations it used; <code>fit$iter</code> holds the
+same two numbers:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>fit_auto<span class="sc">$</span>iter        <span class="co"># c(outer iterations, total inner iterations)</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt; [1]  150 4268</span></span></code></pre></div>
+<p>If either equals its cap the fit has not converged, and
+<code>summary()</code> says <code>Convergence: NO</code>.
+<code>fit_auto</code> above is such a fit: with everything at its
+default it stops at the cap of 150 outer iterations without the degrees
+of freedom having settled.</p>
+<p>The reason is the stopping rule rather than the data. The outer loop
+stops when <span class="math inline">\(\nu\)</span> changes by less than
+<code>10 * tol</code>, which is <span class="math inline">\(10^{-6}\)</span> at the default
+<code>tol = 1e-7</code>, whereas <span class="citation">Ma et al.
+(2024)</span> describe stability in <span class="math inline">\(\nu\)</span> as changes “not greater than, say, 1
+or 0.5”. Asking for six decimal places of a quantity the method itself
+treats as settled at half a unit is what keeps the loop running. Either
+loosening <code>tol</code> to the <span class="math inline">\(10^{-5}\)</span> the book uses in its own
+examples, or raising the cap, produces the same fit:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>fit_tol  <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(f, <span class="at">data =</span> lung, <span class="at">tol =</span> <span class="fl">1e-05</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>fit_more <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(f, <span class="at">data =</span> lung, <span class="at">max.iter =</span> <span class="fu">c</span>(<span class="dv">600</span>, <span class="fl">7.5e4</span>, <span class="fl">1e6</span>))</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="fu">rbind</span>(<span class="st">`</span><span class="at">tol = 1e-05</span><span class="st">`</span>  <span class="ot">=</span> fit_tol<span class="sc">$</span>iter,</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>      <span class="st">`</span><span class="at">max.iter 600</span><span class="st">`</span> <span class="ot">=</span> fit_more<span class="sc">$</span>iter)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt;              [,1] [,2]</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; tol = 1e-05   101  571</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; max.iter 600  492 5196</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">cbind</span>(<span class="st">`</span><span class="at">default (capped)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">coef</span>(fit_auto),</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>            <span class="st">`</span><span class="at">tol = 1e-05</span><span class="st">`</span>      <span class="ot">=</span> <span class="fu">coef</span>(fit_tol),</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>            <span class="st">`</span><span class="at">max.iter 600</span><span class="st">`</span>     <span class="ot">=</span> <span class="fu">coef</span>(fit_more)), <span class="dv">4</span>)</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt;          default (capped) tol = 1e-05 max.iter 600</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; age                0.0146      0.0144       0.0146</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; sex               -0.5108     -0.5103      -0.5108</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; ph.karno          -0.0118     -0.0117      -0.0118</span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt; wt.loss           -0.0018     -0.0017      -0.0018</span></span></code></pre></div>
+<p>The three sets of coefficients differ by at most a twentieth of a
+standard error, so the capped fit was not wrong - but a fit that reports
+non-convergence should not be published on the strength of that, and
+<code>tol = 1e-05</code> is the cheaper of the two ways out. If neither
+helps, the usual causes are too many knots for the number of events, or
+a covariate on a very different scale from the others.</p>
+<hr />
+</div>
+<div id="ties-ties-and-seed" class="section level2">
+<h2>Ties: <code>ties</code> and <code>seed</code></h2>
+<p>Knot sequences are built from the distinct fully observed event
+times. Duplicated event times therefore have to be resolved:</p>
+<ul>
+<li><code>ties = &quot;epsilon&quot;</code> (default) jitters duplicates by a
+small random amount;</li>
+<li><code>ties = &quot;unique&quot;</code> drops duplicates before computing
+quantiles.</li>
+</ul>
+<p>Because <code>&quot;epsilon&quot;</code> uses the random number generator,
+<code>seed</code> fixes it so the knots - and hence the fit - are
+exactly reproducible:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>fit_a <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(f, <span class="at">data =</span> lung, <span class="at">ties =</span> <span class="st">&quot;epsilon&quot;</span>, <span class="at">seed =</span> <span class="dv">42</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>fit_b <span class="ot">&lt;-</span> <span class="fu">coxph_mpl</span>(f, <span class="at">data =</span> lung, <span class="at">ties =</span> <span class="st">&quot;epsilon&quot;</span>, <span class="at">seed =</span> <span class="dv">42</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="fu">identical</span>(<span class="fu">coef</span>(fit_a), <span class="fu">coef</span>(fit_b))</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>The current RNG state is restored afterwards, so setting
+<code>seed</code> does not disturb any simulation running around the
+fit.</p>
+<hr />
+</div>
+<div id="full-argument-list" class="section level2">
+<h2>Full argument list</h2>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Argument</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>n.obs</code></td>
+<td>Number of fully observed events; used to derive defaults</td>
+</tr>
+<tr class="even">
+<td><code>basis</code></td>
+<td>Basis for <span class="math inline">\(h_0\)</span></td>
+</tr>
+<tr class="odd">
+<td><code>smooth</code></td>
+<td>Smoothing value <span class="math inline">\(\lambda\)</span>;
+<code>NULL</code> = automatic selection, <code>0</code> = no
+penalty</td>
+</tr>
+<tr class="even">
+<td><code>max.iter</code></td>
+<td>Iteration limits for the three optimisation stages</td>
+</tr>
+<tr class="odd">
+<td><code>tol</code></td>
+<td>Convergence tolerance</td>
+</tr>
+<tr class="even">
+<td><code>n.knots</code></td>
+<td>Quantile and equally spaced internal knot counts</td>
+</tr>
+<tr class="odd">
+<td><code>range.quant</code></td>
+<td>Quantile range for the quantile-based knots</td>
+</tr>
+<tr class="even">
+<td><code>order</code></td>
+<td>Order of the M-spline / Epanechnikov basis</td>
+</tr>
+<tr class="odd">
+<td><code>penalty</code></td>
+<td>Order of the roughness penalty</td>
+</tr>
+<tr class="even">
+<td><code>cover.sigma.quant</code>, <code>cover.sigma.fixed</code></td>
+<td>Bandwidth targets for the Gaussian basis</td>
+</tr>
+<tr class="odd">
+<td><code>min.theta</code></td>
+<td>Threshold below which <span class="math inline">\(\hat\theta_u\)</span> is reported as zero</td>
+</tr>
+<tr class="even">
+<td><code>kappa</code></td>
+<td>Step-size reduction factor</td>
+</tr>
+<tr class="odd">
+<td><code>epsilon</code></td>
+<td>Numerical floors for survival and hazard values</td>
+</tr>
+<tr class="even">
+<td><code>ties</code></td>
+<td>Tie-breaking strategy for duplicated event times</td>
+</tr>
+<tr class="odd">
+<td><code>seed</code></td>
+<td>RNG seed used when <code>ties = &quot;epsilon&quot;</code></td>
+</tr>
+<tr class="even">
+<td><code>n.events_basis</code></td>
+<td>Events per uniform basis element; retained for backward
+compatibility, not used by the current knot construction</td>
+</tr>
+</tbody>
+</table>
+<p>See <code>?coxph_mpl.control</code> for the full argument
+documentation.</p>
+<hr />
+</div>
+<div id="practical-recipes" class="section level2">
+<h2>Practical recipes</h2>
+<ul>
+<li><strong>Start with the defaults.</strong> Uniform basis, automatic
+smoothing, default knots.</li>
+<li><strong>Interval- or left-censored data:</strong>
+<code>basis = &quot;msplines&quot;</code>, since <span class="math inline">\(H_0\)</span> is evaluated at both interval
+endpoints and a step function makes that estimate coarse.</li>
+<li><strong>Comparing bases or reproducing a maximum likelihood
+fit:</strong> <code>smooth = 0</code>.</li>
+<li><strong>Left truncation (<code>entry</code>):</strong>
+<code>basis = &quot;uniform&quot;</code> - the only basis for which differencing
+the cumulative basis is implemented. Any other basis is replaced by
+<code>&quot;uniform&quot;</code> with a warning.</li>
+<li><strong>A fit that will not converge:</strong> set
+<code>tol = 1e-05</code> first - the outer loop stopping rule at the
+default tolerance is stricter than the method needs - then raise
+<code>max.iter</code>, then reduce <code>n.knots</code>.</li>
+</ul>
+</div>
+<div id="references" class="section level2 unnumbered">
+<h2 class="unnumbered">References</h2>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-Ma2014" class="csl-entry">
+Ma, Jun, Stephane Héritier, and Serigne N. Lo. 2014. <span>“On the
+Maximum Penalized Likelihood Approach for Proportional Hazard Models
+with Right Censored Survival Data.”</span> <em>Computational Statistics
+&amp; Data Analysis</em> 74: 142–56. <a href="https://doi.org/10.1016/j.csda.2014.01.005">https://doi.org/10.1016/j.csda.2014.01.005</a>.
+</div>
+<div id="ref-MaWebbHudson2024" class="csl-entry">
+Ma, Jun, Annabel Webb, and Harold Malcolm Hudson. 2024. <em>Likelihood
+Methods in Survival Analysis: With <span>R</span> Examples</em>. 1st ed.
+Chapman; Hall/<span>CRC</span>. <a href="https://doi.org/10.1201/9781351109710">https://doi.org/10.1201/9781351109710</a>.
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

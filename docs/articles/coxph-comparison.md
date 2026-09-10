@@ -36,14 +36,14 @@ compare:
 
 ## Regression coefficients and standard errors
 
-`beta_pl`` ``<-`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_pl``)`` ``se_pl`` ``<-`` `[`sqrt`](https://rdrr.io/r/base/MathFun.html)`(`[`diag`](https://rdrr.io/r/base/diag.html)`(`[`vcov`](https://rdrr.io/r/stats/vcov.html)`(``fit_pl``)``)``)`` `` ``beta_mpl`` ``<-`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_mpl``)`` ``se_mpl`` ``<-`` ``fit_mpl``$``se``$``Beta``$``M2HM2`` `` ``row_labels`` ``<-`` `[`c`](https://rdrr.io/r/base/c.html)`(`` `` age ``=`` ``"Age (per year)^a^"``,`` `` sex ``=`` ``"Sex"``,`` `` ph.karno ``=`` ``"Karnofsky score (per point)^a^"``,`` `` wt.loss ``=`` ``"Weight loss (kg)"`` ``)`` `` ``tab`` ``<-`` `[`data.frame`](https://rdrr.io/r/base/data.frame.html)`(`` `` Covariate ``=`` ``row_labels``[`[`names`](https://rdrr.io/r/base/names.html)`(``beta_pl``)``]``,`` ```  `PL β`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``beta_pl``, ``4``)``,`` ```  `PL SE`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``se_pl``, ``4``)``,`` ```  `MPL β`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``beta_mpl``, ``4``)``,`` ```  `MPL SE`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``se_mpl``, ``4``)``,`` ```  `Δβ`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``beta_mpl`` ``-`` ``beta_pl``, ``4``)``,`` `` check.names ``=`` ``FALSE``,`` `` row.names ``=`` ``NULL`` ``)`` ``knitr``::`[`kable`](https://rdrr.io/pkg/knitr/man/kable.html)`(``tab``, align ``=`` ``"lrrrrr"``,`` `` caption ``=`` ``"^a^ The forest plot rescales these covariates to per-10-unit changes."``)`
+`beta_pl`` ``<-`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_pl``)`` ``se_pl`` ``<-`` `[`sqrt`](https://rdrr.io/r/base/MathFun.html)`(`[`diag`](https://rdrr.io/r/base/diag.html)`(`[`vcov`](https://rdrr.io/r/stats/vcov.html)`(``fit_pl``)``)``)`` `` ``beta_mpl`` ``<-`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_mpl``)`` ``se_mpl`` ``<-`` ``fit_mpl``$``se``$``Beta``$``M2HM2`` `` ``row_labels`` ``<-`` `[`c`](https://rdrr.io/r/base/c.html)`(`` `` age ``=`` ``"Age (per year)^a^"``,`` `` sex ``=`` ``"Sex"``,`` `` ph.karno ``=`` ``"Karnofsky score (per point)^a^"``,`` `` wt.loss ``=`` ``"Weight loss (kg)"`` ``)`` `` ``tab`` ``<-`` `[`data.frame`](https://rdrr.io/r/base/data.frame.html)`(`` `` Covariate ``=`` ``row_labels``[`[`names`](https://rdrr.io/r/base/names.html)`(``beta_pl``)``]``,`` ```  `PL est.`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``beta_pl``, ``4``)``,`` ```  `PL SE`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``se_pl``, ``4``)``,`` ```  `MPL est.`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``beta_mpl``, ``4``)``,`` ```  `MPL SE`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``se_mpl``, ``4``)``,`` ```  `Difference`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``beta_mpl`` ``-`` ``beta_pl``, ``4``)``,`` `` check.names ``=`` ``FALSE``,`` `` row.names ``=`` ``NULL`` ``)`` ``knitr``::`[`kable`](https://rdrr.io/pkg/knitr/man/kable.html)`(``tab``, align ``=`` ``"lrrrrr"``,`` `` caption ``=`` ``"^a^ The forest plot rescales these covariates to per-10-unit changes."``)`
 
-| Covariate                       |    PL β |  PL SE |   MPL β | MPL SE |      Δβ |
-|:--------------------------------|--------:|-------:|--------:|-------:|--------:|
-| Age (per year)^(a)              |  0.0151 | 0.0098 |  0.0148 | 0.0099 | -0.0004 |
-| Sex                             | -0.5140 | 0.1744 | -0.4964 | 0.1735 |  0.0176 |
-| Karnofsky score (per point)^(a) | -0.0129 | 0.0062 | -0.0107 | 0.0061 |  0.0022 |
-| Weight loss (kg)                | -0.0022 | 0.0064 | -0.0010 | 0.0063 |  0.0012 |
+| Covariate                       | PL est. |  PL SE | MPL est. | MPL SE | Difference |
+|:--------------------------------|--------:|-------:|---------:|-------:|-----------:|
+| Age (per year)^(a)              |  0.0151 | 0.0098 |   0.0148 | 0.0099 |    -0.0004 |
+| Sex                             | -0.5140 | 0.1744 |  -0.4964 | 0.1735 |     0.0176 |
+| Karnofsky score (per point)^(a) | -0.0129 | 0.0062 |  -0.0107 | 0.0061 |     0.0022 |
+| Weight loss (kg)                | -0.0022 | 0.0064 |  -0.0010 | 0.0063 |     0.0012 |
 
 ^(a) The forest plot rescales these covariates to per-10-unit changes.
 {.table style="width:100%;"}
@@ -89,6 +89,64 @@ arise from tied or sparse event times. The Kaplan-Meier curve sits above
 both because it is not adjusted for covariates - in particular it does
 not account for the protective effect of female sex and higher Karnofsky
 score at the mean covariate profile.
+
+------------------------------------------------------------------------
+
+## Instantaneous hazard comparison
+
+Survival curves are the forgiving comparison: integration smooths away
+differences in the hazard. The instantaneous hazard $`\hat h(t)`$ is
+where the two approaches genuinely differ, and it is the quantity
+[`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) does not
+estimate at all.
+
+The partial likelihood gives a cumulative hazard that jumps at each
+event time, so its “hazard” is a set of point masses. To draw it as a
+rate it has to be binned: the increments of the Breslow cumulative
+hazard are accumulated over equal-width intervals and divided by the
+interval width, which is the piecewise-constant hazard estimate implied
+by [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) at that
+resolution.
+[`coxph_mpl()`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)
+needs no such post-processing - $`\hat h(t)`$ is part of the fitted
+object.
+
+![](coxph-comparison_files/figure-html/hazard-comparison-1.png)
+
+Over the bulk of follow-up the two agree: a hazard of roughly
+$`1.3 \times
+10^{-3}`$ per day early on, rising to around $`3 \times 10^{-3}`$ by day
+500. The disagreement is in the character of the two estimates rather
+than their level.
+
+The binned Breslow estimate jumps from bin to bin - its fourth bin sits
+below its third - and the whole picture depends on a bin width nobody
+chose on statistical grounds: eight bins give this, sixteen would give
+something visibly rougher, four something visibly flatter. Its last bin
+is exactly zero, because no death is recorded after day 894, which is a
+statement about this sample rather than about the hazard. The M-spline
+estimate is smooth by construction, with the roughness penalty rather
+than an arbitrary bin width deciding how much structure survives, and
+every point of it carries a standard error - which the binned version
+does not.
+
+Past about 900 days the two part company completely: the smooth estimate
+goes on rising while the binned one collapses to zero. Neither is
+informative there. Three patients are still at risk and none of them
+dies, so the data contain almost nothing about the hazard at that point,
+and each method fills the vacuum in its own way - one by extrapolating
+its trend, the other by reporting the empty bin as a zero rate.
+
+That difference is the practical argument for the penalised full
+likelihood: when the target is a hazard ratio,
+[`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) and
+[`coxph_mpl()`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)
+agree, and the partial likelihood is the cheaper route; when the target
+is absolute risk - a hazard, a survival probability, a predicted event
+time for a given covariate profile - the baseline has to be estimated,
+and
+[`coxph_mpl()`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)
+estimates it as part of the model.
 
 ------------------------------------------------------------------------
 

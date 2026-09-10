@@ -3,6 +3,7 @@ title: "Right Censoring with survivalMPL"
 output:
   rmarkdown::html_vignette:
     toc: true
+bibliography: references.bib
 vignette: >
   %\VignetteIndexEntry{Right Censoring with survivalMPL}
   %\VignetteEngine{knitr::rmarkdown}
@@ -66,20 +67,19 @@ c(n = nrow(lung), events = sum(lung$status == 2),
 
 ### Model fit
 
-`n.obs` tells `coxph_mpl.control()` how many exact events there are, which sets
-the default number of knots for the baseline hazard.  Here we fix the smoothing
-parameter at `smooth = 0` (no penalty) to keep the example fast; leaving
-`smooth = NULL` estimates it by REML instead.
+Little beyond the formula and the data is required.  The defaults use a uniform
+(piecewise-constant) baseline hazard, take the number of knots from the number
+of events, and select the smoothing value $\lambda$ automatically by the
+marginal likelihood method.  The one change made here is the convergence
+tolerance, set to the $10^{-5}$ used throughout @MaWebbHudson2024; at the
+default $10^{-7}$ the outer iterations do not settle on this dataset - see
+**Control Parameters**:
 
 ```{r fit}
 fit_lung <- coxph_mpl(
   Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss,
   data = lung,
-  control = coxph_mpl.control(
-    n.obs    = sum(lung$status == 2),
-    max.iter = c(40, 2000, 4000),
-    smooth   = 0
-  )
+  tol  = 1e-05
 )
 
 summary(fit_lung)
@@ -90,6 +90,10 @@ The coefficient table is read as in any Cox fit: `sex` is strongly protective
 is associated with lower hazard.  The summary also reports the estimated
 baseline hazard coefficients $\boldsymbol{\theta}$, which have no counterpart in
 a partial likelihood fit.
+
+Every one of those defaults can be overridden through `coxph_mpl.control()` -
+the basis, the knots, the smoothing parameter, the iteration limits.  The
+**Control Parameters** article covers them one at a time.
 
 ### Baseline hazard and survival
 
@@ -111,6 +115,18 @@ interval; the pale grey verticals are the knots $\boldsymbol{\alpha}$.  A basis
 drawn dashed would indicate $\hat\theta_u$ driven to zero, meaning that
 interval contributes nothing to the fitted hazard.
 
+The second panel is the estimated baseline hazard itself: a step function whose
+height on knot interval $u$ is $\hat\theta_u$.  It is the one quantity a
+partial likelihood fit cannot give you, so it is worth drawing on its own:
+
+```{r plot-hazard-only, fig.width=6.5, fig.height=4.5}
+plot(fit_lung, which = 2, ask = FALSE, cex.main = 0.9)
+```
+
+The hazard climbs steadily across follow-up - more than doubling between the
+first knot interval and the last - and flattens only in the final intervals,
+where few patients remain at risk and the confidence band widens accordingly.
+
 ### Predicted survival
 
 `predict()` returns absolute estimates with standard errors and pointwise
@@ -130,18 +146,56 @@ pred_one <- predict(fit_lung, type = "survival", i = 1)
 head(pred_one)
 ```
 
-### Residuals
+---
 
-Martingale residuals are available for checking the fit:
+## Residuals
 
-```{r resid, fig.height=4}
-plot(residuals(fit_lung))
+`residuals()` returns both Cox-Snell and martingale residuals.  For a subject
+observed exactly, the Cox-Snell residual is the fitted cumulative hazard that
+subject accumulated,
+
+$$r^{CS}_i = e^{\mathbf{x}_i^T\hat{\boldsymbol{\beta}}}\,\hat H_0(t_i),$$
+
+with censored observations adjusted so that every residual estimates the same
+quantity under the model.  The martingale residual is then
+$\hat M_i = \delta_i - r^{CS}_i$: the difference between the number of events
+actually observed for subject $i$ (0 or 1) and the number the model expects.
+
+```{r resid, fig.width=8, fig.height=4}
+res_lung <- residuals(fit_lung)
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+plot(res_lung, which = 1:2, ask = FALSE)
 ```
+
+Read them as follows.
+
+- **Martingale residuals** are bounded above by 1 and unbounded below, so the
+  cloud is asymmetric by construction: censored observations (red) are at or
+  below zero, events (black) are pulled towards 1.  A residual close to 1 marks
+  a subject who died far earlier than the model predicted, a large negative one
+  a subject who survived far longer.  Here a handful of subjects sit below
+  $-2$, one of them near $-6$: those are the long survivors the fitted model
+  finds most surprising, and they are worth looking at individually before
+  concluding anything about the model as a whole.
+- **Cox-Snell residuals** behave like a censored sample from a unit exponential
+  distribution when the model is correct, so most sit below 1 with a thinning
+  right tail.  A mass of residuals far above 1 indicates the fitted cumulative
+  hazard is wrong, usually through a mis-specified covariate effect rather than
+  a mis-specified baseline.
+
+The horizontal axis of both panels is the row number, which carries meaning
+only if the rows arrived in a meaningless order.  In `lung` they did not: the
+censored subjects are concentrated in the later rows (3 of the first 54 are
+censored, against 36 of the last 53), which is why the red points drift to the
+right of both panels.  That is a fact about the data file, not about the fit.
 
 ---
 
 ## Next steps
 
+- **Control Parameters** covers `coxph_mpl.control()`: the basis, the knots,
+  the smoothing value $\lambda$, the iteration limits and the convergence
+  tolerance used above.
 - **Left Truncation** covers delayed entry, where subjects join the risk set
   only at some entry time.  Right-censored data are often also left truncated,
   and `coxph_mpl()` handles it through the `entry` argument.
@@ -151,3 +205,5 @@ plot(residuals(fit_lung))
   $\psi_u$ and how the knots are placed.
 - **Comparing `coxph()` and `coxph_mpl()`** fits both to the same
   right-censored data and contrasts the results.
+
+## References

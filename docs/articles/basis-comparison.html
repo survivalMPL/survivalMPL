@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,10 +51,12 @@
     <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
+    <li><a class="dropdown-item" href="../articles/control-parameters.html">Control Parameters</a></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
     <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../articles/book.html">Book</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -258,7 +260,7 @@ on a fine grid and plot each set of basis functions.</p>
 quantile-based knots over the lower <code>range.quant[2]</code> (90% by
 default) of the event times, plus
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mn>2</mn></msub><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">k_2 + 1</annotation></semantics></math>
-equally spaced knots above that quantile —
+equally spaced knots above that quantile, giving
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mn>1</mn></msub><mo>+</mo><msub><mi>k</mi><mn>2</mn></msub><mo>+</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">k_1 + k_2 + 2</annotation></semantics></math>
 knots in total. The defaults are <code>c(8, 2)</code> for
 <code>"uniform"</code> and <code>"msplines"</code> (12 knots,
@@ -272,16 +274,18 @@ and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>23</mn><annotation encoding="application/x-tex">23</annotation></semantics></math>).</p>
 <p>The figure below deliberately uses far fewer:
 <code>n.knots = c(0, 6)</code>, i.e. 8 widely spaced knots and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>=</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">m = 7</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>9</mn><annotation encoding="application/x-tex">9</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>=</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">m = 7</annotation></semantics></math>
+to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>9</mn><annotation encoding="application/x-tex">9</annotation></semantics></math>
 basis functions per panel. At the default resolution the curves overlap
 into a dense, unreadable thicket, and on this right-skewed dataset the
 quantile knots crowd so tightly near
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">t = 0</annotation></semantics></math>
 that the first basis function spikes and flattens all the others. Fewer
-knots do not change the shape of an individual basis function — only how
+knots do not change the shape of an individual basis function, only how
 many there are and how wide each one is.</p>
 <p><img src="basis-comparison_files/figure-html/basis-vis-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
-<p>Colour runs with the basis index —
+<p>Colour runs with the basis index:
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ψ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\psi_1</annotation></semantics></math>
 (blue) is left-most in time,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ψ</mi><mi>m</mi></msub><annotation encoding="application/x-tex">\psi_m</annotation></semantics></math>
@@ -309,7 +313,7 @@ true baseline
 <code>c(0, 20)</code>.)</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">)</span></span>
-<span><span class="va">formula_mel</span> <span class="op">&lt;-</span> <span class="fu">Surv</span><span class="op">(</span><span class="va">t_L</span>, <span class="va">t_R</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span> <span class="op">~</span></span>
+<span><span class="va">formula_mel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">t_L</span>, <span class="va">t_R</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span> <span class="op">~</span></span>
 <span>  <span class="va">Arm</span> <span class="op">+</span> <span class="va">Leg</span> <span class="op">+</span> <span class="va">Trunk</span> <span class="op">+</span> <span class="va">mm1to2</span> <span class="op">+</span> <span class="va">mm2to4</span> <span class="op">+</span> <span class="va">mm4plus</span> <span class="op">+</span> <span class="va">Female</span> <span class="op">+</span> <span class="va">Age_centred</span></span>
 <span><span class="va">n_obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">$</span><span class="va">t_L</span> <span class="op">==</span> <span class="va">melanoma</span><span class="op">$</span><span class="va">t_R</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">melanoma</span><span class="op">$</span><span class="va">t_R</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">base_ctrl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>n.obs <span class="op">=</span> <span class="va">n_obs</span>,</span>
@@ -344,39 +348,41 @@ true baseline
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">coef_mat</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;             Uniform Gaussian M-Splines Epanechnikov</span></span>
-<span><span class="co">#&gt; Arm          -0.596   -0.583    -0.562       -0.620</span></span>
-<span><span class="co">#&gt; Leg          -0.112   -0.085    -0.087       -0.111</span></span>
-<span><span class="co">#&gt; Trunk        -0.241   -0.243    -0.239       -0.252</span></span>
-<span><span class="co">#&gt; mm1to2        0.036    0.053     0.029        0.056</span></span>
-<span><span class="co">#&gt; mm2to4        0.614    0.672     0.625        0.642</span></span>
-<span><span class="co">#&gt; mm4plus       1.472    1.468     1.436        1.454</span></span>
-<span><span class="co">#&gt; Female       -0.090   -0.077    -0.089       -0.088</span></span>
-<span><span class="co">#&gt; Age_centred   0.117    0.114     0.111        0.119</span></span></code></pre></div>
+<span><span class="co">#&gt; Arm          -0.491   -0.467    -0.491       -0.495</span></span>
+<span><span class="co">#&gt; Leg          -0.032    0.006    -0.014       -0.016</span></span>
+<span><span class="co">#&gt; Trunk        -0.221   -0.204    -0.214       -0.213</span></span>
+<span><span class="co">#&gt; mm1to2       -0.037   -0.011    -0.013       -0.026</span></span>
+<span><span class="co">#&gt; mm2to4        0.613    0.629     0.630        0.624</span></span>
+<span><span class="co">#&gt; mm4plus       1.255    1.270     1.267        1.264</span></span>
+<span><span class="co">#&gt; Female       -0.171   -0.160    -0.161       -0.164</span></span>
+<span><span class="co">#&gt; Age_centred   0.099    0.093     0.098        0.099</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="estimated-baseline-hazards">Estimated baseline hazards<a class="anchor" aria-label="anchor" href="#estimated-baseline-hazards"></a>
 </h3>
 <p><img src="basis-comparison_files/figure-html/baseline-plot-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
-<p>All four bases recover the decreasing shape of the true Weibull
-baseline
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mi>t</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h_0(t) = t^{-1/2}</annotation></semantics></math>
-(dashed), and the four estimates are almost indistinguishable from one
-another — though all four sit above the true level over this range, so
-the fitted survival curves fall below the true
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mn>0</mn></msub><annotation encoding="application/x-tex">S_0</annotation></semantics></math>.
-The uniform basis shows the expected step artefacts; the smooth bases
-produce continuous estimates but, with <code>smooth = 0</code> (no
-roughness penalty), they oscillate around the truth — the log scale
-makes this visible. Penalised fits (<code>smooth &gt; 0</code>, or
-<code>smooth.per = TRUE</code> for automatic selection) damp these
-oscillations.</p>
-<p>Note that these are predictions at the <em>mean</em> covariate
-vector, so each curve estimates
+<p>All four bases agree on the broad picture: a hazard that falls
+steeply over the first few weeks and then levels off, and survival
+curves that are nearly identical. The hazard estimates themselves are
+not nearly identical, and the log scale is what shows it. The uniform
+basis gives the expected step artefacts, while the three smooth bases
+oscillate, and disagree about where the peaks and troughs fall, because
+<code>smooth = 0</code> applies no roughness penalty at all. Penalised
+fits (<code>smooth &gt; 0</code>, or <code>smooth.per = TRUE</code> for
+automatic selection) damp these oscillations. That the four disagree
+this much on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>h</mi><mo accent="true">̂</mo></mover><mn>0</mn></msub><annotation encoding="application/x-tex">\hat h_0</annotation></semantics></math>
+while agreeing on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>S</mi><mo accent="true">̂</mo></mover><mn>0</mn></msub><annotation encoding="application/x-tex">\hat S_0</annotation></semantics></math>
+is the usual picture: the survival curve integrates the hazard, and
+integration smooths the differences away.</p>
+<p>These are predictions at the <em>mean</em> covariate vector, so each
+curve estimates
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msup><mover><mi mathvariant="bold-italic">𝒙</mi><mo accent="true">‾</mo></mover><mi>T</mi></msup><mi mathvariant="bold-italic">𝜷</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h_0(t)\exp(\bar{\mathbf{x}}^T\boldsymbol{\beta})</annotation></semantics></math>
 rather than
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h_0(t)</annotation></semantics></math>
-itself. The covariates are not centred, so this is not directly
-comparable to the Weibull baseline used to simulate the data.</p>
+itself. The covariates are not centred, so the level of these curves is
+not the level of the baseline hazard.</p>
 <hr>
 </div>
 </div>
@@ -404,12 +410,14 @@ second-order penalty is supported.</p></li>
 <h2 id="extensibility">Extensibility<a class="anchor" aria-label="anchor" href="#extensibility"></a>
 </h2>
 <p>The basis registry (<code>R/basis.R</code>) allows new basis types to
-be added without modifying existing code. The file
-<code>R/basis-bsplines.R</code> includes a skeleton showing how to
-implement the three required functions (<code>knots_fn</code>,
-<code>matrix_fn</code>, <code>penalty_fn</code>) and how to call
-<code><a href="../reference/register_basis.html">register_basis()</a></code>.<br>
-See <code><a href="../reference/list_bases.html">?list_bases</a></code> for the full list of registered bases.</p>
+be added without modifying existing code. Each basis lives in its own
+<code>R/basis-*.R</code> file, which implements the three required
+functions - <code>knots_fn</code>, <code>matrix_fn</code> and
+<code>penalty_fn</code> - collects them in a spec list, and is
+registered by a call to <code><a href="../reference/register_basis.html">register_basis()</a></code> in
+<code>zzz.R</code>. Any of the four files is a working template for a
+fifth basis. See <code><a href="../reference/list_bases.html">?list_bases</a></code> for the bases currently
+registered.</p>
 <hr>
 </div>
 <div class="section level2 unnumbered">

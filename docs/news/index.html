@@ -15,7 +15,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,9 +35,11 @@
     <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
+    <li><a class="dropdown-item" href="../articles/control-parameters.html">Control Parameters</a></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
     <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul></li>
+<li class="nav-item"><a class="nav-link" href="../articles/book.html">Book</a></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -59,6 +61,34 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2-4.9005" id="survivalmpl-02-49005-development">survivalMPL 0.2-4.9005 (development)<a class="anchor" aria-label="anchor" href="#survivalmpl-02-49005-development"></a></h2>
+<ul><li>
+<strong><code>entry=</code> no longer errors on a non-uniform basis.</strong> Left truncation is only implemented for the piecewise-constant basis, so asking for any other basis together with <code>entry=</code> now falls back to <code>"uniform"</code> with a warning instead of stopping. The knot count reverts to the uniform default when it was the kernel-basis default, and the penalty order is recomputed for the new basis.</li>
+<li>
+<strong>B-splines removed.</strong> <code>R/basis-bsplines.R</code> was a proof-of-concept never intended as a production basis; it is gone, along with its registration in <code>zzz.R</code> and its mentions in the articles. The registered bases are uniform, M-splines, Gaussian and Epanechnikov.</li>
+<li>
+<strong>New dataset <code>hiv</code>.</strong> 300 simulated HIV seroconversion times with left- and right-censored observations and exact events, and no interval censoring - a clean illustration of left censoring on its own. See <code>dev/data-raw/hiv.R</code>.</li>
+<li>
+<strong><code>melanoma</code> regenerated.</strong> Two thirds of the sample (200 subjects) are now exact events and one third is censored: 58 interval, 23 right and 19 left censored. Previously it was 117 exact, 35 interval, 16 right and 132 left censored, i.e. dominated by left censoring. The simulation design, true coefficients and baseline hazard are unchanged; only <code>pi_E</code>, <code>a1</code> and <code>a2</code> differ. Fits on this dataset will give different numbers than in 0.2-4.9004.</li>
+<li>New article <strong>Control Parameters</strong>, covering <code><a href="../reference/coxph_mpl.control.html">coxph_mpl.control()</a></code>: the basis, the knots, the smoothing value and its automatic selection, the optimiser limits and tie handling.</li>
+<li>
+<strong>The default <code>tol</code> makes the outer loop hard to satisfy.</strong> The automatic smoothing parameter selection stops when the degrees of freedom <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math> change by less than <code>10 * tol</code>, i.e. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>6</mn></mrow></msup><annotation encoding="application/x-tex">10^{-6}</annotation></semantics></math> by default, where Ma, Webb and Hudson (2024, Section 2.10) call <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math> settled at changes of 0.5 to 1. On <code>lung</code> the default fit therefore runs out its 150 outer iterations and reports <code>Convergence: NO</code>, though its coefficients differ from a converged fit by at most a twentieth of a standard error. The examples now pass <code>tol = 1e-05</code>, the value the book uses throughout; the default itself is unchanged.</li>
+<li>New website page <strong>Book</strong>, with the cover, DOI and citation for Ma, Webb and Hudson (2024), and a map from each article to the material it follows.</li>
+<li>
+<strong>Right Censoring</strong> drops the <code>control = coxph_mpl.control(...)</code> block from its example and gains a residuals section: how to read the martingale and Cox-Snell plots, and why the index axis of both reflects the row order of <code>lung</code> rather than the fit.</li>
+<li>
+<strong>Left Censoring</strong> rewritten around the new <code>hiv</code> dataset, with no interval censoring in sight: the fit checked against the coefficients that generated the data, the baseline hazard, and predicted survival by sharing status.</li>
+<li>
+<strong>Interval Censoring</strong> now uses the bundled <code>melanoma</code> data instead of simulating them inline, and follows the book’s own example (Section 2.11): its fit call unchanged, including the automatic smoothing parameter selection, a hazard ratio table as in its Table 2.6, and the baseline hazard of its Figure 2.5.</li>
+<li>
+<strong>Comparing <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code> and <code><a href="../reference/coxph_mpl.html">coxph_mpl()</a></code></strong> gains an instantaneous hazard comparison: the binned Breslow hazard against the smooth M-spline estimate.</li>
+<li>Baseline hazard plots added to the right-censoring, left-censoring, interval-censoring and left-truncation articles.</li>
+<li>
+<strong>Left Truncation</strong> drops its redundant <code>control = coxph_mpl.control(basis = "uniform", n.obs = ...)</code> blocks - <code>"uniform"</code> is the default and <code>n.obs</code> is not read by the fitting code - and its “What ignoring the truncation costs” comparison, keeping the article to the <code>entry=</code> fit, its baseline hazard and the basis fallback.</li>
+<li>
+<strong>Getting Started</strong> lists the bases in the text instead of printing <code><a href="../reference/list_bases.html">list_bases()</a></code>, and points at the new Control Parameters article.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2-4.9004" id="survivalmpl-02-49004-development">survivalMPL 0.2-4.9004 (development)<a class="anchor" aria-label="anchor" href="#survivalmpl-02-49004-development"></a></h2>
 <ul><li>

@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
   fig.width  = 7,
   fig.height = 4.5
 )
+set.seed(1)
 ```
 
 ## Overview
@@ -85,14 +86,14 @@ row_labels <- c(
 )
 
 tab <- data.frame(
-  Covariate   = row_labels[names(beta_pl)],
-  `PL β`      = round(beta_pl,  4),
-  `PL SE`     = round(se_pl,    4),
-  `MPL β`     = round(beta_mpl, 4),
-  `MPL SE`    = round(se_mpl,   4),
-  `Δβ`        = round(beta_mpl - beta_pl, 4),
-  check.names = FALSE,
-  row.names   = NULL
+  Covariate    = row_labels[names(beta_pl)],
+  `PL est.`    = round(beta_pl,  4),
+  `PL SE`      = round(se_pl,    4),
+  `MPL est.`   = round(beta_mpl, 4),
+  `MPL SE`     = round(se_mpl,   4),
+  `Difference` = round(beta_mpl - beta_pl, 4),
+  check.names  = FALSE,
+  row.names    = NULL
 )
 knitr::kable(tab, align = "lrrrrr",
              caption = "^a^ The forest plot rescales these covariates to per-10-unit changes.")
@@ -232,6 +233,81 @@ curve, while avoiding the staircase artefacts that arise from tied or sparse
 event times.  The Kaplan-Meier curve sits above both because it is not adjusted
 for covariates - in particular it does not account for the protective effect of
 female sex and higher Karnofsky score at the mean covariate profile.
+
+---
+
+## Instantaneous hazard comparison
+
+Survival curves are the forgiving comparison: integration smooths away
+differences in the hazard.  The instantaneous hazard $\hat h(t)$ is where the
+two approaches genuinely differ, and it is the quantity `coxph()` does not
+estimate at all.
+
+The partial likelihood gives a cumulative hazard that jumps at each event time,
+so its "hazard" is a set of point masses.  To draw it as a rate it has to be
+binned: the increments of the Breslow cumulative hazard are accumulated over
+equal-width intervals and divided by the interval width, which is the
+piecewise-constant hazard estimate implied by `coxph()` at that resolution.
+`coxph_mpl()` needs no such post-processing - $\hat h(t)$ is part of the fitted
+object.
+
+```{r hazard-comparison, echo=FALSE, fig.height=5, out.width="90%"}
+# --- binned Breslow hazard at mean covariates ---
+H_pl  <- -log(sf_pl$surv)                       # cumulative hazard, step function
+brks  <- seq(0, max(lung$time), length.out = 9) # 8 equal-width bins
+H_brk <- approx(c(0, sf_pl$time), c(0, H_pl), xout = brks, rule = 2)$y
+h_bin <- diff(H_brk) / diff(brks)
+
+# --- smooth MPL hazard at mean covariates ---
+t_haz    <- seq(min(lung$time), max(lung$time), length.out = 400)
+haz_mpl  <- predict(fit_mpl, type = "risk", time = t_haz)
+
+par(mar = c(4, 4.2, 3, 1))
+plot(NA, xlim = c(0, max(lung$time)), ylim = c(0, max(c(h_bin, haz_mpl$risk)) * 1.15),
+     xlab = "Time (days)", ylab = expression(hat(h)(t)),
+     main = "Instantaneous hazard: binned Breslow vs M-splines (mean covariates)",
+     cex.main = 0.95, las = 1)
+segments(brks[-length(brks)], h_bin, brks[-1], h_bin, col = "steelblue", lwd = 2.4)
+segments(brks[-c(1, length(brks))], h_bin[-length(h_bin)],
+         brks[-c(1, length(brks))], h_bin[-1], col = "steelblue", lwd = 1, lty = 3)
+lines(haz_mpl$time, haz_mpl$risk, col = "tomato", lwd = 2.4)
+rug(lung$time[lung$status == 2], col = "grey60")
+
+legend("topleft",
+       legend = c("Breslow / coxph, binned into 8 intervals",
+                  "M-splines / coxph_mpl (smooth)",
+                  "observed death times"),
+       col = c("steelblue", "tomato", "grey60"),
+       lwd = c(2.4, 2.4, 1), lty = c(1, 1, 1), bty = "n", cex = 0.85)
+```
+
+Over the bulk of follow-up the two agree: a hazard of roughly $1.3 \times
+10^{-3}$ per day early on, rising to around $3 \times 10^{-3}$ by day 500.  The
+disagreement is in the character of the two estimates rather than their level.
+
+The binned Breslow estimate jumps from bin to bin - its fourth bin sits below
+its third - and the whole picture depends on a bin width nobody chose on
+statistical grounds: eight bins give this, sixteen would give something visibly
+rougher, four something visibly flatter.  Its last bin is exactly zero, because
+no death is recorded after day 894, which is a statement about this sample
+rather than about the hazard.  The M-spline estimate is smooth by construction,
+with the roughness penalty rather than an arbitrary bin width deciding how much
+structure survives, and every point of it carries a standard error - which the
+binned version does not.
+
+Past about 900 days the two part company completely: the smooth estimate goes
+on rising while the binned one collapses to zero.  Neither is informative
+there.  Three patients are still at risk and none of them dies, so the data
+contain almost nothing about the hazard at that point, and each method fills
+the vacuum in its own way - one by extrapolating its trend, the other by
+reporting the empty bin as a zero rate.
+
+That difference is the practical argument for the penalised full likelihood:
+when the target is a hazard ratio, `coxph()` and `coxph_mpl()` agree, and the
+partial likelihood is the cheaper route; when the target is absolute risk - a
+hazard, a survival probability, a predicted event time for a given covariate
+profile - the baseline has to be estimated, and `coxph_mpl()` estimates it as
+part of the model.
 
 ---
 

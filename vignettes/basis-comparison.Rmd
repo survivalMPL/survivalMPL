@@ -134,17 +134,17 @@ $\psi_u(t)$ on a fine grid and plot each set of basis functions.
 
 `n.knots = c(k_1, k_2)` places $k_1 + 1$ quantile-based knots over the lower
 `range.quant[2]` (90% by default) of the event times, plus $k_2 + 1$ equally
-spaced knots above that quantile — $k_1 + k_2 + 2$ knots in total.  The
+spaced knots above that quantile, giving $k_1 + k_2 + 2$ knots in total.  The
 defaults are `c(8, 2)` for `"uniform"` and `"msplines"` (12 knots, $m = 11$ and
 $13$) and `c(0, 20)` for `"gaussian"` and `"epanechikov"` (22 knots, $m = 22$
 and $23$).
 
 The figure below deliberately uses far fewer: `n.knots = c(0, 6)`, i.e. 8 widely
-spaced knots and $m = 7$–$9$ basis functions per panel.  At the default
+spaced knots and $m = 7$ to $9$ basis functions per panel.  At the default
 resolution the curves overlap into a dense, unreadable thicket, and on this
 right-skewed dataset the quantile knots crowd so tightly near $t = 0$ that the
 first basis function spikes and flattens all the others.  Fewer knots do not
-change the shape of an individual basis function — only how many there are and
+change the shape of an individual basis function, only how many there are and
 how wide each one is.
 
 ```{r basis-vis, fig.height=8, out.width="100%", echo=FALSE, message=FALSE}
@@ -203,7 +203,7 @@ plot_basis(psi_m, t_vis, "M-Splines",    knots_m$Alpha)
 plot_basis(psi_e, t_vis, "Epanechnikov", knots_e$Alpha)
 ```
 
-Colour runs with the basis index — $\psi_1$ (blue) is left-most in time,
+Colour runs with the basis index: $\psi_1$ (blue) is left-most in time,
 $\psi_m$ (red) right-most.  Dotted vertical lines mark the knots
 $\boldsymbol{\alpha}$.
 
@@ -280,19 +280,18 @@ t_hi  <- quantile(events, 0.95)
 t_seq <- seq(t_lo, t_hi, length.out = 300)
 
 # instantaneous risk at mean covariates
-# log y-scale: the true h0 = t^{-1/2} spans an order of magnitude over this
-# range, which on a linear scale flattens every curve against the axis
+# log y-scale: the estimates span an order of magnitude over this range, which
+# on a linear scale flattens every curve against the axis
 risks <- sapply(fits, function(f) predict(f, type = "risk", time = t_seq)$risk)
-plot(NA, xlim = range(t_seq), ylim = range(c(risks, t_seq^(-0.5))), log = "y",
+plot(NA, xlim = range(t_seq), ylim = range(risks), log = "y",
      xlab = "Time (years)", ylab = expression(hat(h)(t)),
      main = "Instantaneous risk (log scale)", cex.main = 0.95, las = 1)
 grid(col = "grey92", lty = 1)
-lines(t_seq, t_seq^(-0.5), lty = 2, lwd = 3, col = "grey30")
 for (i in seq_along(fits))
   lines(t_seq, risks[, i], col = cols[i], lwd = 2.4)
 legend("topright",
-       legend = as.expression(c(as.list(labels), list(bquote("True" ~ h[0])))),
-       col = c(cols, "grey30"), lty = c(1, 1, 1, 1, 2),
+       legend = labels,
+       col = cols, lty = 1,
        lwd = 2.4, bty = "n", cex = 0.85)
 
 # survival at mean covariates
@@ -300,31 +299,31 @@ plot(NA, xlim = range(t_seq), ylim = c(0, 1),
      xlab = "Time (years)", ylab = expression(hat(S)(t)),
      main = "Survival (mean covariates)", cex.main = 0.95, las = 1)
 grid(col = "grey92", lty = 1)
-lines(t_seq, exp(-2 * sqrt(t_seq)), lty = 2, lwd = 3, col = "grey30")
 for (i in seq_along(fits)) {
   p <- predict(fits[[i]], type = "survival", time = t_seq)
   lines(p$time, p$survival, col = cols[i], lwd = 2.4)
 }
 legend("topright",
-       legend = as.expression(c(as.list(labels), list(bquote("True" ~ S[0])))),
-       col = c(cols, "grey30"), lty = c(1, 1, 1, 1, 2),
+       legend = labels,
+       col = cols, lty = 1,
        lwd = 2.4, bty = "n", cex = 0.85)
 ```
 
-All four bases recover the decreasing shape of the true Weibull baseline
-$h_0(t) = t^{-1/2}$ (dashed), and the four estimates are almost
-indistinguishable from one another — though all four sit above the true level
-over this range, so the fitted survival curves fall below the true $S_0$.
-The uniform basis shows the expected step artefacts; the
-smooth bases produce continuous estimates but, with `smooth = 0` (no roughness
-penalty), they oscillate around the truth — the log scale makes this visible.
-Penalised fits (`smooth > 0`, or `smooth.per = TRUE` for automatic selection)
-damp these oscillations.
+All four bases agree on the broad picture: a hazard that falls steeply over the
+first few weeks and then levels off, and survival curves that are nearly
+identical.  The hazard estimates themselves are not nearly identical, and the
+log scale is what shows it.  The uniform basis gives the expected step
+artefacts, while the three smooth bases oscillate, and disagree about where the
+peaks and troughs fall, because `smooth = 0` applies no roughness penalty at
+all.  Penalised fits (`smooth > 0`, or `smooth.per = TRUE` for automatic
+selection) damp these oscillations.  That the four disagree this much on
+$\hat h_0$ while agreeing on $\hat S_0$ is the usual picture: the survival curve
+integrates the hazard, and integration smooths the differences away.
 
-Note that these are predictions at the *mean* covariate vector, so each curve
-estimates $h_0(t)\exp(\bar{\mathbf{x}}^T\boldsymbol{\beta})$ rather than $h_0(t)$
-itself.  The covariates are not centred, so this is not directly comparable to
-the Weibull baseline used to simulate the data.
+These are predictions at the *mean* covariate vector, so each curve estimates
+$h_0(t)\exp(\bar{\mathbf{x}}^T\boldsymbol{\beta})$ rather than $h_0(t)$ itself.
+The covariates are not centred, so the level of these curves is not the level of
+the baseline hazard.
 
 ---
 
@@ -348,10 +347,11 @@ the Weibull baseline used to simulate the data.
 ## Extensibility
 
 The basis registry (`R/basis.R`) allows new basis types to be added without
-modifying existing code.  The file `R/basis-bsplines.R` includes a skeleton 
-showing how to implement the three required functions (`knots_fn`, `matrix_fn`, 
-`penalty_fn`) and how to call `register_basis()`.  
-See `?list_bases` for the full list of registered bases.
+modifying existing code.  Each basis lives in its own `R/basis-*.R` file, which
+implements the three required functions - `knots_fn`, `matrix_fn` and
+`penalty_fn` - collects them in a spec list, and is registered by a call to
+`register_basis()` in `zzz.R`.  Any of the four files is a working template for
+a fifth basis.  See `?list_bases` for the bases currently registered.
 
 ---
 

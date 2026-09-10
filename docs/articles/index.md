@@ -20,10 +20,19 @@ One article per observation scheme, each with a complete worked example.
 
 ### Modelling choices
 
-How the baseline hazard is represented, and how MPL compares with the
-partial likelihood.
+How a fit is tuned, how the baseline hazard is represented, and how MPL
+compares with the partial likelihood.
 
+- [Control
+  Parameters](https://CRAN.R-project.org/package=survivalMPL/articles/control-parameters.md):
 - [Basis Functions for the Baseline
   Hazard](https://CRAN.R-project.org/package=survivalMPL/articles/basis-comparison.md):
 - [Comparing coxph() and
   coxph_mpl()](https://CRAN.R-project.org/package=survivalMPL/articles/coxph-comparison.md):
+
+### Background
+
+The book the methods in this package come from.
+
+- [The
+  Book](https://CRAN.R-project.org/package=survivalMPL/articles/book.md):

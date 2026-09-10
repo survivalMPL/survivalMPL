@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,10 +51,12 @@
     <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
+    <li><a class="dropdown-item" href="../articles/control-parameters.html">Control Parameters</a></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
     <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../articles/book.html">Book</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -145,36 +147,38 @@ for censored, so the event indicator is <code>status == 2</code>.</p>
 <div class="section level3">
 <h3 id="model-fit">Model fit<a class="anchor" aria-label="anchor" href="#model-fit"></a>
 </h3>
-<p><code>n.obs</code> tells <code><a href="../reference/coxph_mpl.control.html">coxph_mpl.control()</a></code> how many
-exact events there are, which sets the default number of knots for the
-baseline hazard. Here we fix the smoothing parameter at
-<code>smooth = 0</code> (no penalty) to keep the example fast; leaving
-<code>smooth = NULL</code> estimates it by REML instead.</p>
+<p>Little beyond the formula and the data is required. The defaults use
+a uniform (piecewise-constant) baseline hazard, take the number of knots
+from the number of events, and select the smoothing value
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
+automatically by the marginal likelihood method. The one change made
+here is the convergence tolerance, set to the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>5</mn></mrow></msup><annotation encoding="application/x-tex">10^{-5}</annotation></semantics></math>
+used throughout <span class="citation">Ma et al. (2024)</span>; at the
+default
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>7</mn></mrow></msup><annotation encoding="application/x-tex">10^{-7}</annotation></semantics></math>
+the outer iterations do not settle on this dataset - see <strong>Control
+Parameters</strong>:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_lung</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">sex</span> <span class="op">+</span> <span class="va">ph.karno</span> <span class="op">+</span> <span class="va">wt.loss</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">lung</span>,</span>
-<span>  control <span class="op">=</span> <span class="fu"><a href="../reference/coxph_mpl.control.html">coxph_mpl.control</a></span><span class="op">(</span></span>
-<span>    n.obs    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">lung</span><span class="op">$</span><span class="va">status</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span>,</span>
-<span>    max.iter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">2000</span>, <span class="fl">4000</span><span class="op">)</span>,</span>
-<span>    smooth   <span class="op">=</span> <span class="fl">0</span></span>
-<span>  <span class="op">)</span></span>
+<span>  tol  <span class="op">=</span> <span class="fl">1e-05</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_lung</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; coxph_mpl(formula = Surv(time, status == 2) ~ age + sex + ph.karno + </span></span>
-<span><span class="co">#&gt;     wt.loss, data = lung, control = coxph_mpl.control(n.obs = sum(lung$status == </span></span>
-<span><span class="co">#&gt;     2), max.iter = c(40, 2000, 4000), smooth = 0))</span></span>
+<span><span class="co">#&gt;     wt.loss, data = lung, tol = 1e-05)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -----</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Cox Proportional Hazards Model Fit Using MPL </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Penalized log-likelihood  :  -1052.062</span></span>
-<span><span class="co">#&gt; Fixed smoothing value     :  0</span></span>
-<span><span class="co">#&gt; Convergence               :  Yes (8 iter.) </span></span>
+<span><span class="co">#&gt; Penalized log-likelihood  :  -1059.173</span></span>
+<span><span class="co">#&gt; Estimated smoothing value :  5945063</span></span>
+<span><span class="co">#&gt; Convergence               :  Yes (101 + 571 iter.) </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Data             : lung</span></span>
 <span><span class="co">#&gt; Number of obs.   : 214</span></span>
@@ -183,19 +187,19 @@ baseline hazard. Here we fix the smoothing parameter at
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Regression parameters : Surv(time, status == 2) ~ age + sex + ph.karno + wt.loss</span></span>
 <span><span class="co">#&gt;            Estimate Std. Error z-value Pr(&gt;|z|)   </span></span>
-<span><span class="co">#&gt; age       0.0151013  0.0101696  1.4849 0.137559   </span></span>
-<span><span class="co">#&gt; sex      -0.5148282  0.1691462 -3.0437 0.002337 **</span></span>
-<span><span class="co">#&gt; ph.karno -0.0126768  0.0086042 -1.4733 0.140664   </span></span>
-<span><span class="co">#&gt; wt.loss  -0.0020624  0.0069833 -0.2953 0.767745   </span></span>
+<span><span class="co">#&gt; age       0.0144154  0.0101531  1.4198 0.155666   </span></span>
+<span><span class="co">#&gt; sex      -0.5103399  0.1708342 -2.9873 0.002814 **</span></span>
+<span><span class="co">#&gt; ph.karno -0.0117159  0.0089906 -1.3031 0.192529   </span></span>
+<span><span class="co">#&gt; wt.loss  -0.0017065  0.0071640 -0.2382 0.811722   </span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Baseline hasard parameters approximated using Uniform :</span></span>
 <span><span class="co">#&gt;  (11 equal events bins)</span></span>
-<span><span class="co">#&gt;            1            2            3            4            5            6 </span></span>
-<span><span class="co">#&gt; 3.091190e-03 3.073782e-03 8.005268e-03 6.378672e-03 5.284837e-03 6.891828e-03 </span></span>
-<span><span class="co">#&gt;            7            8            9           10           11 </span></span>
-<span><span class="co">#&gt; 6.688682e-03 6.777236e-03 1.262414e-02 9.950425e-03 2.312947e-10 </span></span>
+<span><span class="co">#&gt;           1           2           3           4           5           6 </span></span>
+<span><span class="co">#&gt; 0.003163491 0.003488916 0.004576128 0.005400816 0.005924636 0.006389894 </span></span>
+<span><span class="co">#&gt;           7           8           9          10          11 </span></span>
+<span><span class="co">#&gt; 0.006875642 0.007437590 0.007988655 0.008295504 0.008327673 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -----</span></span></code></pre></div>
 <p>The coefficient table is read as in any Cox fit: <code>sex</code> is
@@ -205,6 +209,10 @@ lower hazard. The summary also reports the estimated baseline hazard
 coefficients
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝜽</mi><annotation encoding="application/x-tex">\boldsymbol{\theta}</annotation></semantics></math>,
 which have no counterpart in a partial likelihood fit.</p>
+<p>Every one of those defaults can be overridden through
+<code><a href="../reference/coxph_mpl.control.html">coxph_mpl.control()</a></code> - the basis, the knots, the smoothing
+parameter, the iteration limits. The <strong>Control Parameters</strong>
+article covers them one at a time.</p>
 </div>
 <div class="section level3">
 <h3 id="baseline-hazard-and-survival">Baseline hazard and survival<a class="anchor" aria-label="anchor" href="#baseline-hazard-and-survival"></a>
@@ -237,6 +245,20 @@ A basis drawn dashed would indicate
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>u</mi></msub><annotation encoding="application/x-tex">\hat\theta_u</annotation></semantics></math>
 driven to zero, meaning that interval contributes nothing to the fitted
 hazard.</p>
+<p>The second panel is the estimated baseline hazard itself: a step
+function whose height on knot interval
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>
+is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>u</mi></msub><annotation encoding="application/x-tex">\hat\theta_u</annotation></semantics></math>.
+It is the one quantity a partial likelihood fit cannot give you, so it
+is worth drawing on its own:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_lung</span>, which <span class="op">=</span> <span class="fl">2</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, cex.main <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span></code></pre></div>
+<p><img src="right-censoring_files/figure-html/plot-hazard-only-1.png" class="r-plt" alt="" width="624" style="display: block; margin: auto;"></p>
+<p>The hazard climbs steadily across follow-up - more than doubling
+between the first knot interval and the last - and flattens only in the
+final intervals, where few patients remain at risk and the confidence
+band widens accordingly.</p>
 </div>
 <div class="section level3">
 <h3 id="predicted-survival">Predicted survival<a class="anchor" aria-label="anchor" href="#predicted-survival"></a>
@@ -244,43 +266,91 @@ hazard.</p>
 <p><code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> returns absolute estimates with standard
 errors and pointwise confidence limits. With no <code>i</code> argument
 it evaluates at the mean covariate vector:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_lung</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_lung</span>, type <span class="op">=</span> <span class="st">"survival"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred_lung</span><span class="op">)</span></span>
 <span><span class="co">#&gt;        time  survival           se       low      high</span></span>
 <span><span class="co">#&gt; 1  4.999000 1.0000000 0.0000000000 1.0000000 1.0000000</span></span>
-<span><span class="co">#&gt; 2  6.017019 0.9986404 0.0002927774 0.9980548 0.9992259</span></span>
-<span><span class="co">#&gt; 3  7.035038 0.9972826 0.0005847586 0.9961131 0.9984521</span></span>
-<span><span class="co">#&gt; 4  8.053057 0.9959267 0.0008759453 0.9941748 0.9976785</span></span>
-<span><span class="co">#&gt; 5  9.071076 0.9945726 0.0011663392 0.9922399 0.9969052</span></span>
-<span><span class="co">#&gt; 6 10.089095 0.9932203 0.0014559417 0.9903084 0.9961322</span></span></code></pre></div>
+<span><span class="co">#&gt; 2  6.017019 0.9985435 0.0002149955 0.9981135 0.9989734</span></span>
+<span><span class="co">#&gt; 3  7.035038 0.9970890 0.0004293647 0.9962303 0.9979478</span></span>
+<span><span class="co">#&gt; 4  8.053057 0.9956367 0.0006431090 0.9943505 0.9969229</span></span>
+<span><span class="co">#&gt; 5  9.071076 0.9941865 0.0008562298 0.9924741 0.9958990</span></span>
+<span><span class="co">#&gt; 6 10.089095 0.9927385 0.0010687283 0.9906010 0.9948759</span></span></code></pre></div>
 <p>A single subject is selected with <code>i</code> (one row index at a
 time; only the first element is used):</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_one</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_lung</span>, type <span class="op">=</span> <span class="st">"survival"</span>, i <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred_one</span><span class="op">)</span></span>
 <span><span class="co">#&gt;        time  survival           se       low      high</span></span>
 <span><span class="co">#&gt; 1  4.999000 1.0000000 0.0000000000 1.0000000 1.0000000</span></span>
-<span><span class="co">#&gt; 2  6.017019 0.9983745 0.0003499798 0.9976746 0.9990745</span></span>
-<span><span class="co">#&gt; 3  7.035038 0.9967517 0.0006988218 0.9953540 0.9981493</span></span>
-<span><span class="co">#&gt; 4  8.053057 0.9951315 0.0010465287 0.9930384 0.9972245</span></span>
-<span><span class="co">#&gt; 5  9.071076 0.9935139 0.0013931035 0.9907277 0.9963001</span></span>
-<span><span class="co">#&gt; 6 10.089095 0.9918989 0.0017385488 0.9884218 0.9953760</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="residuals">Residuals<a class="anchor" aria-label="anchor" href="#residuals"></a>
-</h3>
-<p>Martingale residuals are available for checking the fit:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/residuals.html" class="external-link">residuals</a></span><span class="op">(</span><span class="va">fit_lung</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="right-censoring_files/figure-html/resid-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"><img src="right-censoring_files/figure-html/resid-2.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
+<span><span class="co">#&gt; 2  6.017019 0.9982519 0.0002579962 0.9977359 0.9987679</span></span>
+<span><span class="co">#&gt; 3  7.035038 0.9965068 0.0005150903 0.9954766 0.9975370</span></span>
+<span><span class="co">#&gt; 4  8.053057 0.9947648 0.0007712848 0.9932222 0.9963074</span></span>
+<span><span class="co">#&gt; 5  9.071076 0.9930258 0.0010265820 0.9909727 0.9950790</span></span>
+<span><span class="co">#&gt; 6 10.089095 0.9912899 0.0012809843 0.9887279 0.9938519</span></span></code></pre></div>
 <hr>
 </div>
+</div>
+<div class="section level2">
+<h2 id="residuals">Residuals<a class="anchor" aria-label="anchor" href="#residuals"></a>
+</h2>
+<p><code><a href="https://rdrr.io/r/stats/residuals.html" class="external-link">residuals()</a></code> returns both Cox-Snell and martingale
+residuals. For a subject observed exactly, the Cox-Snell residual is the
+fitted cumulative hazard that subject accumulated,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>r</mi><mi>i</mi><mrow><mi>C</mi><mi>S</mi></mrow></msubsup><mo>=</mo><msup><mi>e</mi><mrow><msubsup><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi><mi>T</mi></msubsup><mover><mi mathvariant="bold-italic">𝜷</mi><mo accent="true">̂</mo></mover></mrow></msup><mspace width="0.167em"></mspace><msub><mover><mi>H</mi><mo accent="true">̂</mo></mover><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">r^{CS}_i = e^{\mathbf{x}_i^T\hat{\boldsymbol{\beta}}}\,\hat H_0(t_i),</annotation></semantics></math></p>
+<p>with censored observations adjusted so that every residual estimates
+the same quantity under the model. The martingale residual is then
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>M</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><mo>=</mo><msub><mi>δ</mi><mi>i</mi></msub><mo>−</mo><msubsup><mi>r</mi><mi>i</mi><mrow><mi>C</mi><mi>S</mi></mrow></msubsup></mrow><annotation encoding="application/x-tex">\hat M_i = \delta_i - r^{CS}_i</annotation></semantics></math>:
+the difference between the number of events actually observed for
+subject
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
+(0 or 1) and the number the model expects.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res_lung</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/residuals.html" class="external-link">residuals</a></span><span class="op">(</span><span class="va">fit_lung</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res_lung</span>, which <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, ask <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="right-censoring_files/figure-html/resid-1.png" class="r-plt" alt="" width="768" style="display: block; margin: auto;"></p>
+<p>Read them as follows.</p>
+<ul>
+<li>
+<strong>Martingale residuals</strong> are bounded above by 1 and
+unbounded below, so the cloud is asymmetric by construction: censored
+observations (red) are at or below zero, events (black) are pulled
+towards 1. A residual close to 1 marks a subject who died far earlier
+than the model predicted, a large negative one a subject who survived
+far longer. Here a handful of subjects sit below
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">-2</annotation></semantics></math>,
+one of them near
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>6</mn></mrow><annotation encoding="application/x-tex">-6</annotation></semantics></math>:
+those are the long survivors the fitted model finds most surprising, and
+they are worth looking at individually before concluding anything about
+the model as a whole.</li>
+<li>
+<strong>Cox-Snell residuals</strong> behave like a censored sample
+from a unit exponential distribution when the model is correct, so most
+sit below 1 with a thinning right tail. A mass of residuals far above 1
+indicates the fitted cumulative hazard is wrong, usually through a
+mis-specified covariate effect rather than a mis-specified
+baseline.</li>
+</ul>
+<p>The horizontal axis of both panels is the row number, which carries
+meaning only if the rows arrived in a meaningless order. In
+<code>lung</code> they did not: the censored subjects are concentrated
+in the later rows (3 of the first 54 are censored, against 36 of the
+last 53), which is why the red points drift to the right of both panels.
+That is a fact about the data file, not about the fit.</p>
+<hr>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
 </h2>
 <ul>
+<li>
+<strong>Control Parameters</strong> covers
+<code><a href="../reference/coxph_mpl.control.html">coxph_mpl.control()</a></code>: the basis, the knots, the smoothing
+value
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>,
+the iteration limits and the convergence tolerance used above.</li>
 <li>
 <strong>Left Truncation</strong> covers delayed entry, where
 subjects join the risk set only at some entry time. Right-censored data
@@ -300,6 +370,17 @@ and how the knots are placed.</li>
 <code><a href="../reference/coxph_mpl.html">coxph_mpl()</a></code></strong> fits both to the same right-censored
 data and contrasts the results.</li>
 </ul>
+</div>
+<div class="section level2 unnumbered">
+<h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-MaWebbHudson2024" class="csl-entry">
+Ma, Jun, Annabel Webb, and Harold Malcolm Hudson. 2024. <em>Likelihood
+Methods in Survival Analysis: With <span>R</span> Examples</em>. 1st ed.
+Chapman; Hall/<span>CRC</span>. <a href="https://doi.org/10.1201/9781351109710" class="external-link">https://doi.org/10.1201/9781351109710</a>.
+</div>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

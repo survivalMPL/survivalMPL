@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">survivalMPL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2-4.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,10 +51,12 @@
     <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Modelling choices</h6></li>
+    <li><a class="dropdown-item" href="../articles/control-parameters.html">Control Parameters</a></li>
     <li><a class="dropdown-item" href="../articles/basis-comparison.html">Basis Functions for the Baseline Hazard</a></li>
     <li><a class="dropdown-item" href="../articles/coxph-comparison.html">Comparing coxph() and coxph_mpl()</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../articles/book.html">Book</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -197,9 +199,10 @@ everything else uses <code>type = "interval2"</code>, where
 <div class="section level3">
 <h3 id="tuning-the-fit">Tuning the fit<a class="anchor" aria-label="anchor" href="#tuning-the-fit"></a>
 </h3>
-<p><code><a href="../reference/coxph_mpl.control.html">coxph_mpl.control()</a></code> collects everything governing the
-baseline hazard and the optimiser. The arguments most often changed
-are:</p>
+<p>Every fit runs with sensible defaults, so <code>control</code> can be
+omitted entirely. When it is supplied, <code><a href="../reference/coxph_mpl.control.html">coxph_mpl.control()</a></code>
+collects everything governing the baseline hazard and the optimiser. The
+arguments most often changed are:</p>
 <table class="table">
 <colgroup>
 <col width="50%">
@@ -214,8 +217,8 @@ are:</p>
 <td><code>basis</code></td>
 <td>Basis for
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>h</mi><mn>0</mn></msub><annotation encoding="application/x-tex">h_0</annotation></semantics></math>:
-<code>"uniform"</code>, <code>"gaussian"</code>,
-<code>"msplines"</code>, <code>"epanechikov"</code>
+<code>"uniform"</code>, <code>"msplines"</code>,
+<code>"gaussian"</code>, <code>"epanechikov"</code>
 </td>
 </tr>
 <tr class="even">
@@ -225,9 +228,10 @@ knots</td>
 </tr>
 <tr class="odd">
 <td><code>smooth</code></td>
-<td>Smoothing parameter
+<td>Smoothing value
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>;
-<code>NULL</code> estimates it by REML</td>
+<code>NULL</code> selects it automatically by marginal likelihood,
+<code>0</code> fits by plain maximum likelihood</td>
 </tr>
 <tr class="even">
 <td><code>n.obs</code></td>
@@ -237,17 +241,33 @@ knots</td>
 <td><code>max.iter</code></td>
 <td>Iteration limits for the three optimisation stages</td>
 </tr>
+<tr class="even">
+<td><code>tol</code></td>
+<td>Convergence tolerance; <code>1e-5</code> is used throughout the
+book</td>
+</tr>
 </tbody>
 </table>
 <p>The registered bases are:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/list_bases.html">list_bases</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt;          name        label</span></span>
-<span><span class="co">#&gt; 1    bsplines    B-Splines</span></span>
-<span><span class="co">#&gt; 2 epanechikov Epanechnikov</span></span>
-<span><span class="co">#&gt; 3    gaussian     Gaussian</span></span>
-<span><span class="co">#&gt; 4    msplines    M-Splines</span></span>
-<span><span class="co">#&gt; 5     uniform      Uniform</span></span></code></pre></div>
+<ul>
+<li>
+<code>"uniform"</code> (alias <code>"u"</code>) - piecewise-constant
+step functions</li>
+<li>
+<code>"msplines"</code> (alias <code>"m"</code>) - M-splines of
+order
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>o</mi><annotation encoding="application/x-tex">o</annotation></semantics></math>,
+cubic by default</li>
+<li>
+<code>"gaussian"</code> (alias <code>"g"</code>) - truncated
+Gaussian kernels</li>
+<li>
+<code>"epanechikov"</code> (aliases <code>"e"</code>,
+<code>"epanechnikov"</code>) - Epanechnikov kernels</li>
+</ul>
+<p><strong>Control Parameters</strong> works through these arguments one
+at a time, and <strong>Basis Functions for the Baseline Hazard</strong>
+gives the mathematical definition of each basis.</p>
 </div>
 <div class="section level3">
 <h3 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a>
@@ -292,7 +312,7 @@ generics:</p>
 </tr>
 <tr class="even">
 <td><code>residuals(fit)</code></td>
-<td>Martingale residuals</td>
+<td>Martingale and Cox-Snell residuals</td>
 </tr>
 </tbody>
 </table>
@@ -303,11 +323,12 @@ generics:</p>
 </h2>
 <p>The tutorials work through one censoring scheme at a time
 (<strong>Right Censoring</strong>, <strong>Left Censoring</strong>,
-<strong>Interval Censoring</strong>), each with a complete worked
-example. Two further articles cover the modelling choices: <strong>Basis
-Functions for the Baseline Hazard</strong>, and <strong>Comparing
-<code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code> and <code><a href="../reference/coxph_mpl.html">coxph_mpl()</a></code></strong> on the same
-data.</p>
+<strong>Interval Censoring</strong>, <strong>Left Truncation</strong>),
+each with a complete worked example. Three further articles cover the
+modelling choices: <strong>Control Parameters</strong> on tuning a fit,
+<strong>Basis Functions for the Baseline Hazard</strong>, and
+<strong>Comparing <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code> and
+<code><a href="../reference/coxph_mpl.html">coxph_mpl()</a></code></strong> on the same data.</p>
 <p>See <code><a href="../reference/coxph_mpl.html">?coxph_mpl</a></code> and <code><a href="../reference/coxph_mpl.control.html">?coxph_mpl.control</a></code> for
 the full argument lists.</p>
 </div>
