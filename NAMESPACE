@@ -2,6 +2,7 @@
 
 S3method(coef,coxph_mpl)
 S3method(coef,summary.coxph_mpl)
+S3method(confint,coxph_mpl)
 S3method(plot,coxph_mpl)
 S3method(plot,predict.coxph_mpl)
 S3method(plot,residuals.coxph_mpl)
@@ -10,6 +11,7 @@ S3method(print,coxph_mpl)
 S3method(print,summary.coxph_mpl)
 S3method(residuals,coxph_mpl)
 S3method(summary,coxph_mpl)
+S3method(vcov,coxph_mpl)
 export(coxph_mpl)
 export(coxph_mpl.control)
 export(list_bases)
@@ -39,6 +41,7 @@ importFrom(stats,
   model.matrix,
   pnorm,
   printCoefmat,
+  qnorm,
   quantile,
   runif,
   terms

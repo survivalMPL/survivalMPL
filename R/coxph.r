@@ -384,6 +384,12 @@ coxph_mpl <- function(formula, data, subset, na.action, control, entry, ...) {
           M_hessbeta_p1[1, 1] <- control$epsilon[1]
         }
       }
+
+  #     # !Test numerical issues
+  # if (!is.finite(s_lik) || s_lambda < 0 || !all(is.finite(M_hessbeta_p1)) ||
+  #     M_hessbeta_p1[1, 1] <= 0) browser()
+
+
       M_stepbeta_p1 <- chol2inv(chol(M_hessbeta_p1)) %*% M_gradbeta_p1
       M_beta_p1 <- M_beta_p1_OLD + s_omega * M_stepbeta_p1
       M_mu_no1 <- exp(M_X_nop %*% M_beta_p1)
