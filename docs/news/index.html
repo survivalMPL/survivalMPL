@@ -67,7 +67,7 @@
 <li>
 <strong>B-splines removed.</strong> <code>R/basis-bsplines.R</code> was a proof-of-concept never intended as a production basis; it is gone, along with its registration in <code>zzz.R</code> and its mentions in the articles. The registered bases are uniform, M-splines, Gaussian and Epanechnikov.</li>
 <li>
-<strong>New dataset <code>hiv</code>.</strong> 300 simulated HIV seroconversion times with left- and right-censored observations and exact events, and no interval censoring - a clean illustration of left censoring on its own. See <code>dev/data-raw/hiv.R</code>.</li>
+<strong>Left Censoring now uses real data.</strong> The article is built on <code>drugusers</code> from the CRAN package <code>icpack</code>: 940 people who inject drugs in Barcelona, with 530 left-censored, 65 interval-censored, 343 right-censored and 2 exact seroconversion times (Gómez et al., 2000). The data are not bundled, since <code>icpack</code> is GPL; it is listed in <code>Suggests</code> and the example is skipped when it is not installed. An earlier simulated <code>hiv</code> dataset was dropped before release.</li>
 <li>
 <strong><code>melanoma</code> regenerated.</strong> Two thirds of the sample (200 subjects) are now exact events and one third is censored: 58 interval, 23 right and 19 left censored. Previously it was 117 exact, 35 interval, 16 right and 132 left censored, i.e. dominated by left censoring. The simulation design, true coefficients and baseline hazard are unchanged; only <code>pi_E</code>, <code>a1</code> and <code>a2</code> differ. Fits on this dataset will give different numbers than in 0.2-4.9004.</li>
 <li>New article <strong>Control Parameters</strong>, covering <code><a href="../reference/coxph_mpl.control.html">coxph_mpl.control()</a></code>: the basis, the knots, the smoothing value and its automatic selection, the optimiser limits and tie handling.</li>
@@ -76,8 +76,6 @@
 <li>New website page <strong>Book</strong>, with the cover, DOI and citation for Ma, Webb and Hudson (2024), and a map from each article to the material it follows.</li>
 <li>
 <strong>Right Censoring</strong> drops the <code>control = coxph_mpl.control(...)</code> block from its example and gains a residuals section: how to read the martingale and Cox-Snell plots, and why the index axis of both reflects the row order of <code>lung</code> rather than the fit.</li>
-<li>
-<strong>Left Censoring</strong> rewritten around the new <code>hiv</code> dataset, with no interval censoring in sight: the fit checked against the coefficients that generated the data, the baseline hazard, and predicted survival by sharing status.</li>
 <li>
 <strong>Interval Censoring</strong> now uses the bundled <code>melanoma</code> data instead of simulating them inline, and follows the book’s own example (Section 2.11): its fit call unchanged, including the automatic smoothing parameter selection, a hazard ratio table as in its Table 2.6, and the baseline hazard of its Figure 2.5.</li>
 <li>

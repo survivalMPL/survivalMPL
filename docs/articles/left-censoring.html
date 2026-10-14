@@ -167,57 +167,53 @@ one that states the intent.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="example-hiv-seroconversion">Example: HIV seroconversion<a class="anchor" aria-label="anchor" href="#example-hiv-seroconversion"></a>
+<h2 id="example-hiv-seroconversion-in-people-who-inject-drugs">Example: HIV seroconversion in people who inject drugs<a class="anchor" aria-label="anchor" href="#example-hiv-seroconversion-in-people-who-inject-drugs"></a>
 </h2>
-<p>The bundled <code>hiv</code> data are entirely synthetic - there is
-no real cohort behind them, and the coefficients are chosen for
-illustration rather than estimated from any study. The design imitates a
-cohort of people who inject drugs, followed for HIV seroconversion, with
-time measured in years from the start of injecting drug use. The
-observation scheme is what makes it useful here: each subject has a
-first HIV test some time after that origin, and</p>
+<p>The example uses <code>drugusers</code> from the CRAN package
+<strong>icpack</strong> <span class="citation">(Gómez et al.
+2000)</span>: 940 people who inject drugs, attending a hospital
+detoxification unit in Barcelona, followed for HIV seroconversion. The
+data are not bundled with survivalMPL, so the code below runs only when
+icpack is installed.</p>
+<p>Time is measured from the start of injecting drug use, and HIV status
+is only known at test visits. That gives all four observation types:</p>
 <ul>
-<li>a subject already seropositive at the first test seroconverted
+<li>the first test was already positive: seroconversion happened
 somewhere in
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>t</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">(0, t_R]</annotation></semantics></math>
 - <strong>left censored</strong>;</li>
-<li>a subject negative at the first test is retested frequently, so a
-later seroconversion is recorded as an <strong>exact
-event</strong>;</li>
-<li>a subject still negative when follow-up ends is <strong>right
-censored</strong>.</li>
+<li>a negative test followed by a positive one: seroconversion lies
+between the two - <strong>interval censored</strong>;</li>
+<li>the last test was negative: <strong>right censored</strong>;</li>
+<li>the two tests coincide: an <strong>exact</strong> time.</li>
 </ul>
-<p>No subject is interval censored, so this is left censoring on its own
-rather than as a special case of something more general.</p>
+<p>In <code>drugusers</code>, <code>left</code> is the last negative
+test (0 if the first test was already positive) and <code>right</code>
+the first positive test (<code>Inf</code> if the last test was
+negative), both in months. Converting to years and replacing the open
+bounds by <code>NA</code> gives the encoding described above:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">hiv</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">drugusers</span>, package <span class="op">=</span> <span class="st">"icpack"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">hiv</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 'data.frame':    300 obs. of  6 variables:</span></span>
-<span><span class="co">#&gt;  $ t_L        : num  3.74 5.76 NA 3.15 4.48 ...</span></span>
-<span><span class="co">#&gt;  $ t_R        : num  3.74 NA 5.01 3.15 NA ...</span></span>
-<span><span class="co">#&gt;  $ Sharing    : int  0 0 0 0 0 1 0 0 1 0 ...</span></span>
-<span><span class="co">#&gt;  $ Prison     : int  0 0 1 0 0 0 1 0 0 0 ...</span></span>
-<span><span class="co">#&gt;  $ Female     : int  0 1 0 0 0 0 1 1 1 1 ...</span></span>
-<span><span class="co">#&gt;  $ Age_centred: num  -1.156 1.354 -0.963 1.361 1.009 ...</span></span>
+<span><span class="va">ivdu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  t_L         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">drugusers</span><span class="op">$</span><span class="va">left</span> <span class="op">==</span> <span class="fl">0</span>, <span class="cn">NA</span>, <span class="va">drugusers</span><span class="op">$</span><span class="va">left</span> <span class="op">/</span> <span class="fl">12</span><span class="op">)</span>,</span>
+<span>  t_R         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">drugusers</span><span class="op">$</span><span class="va">right</span><span class="op">)</span>, <span class="va">drugusers</span><span class="op">$</span><span class="va">right</span> <span class="op">/</span> <span class="fl">12</span>, <span class="cn">NA</span><span class="op">)</span>,</span>
+<span>  Female      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">drugusers</span><span class="op">$</span><span class="va">gender</span> <span class="op">==</span> <span class="st">"female"</span><span class="op">)</span>,</span>
+<span>  Age_centred <span class="op">=</span> <span class="op">(</span><span class="va">drugusers</span><span class="op">$</span><span class="va">age</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">drugusers</span><span class="op">$</span><span class="va">age</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fl">10</span>,</span>
+<span>  period      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/relevel.html" class="external-link">relevel</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">drugusers</span><span class="op">$</span><span class="va">period</span><span class="op">)</span><span class="op">)</span>, <span class="st">"1972-1980"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span>status <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">hiv</span><span class="op">$</span><span class="va">t_L</span>, <span class="va">hiv</span><span class="op">$</span><span class="va">t_R</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span><span class="op">[</span>, <span class="fl">3</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span>status <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">ivdu</span><span class="op">$</span><span class="va">t_L</span>, <span class="va">ivdu</span><span class="op">$</span><span class="va">t_R</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span><span class="op">[</span>, <span class="fl">3</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt; status</span></span>
-<span><span class="co">#&gt;   0   1   2 </span></span>
-<span><span class="co">#&gt;  87 117  96</span></span></code></pre></div>
-<p>Status <code>2</code> marks the left-censored rows (96 subjects, just
-under a third of the sample), status <code>1</code> the exact events and
-status <code>0</code> the right-censored rows. The left-censored
-subjects are the ones with no lower bound at all:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">hiv</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">hiv</span><span class="op">$</span><span class="va">t_L</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    t_L      t_R Sharing Prison Female Age_centred</span></span>
-<span><span class="co">#&gt; 3   NA 5.013339       0      1      0 -0.96307722</span></span>
-<span><span class="co">#&gt; 7   NA 1.502960       0      1      1 -0.10064946</span></span>
-<span><span class="co">#&gt; 9   NA 6.955977       1      0      1 -1.30025951</span></span>
-<span><span class="co">#&gt; 10  NA 3.800657       0      0      1 -1.46512156</span></span>
-<span><span class="co">#&gt; 12  NA 4.214666       0      0      1 -0.07477049</span></span>
-<span><span class="co">#&gt; 14  NA 2.999568       1      0      0  0.13789375</span></span></code></pre></div>
+<span><span class="co">#&gt;   0   1   2   3 </span></span>
+<span><span class="co">#&gt; 343   2 530  65</span></span></code></pre></div>
+<p>Status <code>2</code> marks the 530 left-censored subjects, more than
+half the sample, status <code>3</code> the 65 interval-censored ones,
+status <code>0</code> the 343 right-censored ones and status
+<code>1</code> the 2 exact times. <code>Age_centred</code> is age at the
+start of drug use in decades, centred at the sample mean, and
+<code>period</code> is the period in which drug use began, with
+1972-1980 as the reference.</p>
 <div class="section level3">
 <h3 id="model-fit">Model fit<a class="anchor" aria-label="anchor" href="#model-fit"></a>
 </h3>
@@ -225,80 +221,97 @@ subjects are the ones with no lower bound at all:</p>
 is evaluated at
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>R</mi></msub><annotation encoding="application/x-tex">t_R</annotation></semantics></math>
 for every left-censored subject, so the shape of the baseline matters
-more here than it does for right-censored data, where the likelihood
-only ever looks at the hazard at the event times. That argues for a
-smooth basis: <code>basis = "msplines"</code>. The knot count is set
-with <code>n.knots</code>: a third of this sample contributes only an
-upper bound, which is not enough information to support the default knot
-sequence, so six quantile knots are used instead. Everything else,
-including the automatic selection of the smoothing value, is left at its
-default - see <strong>Control Parameters</strong>.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+more here than it does for right-censored data. That argues for a smooth
+basis, <code>basis = "msplines"</code>. Everything else, including the
+automatic selection of the smoothing value, is left at its default;
+<code>tol</code> is loosened to <code>1e-05</code>, as in the other
+articles - see <strong>Control Parameters</strong>.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_hiv</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">t_L</span>, <span class="va">t_R</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span> <span class="op">~</span> <span class="va">Sharing</span> <span class="op">+</span> <span class="va">Prison</span> <span class="op">+</span> <span class="va">Female</span> <span class="op">+</span> <span class="va">Age_centred</span>,</span>
-<span>  data    <span class="op">=</span> <span class="va">hiv</span>,</span>
-<span>  basis   <span class="op">=</span> <span class="st">"msplines"</span>,</span>
-<span>  n.knots <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">0</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">t_L</span>, <span class="va">t_R</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span> <span class="op">~</span> <span class="va">Female</span> <span class="op">+</span> <span class="va">Age_centred</span> <span class="op">+</span> <span class="va">period</span>,</span>
+<span>  data  <span class="op">=</span> <span class="va">ivdu</span>,</span>
+<span>  basis <span class="op">=</span> <span class="st">"msplines"</span>,</span>
+<span>  tol   <span class="op">=</span> <span class="fl">1e-05</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_hiv</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; coxph_mpl(formula = Surv(t_L, t_R, type = "interval2") ~ Sharing + </span></span>
-<span><span class="co">#&gt;     Prison + Female + Age_centred, data = hiv, basis = "msplines", </span></span>
-<span><span class="co">#&gt;     n.knots = c(5, 0))</span></span>
+<span><span class="co">#&gt; coxph_mpl(formula = Surv(t_L, t_R, type = "interval2") ~ Female + </span></span>
+<span><span class="co">#&gt;     Age_centred + period, data = ivdu, basis = "msplines", tol = 1e-05)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -----</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Cox Proportional Hazards Model Fit Using MPL </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Penalized log-likelihood  :  -367.2072</span></span>
-<span><span class="co">#&gt; Estimated smoothing value :  73126132793</span></span>
-<span><span class="co">#&gt; Convergence               :  Yes (10 + 9835 iter.) </span></span>
+<span><span class="co">#&gt; Penalized log-likelihood  :  -754.9098</span></span>
+<span><span class="co">#&gt; Estimated smoothing value :  1760760</span></span>
+<span><span class="co">#&gt; Convergence               :  Yes (10 + 3148 iter.) </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Data             : hiv</span></span>
-<span><span class="co">#&gt; Number of obs.   : 300</span></span>
-<span><span class="co">#&gt; Number of events : 117 (39%)</span></span>
-<span><span class="co">#&gt; Number of cens.  : 183 (61%)</span></span>
+<span><span class="co">#&gt; Data             : ivdu</span></span>
+<span><span class="co">#&gt; Number of obs.   : 940</span></span>
+<span><span class="co">#&gt; Number of events :   2 ( 0.212766%)</span></span>
+<span><span class="co">#&gt; Number of cens.  : 938 (99.787234%)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Regression parameters : Surv(t_L, t_R, type = "interval2") ~ Sharing + Prison + Female +     Age_centred</span></span>
-<span><span class="co">#&gt;              Estimate Std. Error z-value  Pr(&gt;|z|)    </span></span>
-<span><span class="co">#&gt; Sharing      0.745158   0.137083  5.4358 5.455e-08 ***</span></span>
-<span><span class="co">#&gt; Prison       0.415050   0.150917  2.7502  0.005956 ** </span></span>
-<span><span class="co">#&gt; Female      -0.195567   0.143116 -1.3665  0.171785    </span></span>
-<span><span class="co">#&gt; Age_centred -0.049964   0.093632 -0.5336  0.593605    </span></span>
+<span><span class="co">#&gt; Regression parameters : Surv(t_L, t_R, type = "interval2") ~ Female + Age_centred + period</span></span>
+<span><span class="co">#&gt;                  Estimate Std. Error z-value Pr(&gt;|z|)  </span></span>
+<span><span class="co">#&gt; Female           0.231753   0.115438  2.0076  0.04469 *</span></span>
+<span><span class="co">#&gt; Age_centred     -0.031769   0.103845 -0.3059  0.75966  </span></span>
+<span><span class="co">#&gt; period1981-1985  0.081383   0.122707  0.6632  0.50718  </span></span>
+<span><span class="co">#&gt; period1986-1991 -0.249897   0.145466 -1.7179  0.08581 .</span></span>
+<span><span class="co">#&gt; period1992-1997 -0.374042   0.286460 -1.3057  0.19164  </span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Baseline hasard parameters approximated using M-Splines :</span></span>
-<span><span class="co">#&gt;  (2 (min/max) + 5 quantile knots + 0 equally spaced knots + 3 (order) - 2 = 8 parameters) </span></span>
-<span><span class="co">#&gt;          1          2          3          4          5          6          7 </span></span>
-<span><span class="co">#&gt; 0.03215103 0.08667359 0.19381915 0.20894848 0.27941727 0.86836519 1.22610399 </span></span>
-<span><span class="co">#&gt;          8 </span></span>
-<span><span class="co">#&gt; 1.29240590 </span></span>
+<span><span class="co">#&gt;  (2 (min/max) + 8 quantile knots + 2 equally spaced knots + 3 (order) - 2 = 13 parameters) </span></span>
+<span><span class="co">#&gt;            1            2            3            4            5            6 </span></span>
+<span><span class="co">#&gt; 1.213169e-01 2.020793e-01 2.473852e-01 2.324436e-01 2.026398e-01 1.848422e-01 </span></span>
+<span><span class="co">#&gt;            7            8            9           10           11           12 </span></span>
+<span><span class="co">#&gt; 1.762641e-01 1.859211e-01 1.986088e-01 1.615379e-01 1.045321e-01 2.307903e-02 </span></span>
+<span><span class="co">#&gt;           13 </span></span>
+<span><span class="co">#&gt; 1.039732e-10 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -----</span></span></code></pre></div>
-<p>The data were generated with true coefficients
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.90</mn><annotation encoding="application/x-tex">0.90</annotation></semantics></math>
-for <code>Sharing</code>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.45</mn><annotation encoding="application/x-tex">0.45</annotation></semantics></math>
-for <code>Prison</code>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.25</mn></mrow><annotation encoding="application/x-tex">-0.25</annotation></semantics></math>
-for <code>Female</code> and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.15</mn></mrow><annotation encoding="application/x-tex">-0.15</annotation></semantics></math>
-for <code>Age_centred</code>, so the fit can be checked against the
-truth:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">truth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Sharing <span class="op">=</span> <span class="fl">0.90</span>, Prison <span class="op">=</span> <span class="fl">0.45</span>, Female <span class="op">=</span> <span class="op">-</span><span class="fl">0.25</span>, Age_centred <span class="op">=</span> <span class="op">-</span><span class="fl">0.15</span><span class="op">)</span></span>
+<p>The summary counts only the 2 exact times as “events”; the other 938
+subjects enter the likelihood through censored contributions. Hazard
+ratios with 95% confidence intervals are easier to read:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">est</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_hiv</span><span class="op">)</span></span>
+<span><span class="va">se</span>  <span class="op">&lt;-</span> <span class="va">fit_hiv</span><span class="op">$</span><span class="va">se</span><span class="op">$</span><span class="va">Beta</span><span class="op">$</span><span class="va">M2HM2</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_hiv</span><span class="op">)</span>,</span>
-<span>            SE       <span class="op">=</span> <span class="va">fit_hiv</span><span class="op">$</span><span class="va">se</span><span class="op">$</span><span class="va">Beta</span><span class="op">$</span><span class="va">M2HM2</span>,</span>
-<span>            true     <span class="op">=</span> <span class="va">truth</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt;             estimate    SE  true</span></span>
-<span><span class="co">#&gt; Sharing        0.745 0.149  0.90</span></span>
-<span><span class="co">#&gt; Prison         0.415 0.159  0.45</span></span>
-<span><span class="co">#&gt; Female        -0.196 0.151 -0.25</span></span>
-<span><span class="co">#&gt; Age_centred   -0.050 0.093 -0.15</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>HR    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span>,</span>
+<span>            lower <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">est</span> <span class="op">-</span> <span class="fl">1.96</span> <span class="op">*</span> <span class="va">se</span><span class="op">)</span>,</span>
+<span>            upper <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">est</span> <span class="op">+</span> <span class="fl">1.96</span> <span class="op">*</span> <span class="va">se</span><span class="op">)</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                   HR lower upper</span></span>
+<span><span class="co">#&gt; Female          1.26  1.02  1.56</span></span>
+<span><span class="co">#&gt; Age_centred     0.97  0.79  1.19</span></span>
+<span><span class="co">#&gt; period1981-1985 1.08  0.86  1.38</span></span>
+<span><span class="co">#&gt; period1986-1991 0.78  0.59  1.03</span></span>
+<span><span class="co">#&gt; period1992-1997 0.69  0.40  1.19</span></span></code></pre></div>
+<p>Women seroconvert faster than men at the same age and period, by
+about a quarter. The hazard is lower for those who began injecting
+later, 22% lower in 1986-1991 and 31% lower in 1992-1997 than in
+1972-1980, though only the first of these comes close to significance,
+and the confidence intervals are wide. Age at initiation has no
+detectable effect. Real data come with no known truth to compare
+against, so the check is robustness: the coefficients barely move when
+the basis is changed.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_unif</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_mpl.html">coxph_mpl</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">t_L</span>, <span class="va">t_R</span>, type <span class="op">=</span> <span class="st">"interval2"</span><span class="op">)</span> <span class="op">~</span> <span class="va">Female</span> <span class="op">+</span> <span class="va">Age_centred</span> <span class="op">+</span> <span class="va">period</span>,</span>
+<span>  data  <span class="op">=</span> <span class="va">ivdu</span>,</span>
+<span>  basis <span class="op">=</span> <span class="st">"uniform"</span>,</span>
+<span>  tol   <span class="op">=</span> <span class="fl">1e-05</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>msplines <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_hiv</span><span class="op">)</span>, uniform <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_unif</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                 msplines uniform</span></span>
+<span><span class="co">#&gt; Female             0.232   0.233</span></span>
+<span><span class="co">#&gt; Age_centred       -0.032  -0.038</span></span>
+<span><span class="co">#&gt; period1981-1985    0.081   0.057</span></span>
+<span><span class="co">#&gt; period1986-1991   -0.250  -0.290</span></span>
+<span><span class="co">#&gt; period1992-1997   -0.374  -0.413</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="baseline-hazard-and-survival">Baseline hazard and survival<a class="anchor" aria-label="anchor" href="#baseline-hazard-and-survival"></a>
@@ -309,13 +322,12 @@ truth:</p>
 <p><img src="left-censoring_files/figure-html/hiv-plot-1.png" class="r-plt" alt="" width="768" style="display: block; margin: auto;"></p>
 <p>The four panels are the M-spline basis functions, then the estimated
 baseline hazard, cumulative hazard and survival. The hazard panel is the
-one to read first: the true baseline is Weibull with shape 1.5, an
-increasing hazard, and the estimate reproduces that rise. The confidence
-band is wide, which is honest - a left-censored subject contributes only
-the statement that the event happened at some point before
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>R</mi></msub><annotation encoding="application/x-tex">t_R</annotation></semantics></math>,
-so a third of this sample carries very little information about
-<em>when</em>.</p>
+one to read first: the risk of seroconversion is highest soon after drug
+use begins and declines with its duration. The estimate is close to a
+straight line because the automatic smoothing value is very large; the
+confidence band is wide, and honestly so, since a left-censored subject
+only says that the event happened at some point before
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>R</mi></msub><annotation encoding="application/x-tex">t_R</annotation></semantics></math>.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_hiv</span>, which <span class="op">=</span> <span class="fl">2</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, cex.main <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span></code></pre></div>
 <p><img src="left-censoring_files/figure-html/hiv-hazard-1.png" class="r-plt" alt="" width="624" style="display: block; margin: auto;"></p>
@@ -326,22 +338,24 @@ so a third of this sample carries very little information about
 <p>Because
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mn>0</mn></msub><annotation encoding="application/x-tex">H_0</annotation></semantics></math>
 is estimated, survival can be predicted for a named covariate profile
-rather than only compared between profiles. Here are two subjects who
-differ in the strongest covariate:</p>
+rather than only compared between profiles. Here are a woman and a man
+who began injecting in the same period at the same age:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">i_share</span>    <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">hiv</span><span class="op">$</span><span class="va">Sharing</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
-<span><span class="va">i_no_share</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">hiv</span><span class="op">$</span><span class="va">Sharing</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<code class="sourceCode R"><span><span class="va">i_f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">ivdu</span><span class="op">$</span><span class="va">Female</span> <span class="op">==</span> <span class="fl">1</span> <span class="op">&amp;</span> <span class="va">ivdu</span><span class="op">$</span><span class="va">period</span> <span class="op">==</span> <span class="st">"1981-1985"</span> <span class="op">&amp;</span></span>
+<span>             <span class="va">drugusers</span><span class="op">$</span><span class="va">age</span> <span class="op">==</span> <span class="fl">19</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">i_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">ivdu</span><span class="op">$</span><span class="va">Female</span> <span class="op">==</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="va">ivdu</span><span class="op">$</span><span class="va">period</span> <span class="op">==</span> <span class="st">"1981-1985"</span> <span class="op">&amp;</span></span>
+<span>             <span class="va">drugusers</span><span class="op">$</span><span class="va">age</span> <span class="op">==</span> <span class="fl">19</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span></span>
-<span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_hiv</span>, type <span class="op">=</span> <span class="st">"survival"</span>, i <span class="op">=</span> <span class="va">i_share</span><span class="op">)</span></span>
-<span><span class="va">p0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_hiv</span>, type <span class="op">=</span> <span class="st">"survival"</span>, i <span class="op">=</span> <span class="va">i_no_share</span><span class="op">)</span></span>
+<span><span class="va">p_f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_hiv</span>, type <span class="op">=</span> <span class="st">"survival"</span>, i <span class="op">=</span> <span class="va">i_f</span><span class="op">)</span></span>
+<span><span class="va">p_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_hiv</span>, type <span class="op">=</span> <span class="st">"survival"</span>, i <span class="op">=</span> <span class="va">i_m</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4.2</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">p0</span><span class="op">$</span><span class="va">time</span>, <span class="va">p0</span><span class="op">$</span><span class="va">survival</span>, type <span class="op">=</span> <span class="st">"l"</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, lwd <span class="op">=</span> <span class="fl">2.4</span>,</span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">p_m</span><span class="op">$</span><span class="va">time</span>, <span class="va">p_m</span><span class="op">$</span><span class="va">survival</span>, type <span class="op">=</span> <span class="st">"l"</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, lwd <span class="op">=</span> <span class="fl">2.4</span>,</span>
 <span>     ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, xlab <span class="op">=</span> <span class="st">"Years since first injecting drug use"</span>,</span>
 <span>     ylab <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/influence.measures.html" class="external-link">hat</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span><span class="op">(</span><span class="va">t</span><span class="op">)</span><span class="op">)</span>, las <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>     main <span class="op">=</span> <span class="st">"Predicted survival free of seroconversion"</span>, cex.main <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">p1</span><span class="op">$</span><span class="va">time</span>, <span class="va">p1</span><span class="op">$</span><span class="va">survival</span>, col <span class="op">=</span> <span class="st">"tomato"</span>, lwd <span class="op">=</span> <span class="fl">2.4</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"bottomleft"</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"no equipment sharing"</span>, <span class="st">"equipment sharing"</span><span class="op">)</span>,</span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">p_f</span><span class="op">$</span><span class="va">time</span>, <span class="va">p_f</span><span class="op">$</span><span class="va">survival</span>, col <span class="op">=</span> <span class="st">"tomato"</span>, lwd <span class="op">=</span> <span class="fl">2.4</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"bottomleft"</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"man"</span>, <span class="st">"woman"</span><span class="op">)</span>,</span>
 <span>       col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"steelblue"</span>, <span class="st">"tomato"</span><span class="op">)</span>, lwd <span class="op">=</span> <span class="fl">2.4</span>, bty <span class="op">=</span> <span class="st">"n"</span>, cex <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span></span></code></pre></div>
 <p><img src="left-censoring_files/figure-html/hiv-predict-1.png" class="r-plt" alt="" width="624" style="display: block; margin: auto;"></p>
 <hr>
@@ -373,9 +387,17 @@ enters the left-censored likelihood directly, that choice matters more
 here than for right-censored data alone.</li>
 </ul>
 </div>
-<div class="section level2">
-<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+<div class="section level2 unnumbered">
+<h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-Gomez2000" class="csl-entry">
+Gómez, G., M. L. Calle, J. M. Egea, and R. Muga. 2000. <span>“Risk of
+<span>HIV</span> Infection as a Function of the Duration of Intravenous
+Drug Use: A Non-Parametric <span>Bayesian</span> Approach.”</span>
+<em>Statistics in Medicine</em> 19: 2641–56.
+</div>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

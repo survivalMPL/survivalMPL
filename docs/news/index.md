@@ -12,10 +12,13 @@
   never intended as a production basis; it is gone, along with its
   registration in `zzz.R` and its mentions in the articles. The
   registered bases are uniform, M-splines, Gaussian and Epanechnikov.
-- **New dataset `hiv`.** 300 simulated HIV seroconversion times with
-  left- and right-censored observations and exact events, and no
-  interval censoring - a clean illustration of left censoring on its
-  own. See `dev/data-raw/hiv.R`.
+- **Left Censoring now uses real data.** The article is built on
+  `drugusers` from the CRAN package `icpack`: 940 people who inject
+  drugs in Barcelona, with 530 left-censored, 65 interval-censored, 343
+  right-censored and 2 exact seroconversion times (Gómez et al., 2000).
+  The data are not bundled, since `icpack` is GPL; it is listed in
+  `Suggests` and the example is skipped when it is not installed. An
+  earlier simulated `hiv` dataset was dropped before release.
 - **`melanoma` regenerated.** Two thirds of the sample (200 subjects)
   are now exact events and one third is censored: 58 interval, 23 right
   and 19 left censored. Previously it was 117 exact, 35 interval, 16
@@ -43,10 +46,6 @@
   from its example and gains a residuals section: how to read the
   martingale and Cox-Snell plots, and why the index axis of both
   reflects the row order of `lung` rather than the fit.
-- **Left Censoring** rewritten around the new `hiv` dataset, with no
-  interval censoring in sight: the fit checked against the coefficients
-  that generated the data, the baseline hazard, and predicted survival
-  by sharing status.
 - **Interval Censoring** now uses the bundled `melanoma` data instead of
   simulating them inline, and follows the book’s own example (Section
   2.11): its fit call unchanged, including the automatic smoothing

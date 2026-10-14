@@ -17,6 +17,7 @@ Description: Estimate the regression coefficients and the baseline hazard
       function is provided.
 Depends: R (>= 3.5.0), survival, stats, MASS
 Suggests: knitr,
+    icpack,
     rmarkdown,
     pkgdown,
     pkgload,

@@ -11,7 +11,7 @@ articles:
   left-censoring: left-censoring.html
   left-truncation: left-truncation.html
   right-censoring: right-censoring.html
-last_built: 2026-10-14T20:28Z
+last_built: 2026-10-14T21:07Z
 urls:
   reference: https://CRAN.R-project.org/package=survivalMPL/reference
   article: https://CRAN.R-project.org/package=survivalMPL/articles
