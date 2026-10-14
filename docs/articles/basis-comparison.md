@@ -169,13 +169,52 @@ numbers of parameters. (The defaults differ by basis: `"uniform"` and
 `"msplines"` use `c(8, 2)`, while `"gaussian"` and `"epanechikov"` use
 `c(0, 20)`.)
 
-[`data`](https://rdrr.io/r/utils/data.html)`(``melanoma``)`` ``formula_mel`` ``<-`` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``t_L``, ``t_R``, type ``=`` ``"interval2"``)`` ``~`` `` ``Arm`` ``+`` ``Leg`` ``+`` ``Trunk`` ``+`` ``mm1to2`` ``+`` ``mm2to4`` ``+`` ``mm4plus`` ``+`` ``Female`` ``+`` ``Age_centred`` ``n_obs`` ``<-`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``melanoma``$``t_L`` ``==`` ``melanoma``$``t_R`` ``&`` `[`is.finite`](https://rdrr.io/r/base/is.finite.html)`(``melanoma``$``t_R``)``)`` ``base_ctrl`` ``<-`` `[`list`](https://rdrr.io/r/base/list.html)`(``n.obs ``=`` ``n_obs``,`` `` smooth ``=`` ``0``,`` `` n.knots ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``8``, ``2``)``,`` `` max.iter ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``40``, ``2e4``, ``5e4``)``)`
+\
+[`data`](https://rdrr.io/r/utils/data.html)`(``melanoma``)`\
+`formula_mel`` ``<-`` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``t_L``, ``t_R``, type ``=`` ``"interval2"``)`` ``~`\
+`  ``Arm`` ``+`` ``Leg`` ``+`` ``Trunk`` ``+`` ``mm1to2`` ``+`` ``mm2to4`` ``+`` ``mm4plus`` ``+`` ``Female`` ``+`` ``Age_centred`\
+`n_obs`` ``<-`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``melanoma``$``t_L`` ``==`` ``melanoma``$``t_R`` ``&`` `[`is.finite`](https://rdrr.io/r/base/is.finite.html)`(``melanoma``$``t_R``)``)`\
+`base_ctrl`` ``<-`` `[`list`](https://rdrr.io/r/base/list.html)`(``n.obs ``=`` ``n_obs``,`\
+`                  smooth ``=`` ``0``,`\
+`                  n.knots ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``8``, ``2``)``,`\
+`                  max.iter ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``40``, ``2e4``, ``5e4``)``)`
 
-`fit_u`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``formula_mel``, data ``=`` ``melanoma``,`` `` control ``=`` `[`do.call`](https://rdrr.io/r/base/do.call.html)`(``coxph_mpl.control``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``base_ctrl``, `[`list`](https://rdrr.io/r/base/list.html)`(``basis ``=`` ``"uniform"``)``)``)``)`` `` ``fit_g`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``formula_mel``, data ``=`` ``melanoma``,`` `` control ``=`` `[`do.call`](https://rdrr.io/r/base/do.call.html)`(``coxph_mpl.control``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``base_ctrl``, `[`list`](https://rdrr.io/r/base/list.html)`(``basis ``=`` ``"gaussian"``)``)``)``)`` `` ``fit_m`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``formula_mel``, data ``=`` ``melanoma``,`` `` control ``=`` `[`do.call`](https://rdrr.io/r/base/do.call.html)`(``coxph_mpl.control``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``base_ctrl``, `[`list`](https://rdrr.io/r/base/list.html)`(``basis ``=`` ``"msplines"``)``)``)``)`` `` ``fit_e`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``formula_mel``, data ``=`` ``melanoma``,`` `` control ``=`` `[`do.call`](https://rdrr.io/r/base/do.call.html)`(``coxph_mpl.control``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``base_ctrl``, `[`list`](https://rdrr.io/r/base/list.html)`(``basis ``=`` ``"epanechikov"``)``)``)``)`
+\
+`fit_u`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``formula_mel``, data ``=`` ``melanoma``,`\
+`  control ``=`` `[`do.call`](https://rdrr.io/r/base/do.call.html)`(``coxph_mpl.control``,`\
+`    `[`c`](https://rdrr.io/r/base/c.html)`(``base_ctrl``, `[`list`](https://rdrr.io/r/base/list.html)`(``basis ``=`` ``"uniform"``)``)``)``)`\
+\
+`fit_g`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``formula_mel``, data ``=`` ``melanoma``,`\
+`  control ``=`` `[`do.call`](https://rdrr.io/r/base/do.call.html)`(``coxph_mpl.control``,`\
+`    `[`c`](https://rdrr.io/r/base/c.html)`(``base_ctrl``, `[`list`](https://rdrr.io/r/base/list.html)`(``basis ``=`` ``"gaussian"``)``)``)``)`\
+\
+`fit_m`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``formula_mel``, data ``=`` ``melanoma``,`\
+`  control ``=`` `[`do.call`](https://rdrr.io/r/base/do.call.html)`(``coxph_mpl.control``,`\
+`    `[`c`](https://rdrr.io/r/base/c.html)`(``base_ctrl``, `[`list`](https://rdrr.io/r/base/list.html)`(``basis ``=`` ``"msplines"``)``)``)``)`\
+\
+`fit_e`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``formula_mel``, data ``=`` ``melanoma``,`\
+`  control ``=`` `[`do.call`](https://rdrr.io/r/base/do.call.html)`(``coxph_mpl.control``,`\
+`    `[`c`](https://rdrr.io/r/base/c.html)`(``base_ctrl``, `[`list`](https://rdrr.io/r/base/list.html)`(``basis ``=`` ``"epanechikov"``)``)``)``)`
 
 ### Regression coefficients
 
-`coef_mat`` ``<-`` `[`cbind`](https://rdrr.io/r/base/cbind.html)`(`` `` Uniform ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_u``)``,`` `` Gaussian ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_g``)``,`` ```  `M-Splines`  ```=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_m``)``,`` `` Epanechnikov ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_e``)`` ``)`` `[`round`](https://rdrr.io/r/base/Round.html)`(``coef_mat``, ``3``)`` ``#> Uniform Gaussian M-Splines Epanechnikov`` ``#> Arm -0.491 -0.467 -0.491 -0.495`` ``#> Leg -0.032 0.006 -0.014 -0.016`` ``#> Trunk -0.221 -0.204 -0.214 -0.213`` ``#> mm1to2 -0.037 -0.011 -0.013 -0.026`` ``#> mm2to4 0.613 0.629 0.630 0.624`` ``#> mm4plus 1.255 1.270 1.267 1.264`` ``#> Female -0.171 -0.160 -0.161 -0.164`` ``#> Age_centred 0.099 0.093 0.098 0.099`
+\
+`coef_mat`` ``<-`` `[`cbind`](https://rdrr.io/r/base/cbind.html)`(`\
+`  Uniform      ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_u``)``,`\
+`  Gaussian     ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_g``)``,`\
+``   `M-Splines`   ```=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_m``)``,`\
+`  Epanechnikov ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_e``)`\
+`)`\
+[`round`](https://rdrr.io/r/base/Round.html)`(``coef_mat``, ``3``)`\
+`#>             Uniform Gaussian M-Splines Epanechnikov`\
+`#> Arm          -0.491   -0.467    -0.491       -0.495`\
+`#> Leg          -0.032    0.006    -0.014       -0.016`\
+`#> Trunk        -0.221   -0.204    -0.214       -0.213`\
+`#> mm1to2       -0.037   -0.011    -0.013       -0.026`\
+`#> mm2to4        0.613    0.629     0.630        0.624`\
+`#> mm4plus       1.255    1.270     1.267        1.264`\
+`#> Female       -0.171   -0.160    -0.161       -0.164`\
+`#> Age_centred   0.099    0.093     0.098        0.099`
 
 ### Estimated baseline hazards
 

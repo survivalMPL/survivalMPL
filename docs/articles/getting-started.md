@@ -28,17 +28,24 @@ Supported data:
 
 From CRAN:
 
+\
 [`install.packages`](https://rdrr.io/r/utils/install.packages.html)`(``"survivalMPL"``)`
 
 The development version:
 
-`# install.packages("remotes")`` ``remotes``::``install_github``(``"survivalMPL/survivalMPL"``)`
+\
+`# install.packages("remotes")`\
+`remotes``::`[`install_github`](https://remotes.r-lib.org/reference/install_github.html)`(``"survivalMPL/survivalMPL"``)`
 
 Then attach it alongside `survival`, which provides the
 [`Surv()`](https://rdrr.io/pkg/survival/man/Surv.html) response
 constructor:
 
-[`library`](https://rdrr.io/r/base/library.html)`(`[`survivalMPL`](https://CRAN.R-project.org/package=survivalMPL)`)`` ``#> Loading required package: survival`` ``#> Loading required package: MASS`` `[`library`](https://rdrr.io/r/base/library.html)`(`[`survival`](https://github.com/therneau/survival)`)`
+\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`survivalMPL`](https://CRAN.R-project.org/package=survivalMPL)`)`\
+`#> Loading required package: survival`\
+`#> Loading required package: MASS`\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`survival`](https://github.com/therneau/survival)`)`
 
 ## The main function
 
@@ -46,7 +53,8 @@ constructor:
 is the entry point. Its interface follows
 [`survival::coxph()`](https://rdrr.io/pkg/survival/man/coxph.html):
 
-[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``formula``, ``data``, ``subset``, ``na.action``, ``entry``, ``control``, ``...``)`
+\
+[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``formula``, ``data``, ``subset``, ``na.action``, ``entry``, ``control``, ``...``)`
 
 | Argument | Purpose |
 |----|----|

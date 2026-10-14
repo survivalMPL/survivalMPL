@@ -30,13 +30,57 @@ compare:
 
 ## Data and model fits
 
-[`library`](https://rdrr.io/r/base/library.html)`(`[`survivalMPL`](https://CRAN.R-project.org/package=survivalMPL)`)`` ``#> Loading required package: survival`` ``#> Loading required package: MASS`` `[`library`](https://rdrr.io/r/base/library.html)`(`[`survival`](https://github.com/therneau/survival)`)`` `` ``lung`` ``<-`` `[`na.omit`](https://rdrr.io/r/stats/na.fail.html)`(``lung``[``, `[`c`](https://rdrr.io/r/base/c.html)`(``"time"``, ``"status"``, ``"age"``, ``"sex"``, ``"ph.karno"``, ``"wt.loss"``)``]``)`` ``f`` ``<-`` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status`` ``==`` ``2``)`` ``~`` ``age`` ``+`` ``sex`` ``+`` ``ph.karno`` ``+`` ``wt.loss`` `` ``# --- partial likelihood (coxph) ---`` ``fit_pl`` ``<-`` `[`coxph`](https://rdrr.io/pkg/survival/man/coxph.html)`(``f``, data ``=`` ``lung``, x ``=`` ``TRUE``)`` `` ``# --- penalised full likelihood, M-splines (coxph_mpl) ---`` ``fit_mpl`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``,`` `` control ``=`` `[`coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)`(`` `` basis ``=`` ``"msplines"``,`` `` n.obs ``=`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``lung``$``status`` ``==`` ``2``)``,`` `` max.iter ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``150``, ``7.5e4``, ``1e6``)`` `` ``)`` ``)`
+\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`survivalMPL`](https://CRAN.R-project.org/package=survivalMPL)`)`\
+`#> Loading required package: survival`\
+`#> Loading required package: MASS`\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`survival`](https://github.com/therneau/survival)`)`\
+\
+`lung`` ``<-`` `[`na.omit`](https://rdrr.io/r/stats/na.fail.html)`(``lung``[``, `[`c`](https://rdrr.io/r/base/c.html)`(``"time"``, ``"status"``, ``"age"``, ``"sex"``, ``"ph.karno"``, ``"wt.loss"``)``]``)`\
+`f``    ``<-`` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status`` ``==`` ``2``)`` ``~`` ``age`` ``+`` ``sex`` ``+`` ``ph.karno`` ``+`` ``wt.loss`\
+\
+`# --- partial likelihood (coxph) ---`\
+`fit_pl`` ``<-`` `[`coxph`](https://rdrr.io/pkg/survival/man/coxph.html)`(``f``, data ``=`` ``lung``, x ``=`` ``TRUE``)`\
+\
+`# --- penalised full likelihood, M-splines (coxph_mpl) ---`\
+`fit_mpl`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``,`\
+`  control ``=`` `[`coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)`(`\
+`    basis    ``=`` ``"msplines"``,`\
+`    n.obs    ``=`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``lung``$``status`` ``==`` ``2``)``,`\
+`    max.iter ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``150``, ``7.5e4``, ``1e6``)`\
+`  ``)`\
+`)`
 
 ------------------------------------------------------------------------
 
 ## Regression coefficients and standard errors
 
-`beta_pl`` ``<-`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_pl``)`` ``se_pl`` ``<-`` `[`sqrt`](https://rdrr.io/r/base/MathFun.html)`(`[`diag`](https://rdrr.io/r/base/diag.html)`(`[`vcov`](https://rdrr.io/r/stats/vcov.html)`(``fit_pl``)``)``)`` `` ``beta_mpl`` ``<-`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_mpl``)`` ``se_mpl`` ``<-`` ``fit_mpl``$``se``$``Beta``$``M2HM2`` `` ``row_labels`` ``<-`` `[`c`](https://rdrr.io/r/base/c.html)`(`` `` age ``=`` ``"Age (per year)^a^"``,`` `` sex ``=`` ``"Sex"``,`` `` ph.karno ``=`` ``"Karnofsky score (per point)^a^"``,`` `` wt.loss ``=`` ``"Weight loss (kg)"`` ``)`` `` ``tab`` ``<-`` `[`data.frame`](https://rdrr.io/r/base/data.frame.html)`(`` `` Covariate ``=`` ``row_labels``[`[`names`](https://rdrr.io/r/base/names.html)`(``beta_pl``)``]``,`` ```  `PL est.`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``beta_pl``, ``4``)``,`` ```  `PL SE`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``se_pl``, ``4``)``,`` ```  `MPL est.`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``beta_mpl``, ``4``)``,`` ```  `MPL SE`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``se_mpl``, ``4``)``,`` ```  `Difference`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``beta_mpl`` ``-`` ``beta_pl``, ``4``)``,`` `` check.names ``=`` ``FALSE``,`` `` row.names ``=`` ``NULL`` ``)`` ``knitr``::`[`kable`](https://rdrr.io/pkg/knitr/man/kable.html)`(``tab``, align ``=`` ``"lrrrrr"``,`` `` caption ``=`` ``"^a^ The forest plot rescales these covariates to per-10-unit changes."``)`
+\
+`beta_pl``  ``<-`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_pl``)`\
+`se_pl``    ``<-`` `[`sqrt`](https://rdrr.io/r/base/MathFun.html)`(`[`diag`](https://rdrr.io/r/base/diag.html)`(`[`vcov`](https://rdrr.io/r/stats/vcov.html)`(``fit_pl``)``)``)`\
+\
+`beta_mpl`` ``<-`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_mpl``)`\
+`se_mpl``   ``<-`` ``fit_mpl``$``se``$``Beta``$``M2HM2`\
+\
+`row_labels`` ``<-`` `[`c`](https://rdrr.io/r/base/c.html)`(`\
+`  age      ``=`` ``"Age (per year)^a^"``,`\
+`  sex      ``=`` ``"Sex"``,`\
+`  ph.karno ``=`` ``"Karnofsky score (per point)^a^"``,`\
+`  wt.loss  ``=`` ``"Weight loss (kg)"`\
+`)`\
+\
+`tab`` ``<-`` `[`data.frame`](https://rdrr.io/r/base/data.frame.html)`(`\
+`  Covariate    ``=`` ``row_labels``[`[`names`](https://rdrr.io/r/base/names.html)`(``beta_pl``)``]``,`\
+``   `PL est.`     ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``beta_pl``,  ``4``)``,`\
+``   `PL SE`       ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``se_pl``,    ``4``)``,`\
+``   `MPL est.`    ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``beta_mpl``, ``4``)``,`\
+``   `MPL SE`      ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``se_mpl``,   ``4``)``,`\
+``   `Difference`  ```=`` `[`round`](https://rdrr.io/r/base/Round.html)`(``beta_mpl`` ``-`` ``beta_pl``, ``4``)``,`\
+`  check.names  ``=`` ``FALSE``,`\
+`  row.names    ``=`` ``NULL`\
+`)`\
+`knitr``::`[`kable`](https://rdrr.io/pkg/knitr/man/kable.html)`(``tab``, align ``=`` ``"lrrrrr"``,`\
+`             caption ``=`` ``"^a^ The forest plot rescales these covariates to per-10-unit changes."``)`
 
 | Covariate                       | PL est. |  PL SE | MPL est. | MPL SE | Difference |
 |:--------------------------------|--------:|-------:|---------:|-------:|-----------:|
@@ -46,7 +90,7 @@ compare:
 | Weight loss (kg)                | -0.0022 | 0.0064 |  -0.0010 | 0.0063 |     0.0012 |
 
 ^(a) The forest plot rescales these covariates to per-10-unit changes.
-{.table style="width:100%;"}
+{.table style="width:99%;"}
 
 The estimates agree closely: the full-likelihood approach recovers the
 same regression signal as partial likelihood, with near-identical

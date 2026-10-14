@@ -21,9 +21,11 @@ Penalised Maximum Likelihood for Survival Analysis Models*.
 R package version 0.2-4.9005,
 <https://CRAN.R-project.org/package=survivalMPL>.
 
-@Manual{, title = {survivalMPL: Penalised Maximum Likelihood for
-Survival Analysis Models}, author = {Dominique-Laurent Couturier and Jun
-Ma and Stephane Heritier and Maurizio Manuguerra and Serigne Lo}, year =
-{2025}, note = {R package version 0.2-4.9005}, url =
-{https://CRAN.R-project.org/package=survivalMPL}, doi =
-{10.32614/CRAN.package.survivalMPL}, }
+@Manual{,\
+  title = {survivalMPL: Penalised Maximum Likelihood for Survival Analysis Models},\
+  author = {Dominique-Laurent Couturier and Jun Ma and Stephane Heritier and Maurizio Manuguerra and Serigne Lo},\
+  year = {2025},\
+  note = {R package version 0.2-4.9005},\
+  url = {https://CRAN.R-project.org/package=survivalMPL},\
+  doi = {10.32614/CRAN.package.survivalMPL},\
+}

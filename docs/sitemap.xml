@@ -1,6 +1,5 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/404.html</loc></url>
-<url><loc>https://CRAN.R-project.org/package=survivalMPL/AGENTS.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/basis-comparison.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/book.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/control-parameters.html</loc></url>
@@ -38,5 +37,6 @@
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/reference/resolve_basis_name.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/reference/summary.coxph_mpl.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/reference/survivalMPL-package.html</loc></url>
+<url><loc>https://CRAN.R-project.org/package=survivalMPL/reference/vcov.coxph_mpl.html</loc></url>
 </urlset>
 

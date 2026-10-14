@@ -11,7 +11,14 @@ value, longer iteration limits - the settings live in
 
 There are two equivalent ways to change them:
 
-`# 1. pass control arguments directly; coxph_mpl() forwards them`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(`[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status``)`` ``~`` ``x``, data ``=`` ``df``, basis ``=`` ``"msplines"``, tol ``=`` ``1e-5``)`` `` ``# 2. build the control object explicitly`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(`[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status``)`` ``~`` ``x``, data ``=`` ``df``,`` `` control ``=`` `[`coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)`(``n.obs ``=`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``df``$``status``)``,`` `` basis ``=`` ``"msplines"``, tol ``=`` ``1e-5``)``)`
+\
+`# 1. pass control arguments directly; coxph_mpl() forwards them`\
+[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(`[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status``)`` ``~`` ``x``, data ``=`` ``df``, basis ``=`` ``"msplines"``, tol ``=`` ``1e-5``)`\
+\
+`# 2. build the control object explicitly`\
+[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(`[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status``)`` ``~`` ``x``, data ``=`` ``df``,`\
+`          control ``=`` `[`coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)`(``n.obs ``=`` `[`sum`](https://rdrr.io/r/base/sum.html)`(``df``$``status``)``,`\
+`                                      basis ``=`` ``"msplines"``, tol ``=`` ``1e-5``)``)`
 
 The first form is shorter and is what the other articles use. The second
 is needed when the same settings are reused across several fits. Note
@@ -25,7 +32,31 @@ counts them for you.
 
 A control object is a plain list with validated entries:
 
-[`library`](https://rdrr.io/r/base/library.html)`(`[`survivalMPL`](https://CRAN.R-project.org/package=survivalMPL)`)`` ``#> Loading required package: survival`` ``#> Loading required package: MASS`` `[`library`](https://rdrr.io/r/base/library.html)`(`[`survival`](https://github.com/therneau/survival)`)`` `` `[`str`](https://rdrr.io/r/utils/str.html)`(`[`coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)`(``n.obs ``=`` ``165``)``)`` ``#> List of 16`` ``#> $ basis : chr "uniform"`` ``#> $ smooth : num 0`` ``#> $ max.iter : int [1:3] 150 75000 1000000`` ``#> $ tol : num 1e-07`` ``#> $ order : int 3`` ``#> $ penalty : int 2`` ``#> $ n.knots : num [1:2] 8 2`` ``#> $ range.quant : num [1:2] 0.075 0.9`` ``#> $ cover.sigma.quant: num 0.25`` ``#> $ cover.sigma.fixed: num 0.25`` ``#> $ n.events_basis : int 10`` ``#> $ min.theta : num 1e-10`` ``#> $ ties : chr "epsilon"`` ``#> $ seed : int(0) `` ``#> $ kappa : num 1.67`` ``#> $ epsilon : num [1:2] 1e-16 1e-10`` ``#> - attr(*, "class")= chr "coxph_mpl.control"`
+\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`survivalMPL`](https://CRAN.R-project.org/package=survivalMPL)`)`\
+`#> Loading required package: survival`\
+`#> Loading required package: MASS`\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`survival`](https://github.com/therneau/survival)`)`\
+\
+[`str`](https://rdrr.io/r/utils/str.html)`(`[`coxph_mpl.control`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.control.md)`(``n.obs ``=`` ``165``)``)`\
+`#> List of 16`\
+`#>  $ basis            : chr "uniform"`\
+`#>  $ smooth           : num 0`\
+`#>  $ max.iter         : int [1:3] 150 75000 1000000`\
+`#>  $ tol              : num 1e-07`\
+`#>  $ order            : int 3`\
+`#>  $ penalty          : int 2`\
+`#>  $ n.knots          : num [1:2] 8 2`\
+`#>  $ range.quant      : num [1:2] 0.075 0.9`\
+`#>  $ cover.sigma.quant: num 0.25`\
+`#>  $ cover.sigma.fixed: num 0.25`\
+`#>  $ n.events_basis   : int 10`\
+`#>  $ min.theta        : num 1e-10`\
+`#>  $ ties             : chr "epsilon"`\
+`#>  $ seed             : int(0) `\
+`#>  $ kappa            : num 1.67`\
+`#>  $ epsilon          : num [1:2] 1e-16 1e-10`\
+`#>  - attr(*, "class")= chr "coxph_mpl.control"`
 
 Every argument is validated on the way in: values outside their
 admissible range are silently replaced by the default rather than passed
@@ -70,12 +101,30 @@ $`\boldsymbol{\theta}`$ to estimate; the penalty, not the knot count, is
 what should control smoothness, so a moderately generous knot count with
 automatic smoothing is usually better than a small one:
 
-`lung`` ``<-`` `[`na.omit`](https://rdrr.io/r/stats/na.fail.html)`(``lung``[``, `[`c`](https://rdrr.io/r/base/c.html)`(``"time"``, ``"status"``, ``"age"``, ``"sex"``, ``"ph.karno"``, ``"wt.loss"``)``]``)`` ``f`` ``<-`` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status`` ``==`` ``2``)`` ``~`` ``age`` ``+`` ``sex`` ``+`` ``ph.karno`` ``+`` ``wt.loss`` `` ``fit_coarse`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, n.knots ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``3``, ``1``)``, tol ``=`` ``1e-5``)`` ``fit_fine`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, n.knots ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``15``, ``3``)``, tol ``=`` ``1e-5``)`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``coarse ``=`` ``fit_coarse``$``knots``$``m``, fine ``=`` ``fit_fine``$``knots``$``m``)`` ``#> coarse fine `` ``#> 5 19`` `[`round`](https://rdrr.io/r/base/Round.html)`(`[`cbind`](https://rdrr.io/r/base/cbind.html)`(``coarse ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_coarse``)``, fine ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_fine``)``)``, ``4``)`` ``#> coarse fine`` ``#> age 0.0145 0.0142`` ``#> sex -0.5077 -0.5087`` ``#> ph.karno -0.0116 -0.0119`` ``#> wt.loss -0.0016 -0.0018`
+\
+`lung`` ``<-`` `[`na.omit`](https://rdrr.io/r/stats/na.fail.html)`(``lung``[``, `[`c`](https://rdrr.io/r/base/c.html)`(``"time"``, ``"status"``, ``"age"``, ``"sex"``, ``"ph.karno"``, ``"wt.loss"``)``]``)`\
+`f``    ``<-`` `[`Surv`](https://rdrr.io/pkg/survival/man/Surv.html)`(``time``, ``status`` ``==`` ``2``)`` ``~`` ``age`` ``+`` ``sex`` ``+`` ``ph.karno`` ``+`` ``wt.loss`\
+\
+`fit_coarse`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, n.knots ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``3``, ``1``)``,  tol ``=`` ``1e-5``)`\
+`fit_fine``   ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, n.knots ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``15``, ``3``)``, tol ``=`` ``1e-5``)`\
+\
+[`c`](https://rdrr.io/r/base/c.html)`(``coarse ``=`` ``fit_coarse``$``knots``$``m``, fine ``=`` ``fit_fine``$``knots``$``m``)`\
+`#> coarse   fine `\
+`#>      5     19`\
+[`round`](https://rdrr.io/r/base/Round.html)`(`[`cbind`](https://rdrr.io/r/base/cbind.html)`(``coarse ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_coarse``)``, fine ``=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_fine``)``)``, ``4``)`\
+`#>           coarse    fine`\
+`#> age       0.0145  0.0142`\
+`#> sex      -0.5077 -0.5087`\
+`#> ph.karno -0.0116 -0.0119`\
+`#> wt.loss  -0.0016 -0.0018`
 
 The regression coefficients barely move; what changes is the resolution
 of the baseline hazard.
 
-[`par`](https://rdrr.io/r/graphics/par.html)`(``mfrow ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``1``, ``2``)``, mar ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``4``, ``4``, ``3``, ``1``)``)`` `[`plot`](https://rdrr.io/r/graphics/plot.default.html)`(``fit_coarse``, which ``=`` ``2``, ask ``=`` ``FALSE``, cex.main ``=`` ``0.85``)`` `[`plot`](https://rdrr.io/r/graphics/plot.default.html)`(``fit_fine``, which ``=`` ``2``, ask ``=`` ``FALSE``, cex.main ``=`` ``0.85``)`
+\
+[`par`](https://rdrr.io/r/graphics/par.html)`(``mfrow ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``1``, ``2``)``, mar ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``4``, ``4``, ``3``, ``1``)``)`\
+[`plot`](https://rdrr.io/r/graphics/plot.default.html)`(``fit_coarse``, which ``=`` ``2``, ask ``=`` ``FALSE``, cex.main ``=`` ``0.85``)`\
+[`plot`](https://rdrr.io/r/graphics/plot.default.html)`(``fit_fine``,   which ``=`` ``2``, ask ``=`` ``FALSE``, cex.main ``=`` ``0.85``)`
 
 ![](control-parameters_files/figure-html/knots-plot-1.png)
 
@@ -136,7 +185,16 @@ outer iterations off, and
 *fixed* rather than *estimated*. The final $`\lambda`$ - selected or
 not - is stored in `fit$control$smooth`.
 
-`fit_ml`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, smooth ``=`` ``0``)`` ``# unpenalised`` ``fit_auto`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``)`` ``# automatic smoothing value`` ``fit_hard`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, smooth ``=`` ``1e8``)`` ``# heavily penalised`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``ml ``=`` ``fit_ml``$``control``$``smooth``,`` `` automatic ``=`` ``fit_auto``$``control``$``smooth``,`` `` hard ``=`` ``fit_hard``$``control``$``smooth``)`` ``#> ml automatic hard `` ``#> 0 19163433 100000000`
+\
+`fit_ml``   ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, smooth ``=`` ``0``)``      ``# unpenalised`\
+`fit_auto`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``)``                  ``# automatic smoothing value`\
+`fit_hard`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, smooth ``=`` ``1e8``)``    ``# heavily penalised`\
+\
+[`c`](https://rdrr.io/r/base/c.html)`(``ml ``=`` ``fit_ml``$``control``$``smooth``,`\
+`  automatic ``=`` ``fit_auto``$``control``$``smooth``,`\
+`  hard ``=`` ``fit_hard``$``control``$``smooth``)`\
+`#>        ml automatic      hard `\
+`#>         0  19163433 100000000`
 
 ### Choosing $`\lambda`$ by hand
 
@@ -171,7 +229,9 @@ is no outer loop left to run.
 algorithm converged and how many outer and inner iterations it used;
 `fit$iter` holds the same two numbers:
 
-`fit_auto``$``iter`` ``# c(outer iterations, total inner iterations)`` ``#> [1] 150 4268`
+\
+`fit_auto``$``iter``        ``# c(outer iterations, total inner iterations)`\
+`#> [1]  150 4268`
 
 If either equals its cap the fit has not converged, and
 [`summary()`](https://rdrr.io/r/base/summary.html) says
@@ -188,7 +248,24 @@ a unit is what keeps the loop running. Either loosening `tol` to the
 $`10^{-5}`$ the book uses in its own examples, or raising the cap,
 produces the same fit:
 
-`fit_tol`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, tol ``=`` ``1e-05``)`` ``fit_more`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, max.iter ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``600``, ``7.5e4``, ``1e6``)``)`` `` `[`rbind`](https://rdrr.io/r/base/cbind.html)`(``` `tol = 1e-05`  ```=`` ``fit_tol``$``iter``,`` ```  `max.iter 600`  ```=`` ``fit_more``$``iter``)`` ``#> [,1] [,2]`` ``#> tol = 1e-05 101 571`` ``#> max.iter 600 492 5196`` `` `[`round`](https://rdrr.io/r/base/Round.html)`(`[`cbind`](https://rdrr.io/r/base/cbind.html)`(``` `default (capped)`  ```=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_auto``)``,`` ```  `tol = 1e-05`  ```=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_tol``)``,`` ```  `max.iter 600`  ```=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_more``)``)``, ``4``)`` ``#> default (capped) tol = 1e-05 max.iter 600`` ``#> age 0.0146 0.0144 0.0146`` ``#> sex -0.5108 -0.5103 -0.5108`` ``#> ph.karno -0.0118 -0.0117 -0.0118`` ``#> wt.loss -0.0018 -0.0017 -0.0018`
+\
+`fit_tol``  ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, tol ``=`` ``1e-05``)`\
+`fit_more`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, max.iter ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``600``, ``7.5e4``, ``1e6``)``)`\
+\
+[`rbind`](https://rdrr.io/r/base/cbind.html)`(``` `tol = 1e-05`   ```=`` ``fit_tol``$``iter``,`\
+``       `max.iter 600`  ```=`` ``fit_more``$``iter``)`\
+`#>              [,1] [,2]`\
+`#> tol = 1e-05   101  571`\
+`#> max.iter 600  492 5196`\
+\
+[`round`](https://rdrr.io/r/base/Round.html)`(`[`cbind`](https://rdrr.io/r/base/cbind.html)`(``` `default (capped)`  ```=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_auto``)``,`\
+``             `tol = 1e-05`       ```=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_tol``)``,`\
+``             `max.iter 600`      ```=`` `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_more``)``)``, ``4``)`\
+`#>          default (capped) tol = 1e-05 max.iter 600`\
+`#> age                0.0146      0.0144       0.0146`\
+`#> sex               -0.5108     -0.5103      -0.5108`\
+`#> ph.karno          -0.0118     -0.0117      -0.0118`\
+`#> wt.loss           -0.0018     -0.0017      -0.0018`
 
 The three sets of coefficients differ by at most a twentieth of a
 standard error, so the capped fit was not wrong - but a fit that reports
@@ -211,7 +288,11 @@ Duplicated event times therefore have to be resolved:
 Because `"epsilon"` uses the random number generator, `seed` fixes it so
 the knots - and hence the fit - are exactly reproducible:
 
-`fit_a`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, ties ``=`` ``"epsilon"``, seed ``=`` ``42``)`` ``fit_b`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, ties ``=`` ``"epsilon"``, seed ``=`` ``42``)`` `[`identical`](https://rdrr.io/r/base/identical.html)`(`[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_a``)``, `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_b``)``)`` ``#> [1] TRUE`
+\
+`fit_a`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, ties ``=`` ``"epsilon"``, seed ``=`` ``42``)`\
+`fit_b`` ``<-`` `[`coxph_mpl`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)`(``f``, data ``=`` ``lung``, ties ``=`` ``"epsilon"``, seed ``=`` ``42``)`\
+[`identical`](https://rdrr.io/r/base/identical.html)`(`[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_a``)``, `[`coef`](https://rdrr.io/r/stats/coef.html)`(``fit_b``)``)`\
+`#> [1] TRUE`
 
 The current RNG state is restored afterwards, so setting `seed` does not
 disturb any simulation running around the fit.

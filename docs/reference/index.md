@@ -57,3 +57,10 @@
 - [`survivalMPL-package`](https://CRAN.R-project.org/package=survivalMPL/reference/survivalMPL-package.md)
   [`survivalMPL`](https://CRAN.R-project.org/package=survivalMPL/reference/survivalMPL-package.md)
   : Penalised Maximum Likelihood for Survival Analysis Models
+
+- [`vcov(`*`<coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/vcov.coxph_mpl.md)
+  [`confint(`*`<coxph_mpl>`*`)`](https://CRAN.R-project.org/package=survivalMPL/reference/vcov.coxph_mpl.md)
+  :
+
+  Variance-Covariance Matrix and Confidence Intervals for `coxph_mpl`
+  Fits

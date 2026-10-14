@@ -25,7 +25,7 @@
 # //   - Consider an additional comparison with Kaplan-Meier / Nelson-Aalen style
 # //     non-parametric hazard or cumulative hazard estimates, if statistically
 # //     coherent for the chosen example.
-# 5. Create a draft package logo.
+#// 5. [DONE] Create a draft package logo (man/figures/logo.png, master logo.png).
 #    - Keep source assets editable and avoid committing generated experiments
 #      unless they are selected for the package.
 # 6. Prepare examples for Jun that demonstrate numerical issues.
