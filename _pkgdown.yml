@@ -38,8 +38,6 @@ navbar:
         - text: Censoring and truncation
         - text: Right Censoring
           href: articles/right-censoring.html
-        - text: Left Censoring
-          href: articles/left-censoring.html
         - text: Interval Censoring
           href: articles/interval-censoring.html
         - text: Left Truncation
@@ -68,7 +66,6 @@ articles:
       One article per observation scheme, each with a complete worked example.
     contents:
       - right-censoring
-      - left-censoring
       - interval-censoring
       - left-truncation
   - title: Modelling choices

@@ -3,7 +3,7 @@ title: "Left Censoring with survivalMPL"
 output:
   rmarkdown::html_vignette:
     toc: true
-bibliography: references.bib
+bibliography: ../../vignettes/references.bib
 vignette: >
   %\VignetteIndexEntry{Left Censoring with survivalMPL}
   %\VignetteEngine{knitr::rmarkdown}

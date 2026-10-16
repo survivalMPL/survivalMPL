@@ -51,7 +51,6 @@
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Censoring and truncation</h6></li>
     <li><a class="dropdown-item" href="../articles/right-censoring.html">Right Censoring</a></li>
-    <li><a class="dropdown-item" href="../articles/left-censoring.html">Left Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/interval-censoring.html">Interval Censoring</a></li>
     <li><a class="dropdown-item" href="../articles/left-truncation.html">Left Truncation</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -361,9 +360,8 @@ subjects join the risk set only at some entry time. Right-censored data
 are often also left truncated, and <code><a href="../reference/coxph_mpl.html">coxph_mpl()</a></code> handles it
 through the <code>entry</code> argument.</li>
 <li>
-<strong>Left Censoring</strong> and <strong>Interval
-Censoring</strong> cover the other censoring schemes, which use the
-<code>type = "interval2"</code> response.</li>
+<strong>Interval Censoring</strong> covers the other censoring
+scheme, which uses the <code>type = "interval2"</code> response.</li>
 <li>
 <strong>Basis Functions for the Baseline Hazard</strong> explains
 the four choices for

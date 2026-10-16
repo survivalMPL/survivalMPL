@@ -199,8 +199,8 @@ right of both panels.  That is a fact about the data file, not about the fit.
 - **Left Truncation** covers delayed entry, where subjects join the risk set
   only at some entry time.  Right-censored data are often also left truncated,
   and `coxph_mpl()` handles it through the `entry` argument.
-- **Left Censoring** and **Interval Censoring** cover the other censoring
-  schemes, which use the `type = "interval2"` response.
+- **Interval Censoring** covers the other censoring
+  scheme, which uses the `type = "interval2"` response.
 - **Basis Functions for the Baseline Hazard** explains the four choices for
   $\psi_u$ and how the knots are placed.
 - **Comparing `coxph()` and `coxph_mpl()`** fits both to the same

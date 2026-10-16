@@ -122,10 +122,10 @@ A fitted `coxph_mpl` object supports the usual generics:
 ## Where to go next
 
 The tutorials work through one censoring scheme at a time (**Right
-Censoring**, **Left Censoring**, **Interval Censoring**, **Left
-Truncation**), each with a complete worked example. Three further
-articles cover the modelling choices: **Control Parameters** on tuning a
-fit, **Basis Functions for the Baseline Hazard**, and **Comparing
+Censoring**, **Interval Censoring**, **Left Truncation**), each with a
+complete worked example. Three further articles cover the modelling
+choices: **Control Parameters** on tuning a fit, **Basis Functions for
+the Baseline Hazard**, and **Comparing
 [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) and
 [`coxph_mpl()`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)**
 on the same data.

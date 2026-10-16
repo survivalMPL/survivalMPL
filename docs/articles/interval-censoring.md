@@ -286,9 +286,6 @@ that scale:
 
 ## Next steps
 
-- **Left Censoring** covers the boundary case of interval censoring,
-  where the lower endpoint is unknown, on a dataset with no
-  interval-censored observations at all.
 - **Right Censoring** covers the standard scheme and the
   `Surv(time, status)` response.
 - **Control Parameters** explains `basis`, `n.knots`, `tol` and

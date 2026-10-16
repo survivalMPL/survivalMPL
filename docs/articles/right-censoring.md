@@ -250,8 +250,8 @@ data file, not about the fit.
   truncated, and
   [`coxph_mpl()`](https://CRAN.R-project.org/package=survivalMPL/reference/coxph_mpl.md)
   handles it through the `entry` argument.
-- **Left Censoring** and **Interval Censoring** cover the other
-  censoring schemes, which use the `type = "interval2"` response.
+- **Interval Censoring** covers the other censoring scheme, which uses
+  the `type = "interval2"` response.
 - **Basis Functions for the Baseline Hazard** explains the four choices
   for $`\psi_u`$ and how the knots are placed.
 - **Comparing [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html)
