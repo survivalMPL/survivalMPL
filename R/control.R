@@ -12,7 +12,7 @@
 #'   \code{"uniform"}, \code{"gaussian"}, \code{"msplines"}, or
 #'   \code{"epanechikov"}. Defaults to \code{"uniform"}.
 #' @param smooth Smoothing parameter value. Defaults to \code{NULL} (estimated
-#'   via REML). Set to \code{0} for maximum-likelihood estimates. Must be
+#'   automatically by marginal likelihood). Set to \code{0} for maximum-likelihood estimates. Must be
 #'   non-negative.
 #' @param max.iter Integer vector of length 3 giving maximum iterations for (1)
 #'   smoothing parameter updates, (2) inner beta/theta updates, and (3) total

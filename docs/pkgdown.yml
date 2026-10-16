@@ -10,7 +10,7 @@ articles:
   interval-censoring: interval-censoring.html
   left-truncation: left-truncation.html
   right-censoring: right-censoring.html
-last_built: 2026-10-16T08:21Z
+last_built: 2026-10-16T08:25Z
 urls:
   reference: https://CRAN.R-project.org/package=survivalMPL/reference
   article: https://CRAN.R-project.org/package=survivalMPL/articles

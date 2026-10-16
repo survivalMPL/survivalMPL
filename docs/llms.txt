@@ -9,7 +9,8 @@ non-negativity enforced during optimisation.
 
 - Cox PH models with right, left, and interval censoring
 - Smoothed baseline hazard with multiple basis choices
-- Penalised likelihood with REML or fixed smoothing
+- Penalised likelihood with automatic (marginal likelihood) or fixed
+  smoothing
 - Inference for coefficients, baseline hazard/survival, predictions, and
   residuals
 

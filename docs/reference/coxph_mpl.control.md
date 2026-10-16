@@ -44,8 +44,9 @@ coxph_mpl.control(
 
 - smooth:
 
-  Smoothing parameter value. Defaults to `NULL` (estimated via REML).
-  Set to `0` for maximum-likelihood estimates. Must be non-negative.
+  Smoothing parameter value. Defaults to `NULL` (estimated automatically
+  by marginal likelihood). Set to `0` for maximum-likelihood estimates.
+  Must be non-negative.
 
 - max.iter:
 
