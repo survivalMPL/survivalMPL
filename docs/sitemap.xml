@@ -7,7 +7,6 @@
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/getting-started.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/index.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/interval-censoring.html</loc></url>
-<url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/left-censoring.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/left-truncation.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/articles/right-censoring.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/authors.html</loc></url>
@@ -26,7 +25,6 @@
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/reference/dot-compute_alpha_knots.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/reference/get_basis.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/reference/hiroshima.html</loc></url>
-<url><loc>https://CRAN.R-project.org/package=survivalMPL/reference/hiv.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/reference/index.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/reference/list_bases.html</loc></url>
 <url><loc>https://CRAN.R-project.org/package=survivalMPL/reference/melanoma.html</loc></url>
